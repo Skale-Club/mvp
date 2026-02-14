@@ -1,0 +1,55 @@
+import type { HomepageContent } from '@shared/schema';
+
+export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
+  heroBadgeImageUrl: '',
+  heroBadgeAlt: '',
+  trustBadges: [],
+  categoriesSection: {
+    title: 'Our Services',
+    subtitle: 'Browse our services and book online.',
+    ctaText: 'Book Now',
+  },
+  reviewsSection: {
+    title: '',
+    subtitle: '',
+    embedUrl: '',
+  },
+  blogSection: {
+    title: 'Blog',
+    subtitle: 'Latest news and articles',
+    viewAllText: 'View All',
+    readMoreText: 'Read More',
+  },
+  aboutSection: {
+    label: 'About Us',
+    heading: 'Who We Are',
+    description: '',
+    defaultImageUrl: '',
+    highlights: [],
+  },
+  areasServedSection: {
+    label: 'Service Area',
+    heading: 'Areas We Serve',
+    description: '',
+    ctaText: 'Check Availability',
+  },
+  consultingStepsSection: {
+    enabled: false,
+    sectionId: 'how-it-works',
+    title: 'How It Works',
+    subtitle: '',
+    steps: [],
+    practicalBlockTitle: '',
+    practicalBullets: [],
+    ctaButtonLabel: 'Contact Us',
+    ctaButtonLink: '#lead-form',
+    helperText: '',
+    tagLabel: '',
+    stepLabel: 'Step',
+    whatWeDoLabel: 'What we do',
+    outcomeLabel: 'You get',
+    practicalBlockSubtitle: '',
+    nextStepLabel: 'Next step',
+    nextStepText: '',
+  },
+};
