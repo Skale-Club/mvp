@@ -1,117 +1,113 @@
-# [companyname]
+# MVP Builder Remodeling
 
-A full-stack service booking platform for a marketing company. Customers can browse services by category, add items to cart, select available time slots, and complete bookings. Includes an admin dashboard and GoHighLevel CRM integration.
+A full-stack web application for a remodeling business, including a public marketing site and an admin control panel.
 
-## Features
+Customers can browse services, view projects, submit leads, and interact with chat/booking flows. Admin users can manage content, SEO, integrations, and operational settings from a single dashboard.
 
-- **Service Catalog** - Browse marketing services organized by categories and subcategories
-- **Shopping Cart** - Add multiple services, view totals, and manage selections
-- **Booking System** - Select available time slots based on business hours and existing bookings
-- **Admin Dashboard** - Manage services, categories, bookings, and business settings
-- **GoHighLevel Integration** - Sync bookings and contacts with GHL CRM
-- **Responsive Design** - Mobile-friendly interface built with Tailwind CSS
+## Core Features
+
+- Service pages with detailed content and pricing structure
+- Gallery and blog management
+- Lead capture and contact workflows
+- Admin dashboard for company settings, FAQs, content, and users
+- SEO configuration (meta tags, OG, robots, schema fields)
+- Integrations support (Supabase auth/storage, analytics, Twilio/OpenAI hooks)
+- Responsive React UI with shared typed contracts between client and server
 
 ## Tech Stack
 
 ### Frontend
-- React 18 with TypeScript
-- Vite for build tooling
-- Wouter for routing
-- TanStack React Query for server state
-- shadcn/ui + Radix UI components
-- Tailwind CSS for styling
-- Framer Motion for animations
+
+- React 18 + TypeScript
+- Vite
+- Wouter
+- TanStack React Query
+- Tailwind CSS + Radix/shadcn UI primitives
 
 ### Backend
-- Express.js with TypeScript
-- Drizzle ORM with PostgreSQL
-- Session-based authentication with bcrypt
-- Zod for validation
 
-## Getting Started
+- Node.js + Express
+- TypeScript
+- Drizzle ORM
+- PostgreSQL
+- Session-based authentication with Supabase-backed identity
 
-### Prerequisites
+## Project Structure
+
+```text
+client/src/              # React app
+server/                  # Express API, auth, storage
+shared/                  # Shared schemas and route contracts
+script/                  # Build scripts
+scripts/                 # Utility and migration helper scripts
+dist/                    # Production build output
+```
+
+## Requirements
 
 - Node.js 18+
 - PostgreSQL database
 
-### Environment Variables
+## Environment Variables
 
-Create a `.env` file with the following:
+Create a `.env` file in the project root.
+
+### Required
 
 ```env
 DATABASE_URL=postgresql://user:password@host:port/database
-SESSION_SECRET=your-session-secret
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD_HASH=bcrypt-hashed-password
+SESSION_SECRET=replace-with-a-strong-random-secret
+ADMIN_EMAIL=admin@yourdomain.com
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 ```
 
-### Installation
+### Optional (depending on your setup)
+
+```env
+POSTGRES_URL=postgresql://...               # fallback connection var
+SUPABASE_DATABASE_URL=postgresql://...      # optional DB fallback
+OPENAI_API_KEY=...                          # AI/chat features
+PORT=5000                                   # custom server port
+NODE_ENV=development
+```
+
+## Getting Started
 
 ```bash
-# Install dependencies
 npm install
-
-# Push database schema
 npm run db:push
-
-# Start development server
 npm run dev
 ```
 
-The app will be available at `http://localhost:5000`.
+The app runs at `http://localhost:5000` by default.
 
-## Scripts
+## Available Scripts
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Run production server |
-| `npm run check` | TypeScript type checking |
-| `npm run db:push` | Apply database schema changes |
+| `npm run build` | Build client and server into `dist/` |
+| `npm run build:vercel` | Build using Vercel-specific script |
+| `npm run start` | Start production server from `dist/` |
+| `npm run check` | Run TypeScript type checking |
+| `npm run db:push` | Push Drizzle schema changes to database |
+| `npm run print:db:dev` | Print development DB URL helper output |
 
-## Project Structure
+## Production
 
-```
-client/src/
-├── pages/           # Route components (Home, Services, Admin, Booking)
-├── components/      # UI components (ui/ contains shadcn components)
-├── hooks/           # Custom hooks (useAuth, useBooking, useSEO)
-├── context/         # CartContext, AuthContext
-└── lib/             # Utilities
-
-server/
-├── index.ts         # Express setup and middleware
-├── routes.ts        # API endpoints
-├── storage.ts       # Database queries via IStorage interface
-├── db.ts            # Database connection
-└── integrations/    # GoHighLevel API integration
-
-shared/
-├── schema.ts        # Drizzle tables + Zod schemas
-└── routes.ts        # Type-safe API route definitions
+```bash
+npm run build
+npm run start
 ```
 
-## Database Schema
+## Security Notes
 
-- `categories` - Service categories
-- `subcategories` - Service subcategories
-- `services` - Individual marketing services with pricing
-- `serviceAddons` - Cross-sell relationships between services
-- `bookings` - Customer booking records
-- `bookingItems` - Services included in each booking
-- `companySettings` - Business hours, SEO, analytics config
-- `integrationSettings` - GoHighLevel credentials
-- `faqs` - FAQ entries
-
-## Brand Guidelines
-
-- **Primary Blue**: `#1C53A3`
-- **Brand Yellow**: `#FFFF01` (for CTAs)
-- **Fonts**: Outfit (headings), Inter (body)
+- Never commit `.env` or secrets.
+- Rotate keys immediately if any credential is exposed.
+- Use least-privilege credentials for production services.
 
 ## License
 
 MIT
-
