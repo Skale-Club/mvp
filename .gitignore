@@ -7,3 +7,8 @@ vite.config.ts.*
 .env
 .env.*
 .claude
+.vscode/
+.replit
+.dev-live.log
+.dev-run.log
+*.log
