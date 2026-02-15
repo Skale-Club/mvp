@@ -7,7 +7,7 @@ import OpenAI from "openai";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { insertCategorySchema, insertServiceSchema, insertServicePostSchema, insertCompanySettingsSchema, insertFaqSchema, insertIntegrationSettingsSchema, insertBlogPostSchema, insertGalleryImageSchema, insertChatSettingsSchema, insertChatIntegrationsSchema, formLeadProgressSchema } from "#shared/schema.js";
+import { insertServicePostSchema, insertCompanySettingsSchema, insertFaqSchema, insertIntegrationSettingsSchema, insertBlogPostSchema, insertGalleryImageSchema, insertChatSettingsSchema, insertChatIntegrationsSchema, formLeadProgressSchema } from "#shared/schema.js";
 import type { LeadClassification, LeadStatus } from "#shared/schema.js";
 import { DEFAULT_FORM_CONFIG, calculateMaxScore, calculateFormScoresWithConfig, classifyLead, getSortedQuestions, KNOWN_FIELD_IDS } from "#shared/form.js";
 import type { FormAnswers } from "#shared/form.js";
@@ -131,25 +131,6 @@ export async function registerRoutes(
     }
   }
 
-  async function ensureServicePostForService(service: { id: number; name: string; description?: string | null; imageUrl?: string | null; price?: string | null }): Promise<void> {
-    const existing = await storage.getServicePostByServiceId(service.id);
-    if (existing) return;
-
-    const uniqueSlug = await getUniqueServicePostSlug(service.name || `service-${service.id}`);
-    await storage.createServicePost({
-      serviceId: service.id,
-      title: service.name,
-      slug: uniqueSlug,
-      content: service.description || "",
-      excerpt: service.description || null,
-      metaDescription: service.description || null,
-      focusKeyword: service.name,
-      featureImageUrl: service.imageUrl || null,
-      status: "published",
-      publishedAt: new Date(),
-    });
-  }
-
   // Chat tools for lead qualification flow
   const chatTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     {
@@ -233,16 +214,6 @@ export async function registerRoutes(
     const key = apiKey || runtimeOpenAiKey || process.env.OPENAI_API_KEY;
     if (!key) return null;
     return new OpenAI({ apiKey: key });
-  }
-
-  function formatServiceForTool(service: any) {
-    return {
-      id: service.id,
-      name: service.name,
-      description: service.description,
-      price: service.price?.toString?.() || service.price,
-      durationMinutes: service.durationMinutes,
-    };
   }
 
   // Helper to get or create a lead for a conversation
@@ -621,135 +592,6 @@ export async function registerRoutes(
     }
   }
 
-  // Categories
-  app.get(api.categories.list.path, async (req, res) => {
-    const categories = await storage.getCategories();
-    res.json(categories);
-  });
-
-  app.get(api.categories.get.path, async (req, res) => {
-    const category = await storage.getCategoryBySlug(req.params.slug);
-    if (!category) return res.status(404).json({ message: "Category not found" });
-    res.json(category);
-  });
-
-  // Admin Category CRUD (protected routes)
-  app.post('/api/categories', requireAdmin, async (req, res) => {
-    try {
-      const validatedData = insertCategorySchema.parse(req.body);
-      const category = await storage.createCategory(validatedData);
-      res.status(201).json(category);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Validation error', errors: err.errors });
-      }
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
-  app.put('/api/categories/reorder', requireAdmin, async (req, res) => {
-    try {
-      const orderData = z.array(z.object({
-        id: z.number(),
-        order: z.number()
-      })).parse(req.body.order);
-
-      for (const item of orderData) {
-        await storage.updateCategory(item.id, { order: item.order });
-      }
-
-      res.json({ success: true });
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Validation error', errors: err.errors });
-      }
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
-  app.put('/api/categories/:id', requireAdmin, async (req, res) => {
-    try {
-      const validatedData = insertCategorySchema.partial().parse(req.body);
-      const category = await storage.updateCategory(Number(req.params.id), validatedData);
-      res.json(category);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Validation error', errors: err.errors });
-      }
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
-  app.delete('/api/categories/:id', requireAdmin, async (req, res) => {
-    try {
-      await storage.deleteCategory(Number(req.params.id));
-      res.json({ success: true });
-    } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
-  // Services
-  app.get(api.services.list.path, async (req, res) => {
-    const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
-    const includeHidden = req.query.includeHidden === 'true';
-    const services = await storage.getServices(categoryId, undefined, includeHidden);
-    res.json(services);
-  });
-
-  app.get('/api/services/:id(\\d+)', async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      if (Number.isNaN(id)) {
-        return res.status(400).json({ message: 'Invalid service id' });
-      }
-
-      const service = await storage.getService(id);
-      if (!service || service.isArchived) {
-        return res.status(404).json({ message: 'Service not found' });
-      }
-
-      const [category] = await Promise.all([
-        service.categoryId ? storage.getCategories().then((rows) => rows.find((item) => item.id === service.categoryId)) : Promise.resolve(undefined),
-      ]);
-
-      res.json({
-        ...service,
-        categoryName: category?.name || null,
-        categorySlug: category?.slug || null,
-      });
-    } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
-    }
-  });
-
-  app.get('/api/services/:id/post', async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      if (Number.isNaN(id)) {
-        return res.status(400).json({ message: 'Invalid service id' });
-      }
-
-      const service = await storage.getService(id);
-      if (!service || service.isArchived) {
-        return res.status(404).json({ message: 'Service not found' });
-      }
-
-      await ensureServicePostForService(service);
-      const post = await storage.getServicePostByServiceId(service.id);
-      if (!post) {
-        return res.status(404).json({ message: 'Service post not found' });
-      }
-
-      res.json({
-        post,
-        service,
-      });
-    } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
-    }
-  });
-
   // Service Posts (independent custom post type)
   app.get('/api/service-posts', async (req, res) => {
     try {
@@ -758,21 +600,10 @@ export async function registerRoutes(
       const offset = req.query.offset ? Number(req.query.offset) : 0;
 
       if (status === 'published') {
-        let posts = await storage.getPublishedServicePosts(
+        const posts = await storage.getPublishedServicePosts(
           Number.isFinite(limit) && (limit as number) > 0 ? Math.min(Number(limit), 100) : 12,
           Number.isFinite(offset) && offset > 0 ? offset : 0
         );
-        if (posts.length === 0) {
-          const allServices = await storage.getServices(undefined, undefined, true);
-          for (const service of allServices) {
-            if (service.isArchived) continue;
-            await ensureServicePostForService(service);
-          }
-          posts = await storage.getPublishedServicePosts(
-            Number.isFinite(limit) && (limit as number) > 0 ? Math.min(Number(limit), 100) : 12,
-            Number.isFinite(offset) && offset > 0 ? offset : 0
-          );
-        }
         return res.json(posts);
       }
 
@@ -944,6 +775,15 @@ export async function registerRoutes(
     }
   });
 
+  app.delete('/api/gallery', requireAdmin, async (_req, res) => {
+    try {
+      const deletedCount = await storage.deleteAllGalleryImages();
+      res.json({ success: true, deletedCount });
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
+  });
+
   // Register upload/storage routes (environment-aware: Replit Object Storage or Supabase Storage)
   await registerStorageRoutes(app, requireAdmin);
 
@@ -978,29 +818,20 @@ export async function registerRoutes(
       const spec = DEFAULT_FORM_CONFIG;
       const specById = new Map(spec.questions.map(q => [q.id, q]));
 
-      // 1) Normalize known questions to spec (text, type, options, placeholders)
-      let normalizedQuestions = existing.questions.map(q => {
-        const specQ = specById.get(q.id);
-        if (!specQ) return q;
-        return {
-          ...q,
-          title: specQ.title,
-          type: specQ.type,
-          required: specQ.required,
-          placeholder: specQ.placeholder,
-          options: specQ.options,
-          conditionalField: specQ.conditionalField,
-        };
-      });
+      // Start with existing questions exactly as saved by admin
+      // DO NOT normalize existing questions - respect admin customizations
+      let normalizedQuestions = [...existing.questions];
 
-      // 1.1) Add missing spec questions that are not present in existing config
+      // ONLY add missing default questions that don't exist yet
+      // This allows upgrading the form when new questions are added to DEFAULT_FORM_CONFIG
       for (const specQ of spec.questions) {
         if (!normalizedQuestions.some(q => q.id === specQ.id)) {
           normalizedQuestions.push({ ...specQ });
         }
       }
 
-      // 2) Merge standalone conditional questions back into their parent
+      // Merge standalone conditional questions back into their parent (backward compatibility)
+      // This handles old data where conditional fields were saved as separate questions
       const idxLocalizacao = normalizedQuestions.findIndex(q => q.id === 'localizacao');
       if (idxLocalizacao >= 0) {
         const hasStandaloneCidadeEstado = normalizedQuestions.some(q => q.id === 'cidadeEstado');
@@ -1018,8 +849,8 @@ export async function registerRoutes(
               },
             };
           }
-        } else {
-          // Ensure conditional field is present even if never existed
+        } else if (!normalizedQuestions[idxLocalizacao].conditionalField) {
+          // Add conditional field if missing (backward compatibility)
           const specLocalizacao = specById.get('localizacao');
           if (specLocalizacao?.conditionalField) {
             normalizedQuestions[idxLocalizacao] = {
@@ -1047,7 +878,8 @@ export async function registerRoutes(
               },
             };
           }
-        } else {
+        } else if (!normalizedQuestions[idxTipoNegocio].conditionalField) {
+          // Add conditional field if missing (backward compatibility)
           const specTipo = specById.get('tipoNegocio');
           if (specTipo?.conditionalField) {
             normalizedQuestions[idxTipoNegocio] = {
@@ -1058,7 +890,7 @@ export async function registerRoutes(
         }
       }
 
-      // 3) Sort known spec questions by spec order; unknowns follow after in their current order
+      // Sort: known spec questions by spec order, custom questions follow after
       const isKnown = (qId: string) => specById.has(qId);
       normalizedQuestions = normalizedQuestions
         .sort((a, b) => {
@@ -1075,7 +907,7 @@ export async function registerRoutes(
         })
         .map((q, i) => ({ ...q, order: i + 1 }));
 
-      const normalizedConfig = {
+      const normalizedConfig: FormConfig = {
         questions: normalizedQuestions,
         maxScore: calculateMaxScore({ ...existing, questions: normalizedQuestions }),
         thresholds: existing.thresholds || spec.thresholds,
@@ -1123,7 +955,7 @@ export async function registerRoutes(
       const parsed = formLeadProgressSchema.parse(req.body);
       const settings = await storage.getCompanySettings();
       const formConfig = settings?.formConfig || DEFAULT_FORM_CONFIG;
-      const companyName = settings?.companyName || 'Company Name';
+      const companyName = settings?.companyName?.trim() || '';
       const totalQuestions = formConfig.questions.length || DEFAULT_FORM_CONFIG.questions.length;
       const questionNumber = Math.min(parsed.questionNumber, totalQuestions);
       const payload = {
@@ -1346,7 +1178,7 @@ Sitemap: ${canonicalUrl}/sitemap.xml
         const postDate = servicePost.updatedAt ? new Date(servicePost.updatedAt).toISOString().split('T')[0] : lastMod;
         sitemap += `
   <url>
-    <loc>${canonicalUrl}/services/${servicePost.serviceId}/${servicePost.slug}</loc>
+    <loc>${canonicalUrl}/services/${servicePost.slug}</loc>
     <lastmod>${postDate}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -1373,63 +1205,6 @@ Sitemap: ${canonicalUrl}/sitemap.xml
     }
   });
 
-  // Admin Service CRUD (protected routes)
-  app.post('/api/services', requireAdmin, async (req, res) => {
-    try {
-      const validatedData = insertServiceSchema.parse(req.body);
-      const service = await storage.createService(validatedData);
-      await ensureServicePostForService(service);
-      res.status(201).json(service);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Validation error', errors: err.errors });
-      }
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
-  // IMPORTANT: This route must come BEFORE /api/services/:id to avoid route conflict
-  app.put('/api/services/reorder', requireAdmin, async (req, res) => {
-    try {
-      const orderData = z.array(z.object({
-        id: z.number(),
-        order: z.number()
-      })).parse(req.body.order);
-
-      await storage.reorderServices(orderData);
-      const updated = await storage.getServices(undefined, undefined, true);
-      res.json(updated);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Validation error', errors: err.errors });
-      }
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
-  app.put('/api/services/:id', requireAdmin, async (req, res) => {
-    try {
-      const validatedData = insertServiceSchema.partial().parse(req.body);
-      const service = await storage.updateService(Number(req.params.id), validatedData);
-      await ensureServicePostForService(service);
-      res.json(service);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Validation error', errors: err.errors });
-      }
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
-  app.delete('/api/services/:id', requireAdmin, async (req, res) => {
-    try {
-      await storage.deleteService(Number(req.params.id));
-      res.json({ success: true });
-    } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
-    }
-  });
-
   // ===============================
   // Chat Routes
   // ===============================
@@ -1439,11 +1214,9 @@ Sitemap: ${canonicalUrl}/sitemap.xml
     try {
       const settings = await storage.getChatSettings();
       const company = await storage.getCompanySettings();
-      const defaultName = company?.companyName || 'Company Assistant';
-      const fallbackName =
-        settings.agentName && settings.agentName !== 'Company Assistant'
-          ? settings.agentName
-          : defaultName;
+      const defaultName = company?.companyName?.trim();
+      const defaultAssistantName = defaultName ? `${defaultName} Assistant` : 'Assistant';
+      const fallbackName = settings.agentName?.trim() || defaultAssistantName;
       const companyIcon = company?.logoIcon || '/favicon.ico';
       const fallbackAvatar = companyIcon;
       const primaryAvatar = settings.agentAvatarUrl || fallbackAvatar;
@@ -1520,7 +1293,7 @@ Sitemap: ${canonicalUrl}/sitemap.xml
           const twilioSettings = await storage.getTwilioSettings();
           if (twilioSettings) {
             const company = await storage.getCompanySettings();
-            const companyName = company?.companyName || 'Company Name';
+            const companyName = company?.companyName?.trim() || '';
             const result = await sendLowPerformanceAlert(twilioSettings, avgSeconds, samples, companyName);
             if (result.success) {
               lastLowPerformanceAlertAt = now;
@@ -1693,7 +1466,7 @@ Sitemap: ${canonicalUrl}/sitemap.xml
 
         // Send Twilio notification for new chat
         const company = await storage.getCompanySettings();
-        const companyName = company?.companyName || 'Skale Club';
+        const companyName = company?.companyName?.trim() || '';
         const twilioSettings = await storage.getTwilioSettings();
         if (twilioSettings && isNewConversation) {
           sendNewChatNotification(twilioSettings, conversationId, input.pageUrl, companyName).catch(err => {
@@ -1746,7 +1519,7 @@ Sitemap: ${canonicalUrl}/sitemap.xml
         ? `LANGUAGE:\n- Respond in ${input.language}.`
         : '';
 
-      const defaultSystemPrompt = `You are a friendly, consultative lead qualification assistant for ${company?.companyName || 'Skale Club'}, a digital marketing agency that helps service businesses grow.
+      const defaultSystemPrompt = `You are a friendly, consultative lead qualification assistant for ${company?.companyName?.trim() || ''}, a digital marketing agency that helps service businesses grow.
 
 YOUR GOAL:
 Qualify potential clients by collecting information through a natural conversation. Ask questions from the form configuration one at a time, in order.
@@ -1826,7 +1599,6 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
 
       let assistantResponse = 'Sorry, I could not process that request.';
       let leadCaptured = false;
-      let bookingCompleted: { value: number; services: string[] } | null = null;
 
       try {
         const first = await openai.chat.completions.create({
@@ -1899,8 +1671,7 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
       res.json({
         conversationId,
         response: assistantResponse,
-        leadCaptured,
-        bookingCompleted
+        leadCaptured
       });
     } catch (err) {
       res.status(500).json({ message: (err as Error).message });
@@ -2274,7 +2045,7 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
       }
 
       const company = await storage.getCompanySettings();
-      const companyName = company?.companyName || 'Skale Club';
+      const companyName = company?.companyName?.trim() || '';
 
       // Send test SMS using Twilio
       const twilio = await import('twilio');
@@ -2431,15 +2202,6 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
         return res.status(404).json({ message: 'Blog post not found' });
       }
       res.json(post);
-    } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
-    }
-  });
-
-  app.get('/api/blog/:id/services', async (req, res) => {
-    try {
-      const services = await storage.getBlogPostServices(Number(req.params.id));
-      res.json(services);
     } catch (err) {
       res.status(500).json({ message: (err as Error).message });
     }
@@ -2688,30 +2450,7 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
   });
 
 
-  // Legacy data cleanup (non-blocking failure must not crash the app)
-  try {
-    await cleanupLegacyCleaningServices();
-  } catch (err) {
-    console.error("cleanupLegacyCleaningServices failed (non-fatal):", err);
-  }
-
   return httpServer;
-}
-
-async function cleanupLegacyCleaningServices() {
-  const legacyNames = new Set([
-    "3-Seater Sofa Cleaning",
-    "Mattress Cleaning (Queen)",
-    "Room Carpet Cleaning (up to 20sqm)",
-  ]);
-
-  const allServices = await storage.getServices(undefined, undefined, true);
-  const legacyServices = allServices.filter((service) => legacyNames.has(service.name));
-  if (legacyServices.length === 0) return;
-
-  for (const service of legacyServices) {
-    await storage.updateService(service.id, { isArchived: true });
-  }
 }
 
 

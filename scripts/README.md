@@ -1,6 +1,6 @@
 # FAQ Management Scripts
 
-This directory contains utility scripts for managing FAQs in the Skale Club chat system.
+This directory contains utility scripts for managing FAQs in the [companyname] chat system.
 
 ## Available Scripts
 
@@ -50,7 +50,7 @@ npx tsx scripts/test-faq-search.ts
 
 ### Professional Quality
 - Professional qualifications and training
-- Why choose Skale Club
+- Why choose [companyname]
 
 ### Cleaning Process
 - Step-by-step cleaning process
@@ -166,3 +166,4 @@ The chat's system prompt includes instructions to:
 - [ ] Smart FAQ suggestions in chat
 - [ ] Category/tag system for FAQs
 - [ ] A/B testing different FAQ answers
+

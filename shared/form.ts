@@ -13,154 +13,138 @@ export type FormAnswers = {
   telefone?: string;
   cidadeEstado?: string;
   tipoNegocio?: string;
+  tipoNegocioOutro?: string;
   tempoNegocio?: string;
   experienciaMarketing?: string;
   orcamentoAnuncios?: string;
   principalDesafio?: string;
   disponibilidade?: string;
   expectativaResultado?: string;
-  tipoNegocioOutro?: string;
   [key: string]: string | undefined; // Support for custom questions
 };
 
 // Default form configuration - used as fallback when no config in database
+// Generic service business qualification form (white-label)
 export const DEFAULT_FORM_CONFIG: FormConfig = {
   questions: [
     {
       id: "nome",
       order: 1,
-      title: "Qual é o seu nome completo?",
+      title: "What is your full name?",
       type: "text",
       required: true,
-      placeholder: "Digite seu nome completo",
+      placeholder: "Enter your full name",
     },
     {
       id: "email",
       order: 2,
-      title: "Qual é o seu email?",
+      title: "What is your email address?",
       type: "email",
       required: true,
-      placeholder: "exemplo@email.com",
+      placeholder: "you@example.com",
     },
     {
       id: "telefone",
       order: 3,
-      title: "Qual é o seu Celular/WhatsApp?",
+      title: "What is your phone number?",
       type: "tel",
       required: true,
       placeholder: "(555) 123-4567",
     },
     {
-      id: "localizacao",
-      order: 4,
-      title: "Onde você está hoje?",
-      type: "select",
-      required: true,
-      options: [
-        { value: "Já moro nos EUA", label: "Já moro nos EUA", points: 10 },
-        { value: "Estou no Brasil, mas tenho negócio nos EUA", label: "Estou no Brasil, mas tenho negócio nos EUA", points: 8 },
-        { value: "Estou me mudando para os EUA em breve", label: "Estou me mudando para os EUA em breve", points: 7 },
-        { value: "Outro país", label: "Outro país", points: 5 },
-      ],
-      conditionalField: {
-        showWhen: "Já moro nos EUA",
-        id: "cidadeEstado",
-        title: "Em qual cidade/estado?",
-        placeholder: "Ex: Orlando, FL",
-      },
-    },
-    {
       id: "tipoNegocio",
-      order: 5,
-      title: "Qual o seu tipo de negócio?",
+      order: 4,
+      title: "What type of service do you provide?",
       type: "select",
       required: true,
       options: [
-        { value: "Cleaning Services", label: "Cleaning Services", points: 10 },
+        { value: "Cleaning", label: "Cleaning", points: 10 },
         { value: "Landscaping", label: "Landscaping", points: 10 },
-        { value: "Construction/Remodeling", label: "Construction/Remodeling", points: 10 },
+        { value: "Construction", label: "Construction / Remodeling", points: 10 },
+        { value: "Plumbing", label: "Plumbing", points: 10 },
+        { value: "Electrical", label: "Electrical", points: 10 },
+        { value: "HVAC", label: "HVAC", points: 10 },
         { value: "Painting", label: "Painting", points: 10 },
-        { value: "Handyman", label: "Handyman", points: 10 },
-        { value: "Outro", label: "Outro (especificar)", points: 5 },
+        { value: "Other", label: "Other (please specify)", points: 5 },
       ],
       conditionalField: {
-        showWhen: "Outro",
+        showWhen: "Other",
         id: "tipoNegocioOutro",
-        title: "Descreva seu tipo de negócio",
-        placeholder: "Ex: Consultoria, Educação, Tecnologia, etc.",
+        title: "Please describe your service",
+        placeholder: "e.g. Pest Control, Roofing, etc.",
       },
     },
     {
       id: "tempoNegocio",
-      order: 6,
-      title: "Há quanto tempo você tem esse negócio?",
+      order: 5,
+      title: "How long have you been in business?",
       type: "select",
       required: true,
       options: [
-        { value: "Menos de 6 meses", label: "Menos de 6 meses", points: 3 },
-        { value: "6 meses a 1 ano", label: "6 meses a 1 ano", points: 7 },
-        { value: "1 a 3 anos", label: "1 a 3 anos", points: 10 },
-        { value: "Mais de 3 anos", label: "Mais de 3 anos", points: 8 },
+        { value: "Less than 6 months", label: "Less than 6 months", points: 3 },
+        { value: "6 months to 1 year", label: "6 months to 1 year", points: 7 },
+        { value: "1 to 3 years", label: "1 to 3 years", points: 10 },
+        { value: "More than 3 years", label: "More than 3 years", points: 8 },
       ],
     },
     {
-      id: "situacaoMarketing",
-      order: 7,
-      title: "Como está sua captação de clientes hoje?",
+      id: "experienciaMarketing",
+      order: 6,
+      title: "How do you currently get most of your clients?",
       type: "select",
       required: true,
       options: [
-        { value: "Dependo só de indicações", label: "Dependo só de indicações", points: 8 },
-        { value: "Já tentei anúncios por conta própria, sem muito resultado", label: "Já tentei anúncios por conta própria, sem muito resultado", points: 10 },
-        { value: "Já contratei alguém/agência e não funcionou", label: "Já contratei alguém/agência e não funcionou", points: 10 },
-        { value: "Tenho alguns resultados, mas quero escalar", label: "Tenho alguns resultados, mas quero escalar", points: 9 },
-        { value: "Ainda não comecei nenhuma estratégia de marketing", label: "Ainda não comecei nenhuma estratégia de marketing", points: 5 },
+        { value: "Word of mouth only", label: "Word of mouth / referrals only", points: 8 },
+        { value: "Tried ads with poor results", label: "Tried online ads, but poor results", points: 10 },
+        { value: "Hired agency that didn't work", label: "Hired someone / agency that didn't work", points: 10 },
+        { value: "Getting results but want to scale", label: "Getting some results, want to scale", points: 9 },
+        { value: "Haven't started marketing", label: "Haven't started any marketing yet", points: 5 },
       ],
     },
     {
       id: "orcamentoAnuncios",
-      order: 8,
-      title: "Para gerar clientes com consistência, é necessário investir em marketing (anúncios e/ou estrutura). Como isso se encaixa na sua realidade hoje?",
+      order: 7,
+      title: "Are you ready to invest in marketing to grow your business?",
       type: "select",
       required: true,
       options: [
-        { value: "Sim, consigo investir em marketing para acelerar o crescimento", label: "Sim, consigo investir em marketing para acelerar o crescimento", points: 10 },
-        { value: "Consigo começar com pouco e aumentar conforme os resultados", label: "Consigo começar com pouco e aumentar conforme os resultados", points: 8 },
-        { value: "No momento não consigo investir nisso", label: "No momento não consigo investir nisso", points: 3 },
+        { value: "Yes, ready to invest", label: "Yes, I have a budget ready", points: 10 },
+        { value: "Start small and scale", label: "I can start small and scale up", points: 8 },
+        { value: "Not at this time", label: "Not at this time", points: 3 },
       ],
     },
     {
       id: "principalDesafio",
-      order: 9,
-      title: "Qual o maior obstáculo para crescer seu negócio hoje?",
+      order: 8,
+      title: "What is your biggest challenge right now?",
       type: "select",
       required: true,
       options: [
-        { value: "Não tenho clientes suficientes", label: "Não tenho clientes suficientes", points: 8 },
-        { value: "Gasto em marketing mas não vejo retorno", label: "Gasto em marketing mas não vejo retorno", points: 10 },
-        { value: "Dependo de indicações e não tenho controle sobre meu fluxo de leads", label: "Dependo de indicações e não tenho controle sobre meu fluxo de leads", points: 9 },
-        { value: "Não sei por onde começar no marketing digital", label: "Não sei por onde começar no marketing digital", points: 7 },
-        { value: "Tenho clientes, mas não consigo cobrar o que meu serviço vale", label: "Tenho clientes, mas não consigo cobrar o que meu serviço vale", points: 8 },
+        { value: "Not enough clients", label: "Not enough clients", points: 8 },
+        { value: "Spending on marketing with no ROI", label: "Spending on marketing with no return", points: 10 },
+        { value: "Inconsistent lead flow", label: "Inconsistent lead flow", points: 9 },
+        { value: "Don't know where to start", label: "Don't know where to start with marketing", points: 7 },
+        { value: "Can't charge what I'm worth", label: "Can't charge what my service is worth", points: 8 },
       ],
     },
     {
-      id: "expectativaTempo",
-      order: 10,
-      title: "Nossos clientes geralmente veem os primeiros leads em 2-4 semanas e resultados consistentes em 60-90 dias. Isso funciona para você?",
+      id: "expectativaResultado",
+      order: 9,
+      title: "What are your expectations for results?",
       type: "select",
       required: true,
       options: [
-        { value: "Sim, entendo que resultado sólido leva tempo", label: "Sim, entendo que resultado sólido leva tempo", points: 10 },
-        { value: "Preciso de algo mais rápido", label: "Preciso de algo mais rápido", points: 5 },
-        { value: "Não tenho certeza ainda", label: "Não tenho certeza ainda", points: 3 },
+        { value: "Understand it takes time", label: "I understand solid results take 2-3 months", points: 10 },
+        { value: "Need results ASAP", label: "I need results as soon as possible", points: 5 },
+        { value: "Not sure yet", label: "Not sure yet", points: 3 },
       ],
     },
   ],
-  maxScore: 82,
+  maxScore: 68,
   thresholds: {
-    hot: 70,
-    warm: 50,
-    cold: 30,
+    hot: 58,
+    warm: 40,
+    cold: 25,
   },
 };
 

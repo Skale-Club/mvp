@@ -56,12 +56,12 @@ export function Navbar() {
       <div className="container-custom mx-auto">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 min-h-[40px] min-w-[54px]">
+          <Link href="/" className="flex items-center gap-2 min-h-[40px] min-w-[40px]">
             {companySettings?.logoMain ? (
               <img
                 src={companySettings.logoMain}
                 alt={companySettings.companyName || ''}
-                className="h-auto w-[54px] object-contain p-1.5"
+                className="h-14 w-auto object-contain p-1"
               />
             ) : (
               companySettings?.companyName ? (
@@ -87,10 +87,10 @@ export function Navbar() {
               ))}
             </div>
             {displayPhone && (
-            <a href={`tel:${telPhone}`} className="px-4 py-2 bg-[#406EF1] hover:bg-[#355CD0] text-white font-bold rounded-full hover-elevate transition-all text-sm flex items-center gap-2">
-              <Phone className="w-4 h-4 fill-current" />
-              {displayPhone}
-            </a>
+              <a href={`tel:${telPhone}`} className="px-4 py-2 bg-[#406EF1] hover:bg-[#355CD0] text-white font-bold rounded-full hover-elevate transition-all text-sm flex items-center gap-2">
+                <Phone className="w-4 h-4 fill-current" />
+                {displayPhone}
+              </a>
             )}
 
             {/* User Profile (only shown when logged in) */}
@@ -136,7 +136,7 @@ export function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
+          <button
             className="md:hidden p-2 text-white"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
@@ -209,7 +209,7 @@ export function Navbar() {
                       Admin Panel
                     </Link>
                   )}
-                  <button 
+                  <button
                     onClick={() => { setIsMenuOpen(false); logout(); }}
                     className="flex items-center gap-2 text-base font-semibold text-slate-500 hover:text-red-500 transition-colors"
                   >

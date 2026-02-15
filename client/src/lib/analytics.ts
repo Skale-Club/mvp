@@ -120,7 +120,6 @@ export type AnalyticsEventName =
   | 'chat_message_received'
   | 'chat_new_conversation'
   | 'chat_lead_captured'
-  | 'chat_booking_completed'
   | 'form_open'
   | 'form_step_completed'
   | 'form_completed'
@@ -291,19 +290,3 @@ export function trackChatLeadCaptured(pageUrl: string, conversationId?: string) 
   });
 }
 
-export function trackChatBookingCompleted(
-  pageUrl: string,
-  conversationId: string | undefined,
-  bookingValue: number,
-  services: string[]
-) {
-  trackEvent('chat_booking_completed', {
-    location: pageUrl,
-    label: 'Booking Completed via Chat',
-    conversation_id: conversationId,
-    value: bookingValue,
-    currency: 'USD',
-    category: 'conversion',
-    services: services.join(', ')
-  });
-}

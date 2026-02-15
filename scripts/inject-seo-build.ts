@@ -54,7 +54,7 @@ async function injectSEOData() {
     let html = readFileSync(indexPath, "utf-8");
 
     // Extract and prepare values with fallbacks
-    const title = seoData.seoTitle || seoData.companyName || "Company Name";
+    const title = seoData.seoTitle || seoData.companyName || "Website";
     const description = seoData.seoDescription || "";
     const ogImage = seoData.ogImage || "";
     const favicon = seoData.logoIcon || "/favicon.png";
@@ -63,7 +63,7 @@ async function injectSEOData() {
     const canonicalUrl = seoData.seoCanonicalUrl || "";
     const robotsTag = seoData.seoRobotsTag || "index, follow";
     const ogType = seoData.ogType || "website";
-    const ogSiteName = seoData.ogSiteName || seoData.companyName || "Company Name";
+    const ogSiteName = seoData.ogSiteName || seoData.companyName || "Website";
     const twitterCard = seoData.twitterCard || "summary_large_image";
 
     console.log("Injecting SEO data:");
@@ -109,7 +109,15 @@ async function injectSEOData() {
     metaTags.push(`<meta property="og:site_name" content="${escapeHtml(ogSiteName)}" />`);
 
     if (ogImage) {
-      const fullImageUrl = ogImage.startsWith('http') ? ogImage : `https://yourdomain.com${ogImage}`;
+      let canonicalOrigin = "";
+      if (canonicalUrl) {
+        try {
+          canonicalOrigin = new URL(canonicalUrl).origin;
+        } catch {
+          canonicalOrigin = "";
+        }
+      }
+      const fullImageUrl = ogImage.startsWith('http') || !canonicalOrigin ? ogImage : `${canonicalOrigin}${ogImage}`;
       metaTags.push(`<meta property="og:image" content="${escapeHtml(fullImageUrl)}" />`);
     }
 

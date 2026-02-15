@@ -1,8 +1,6 @@
 import { db, pool } from "./db.js";
 import { DEFAULT_FORM_CONFIG, calculateFormScoresWithConfig, classifyLead } from "#shared/form.js";
 import {
-  categories,
-  services,
   formLeads,
   chatSettings,
   chatIntegrations,
@@ -13,11 +11,8 @@ import {
   faqs,
   integrationSettings,
   blogPosts,
-  blogPostServices,
   servicePosts,
   galleryImages,
-  type Category,
-  type Service,
   type CompanySettings,
   type ChatSettings,
   type ChatIntegrations,
@@ -31,11 +26,8 @@ import {
   type Faq,
   type IntegrationSettings,
   type BlogPost,
-  type BlogPostService,
   type ServicePost,
   type GalleryImage,
-  type InsertCategory,
-  type InsertService,
   type InsertChatSettings,
   type InsertChatIntegrations,
   type InsertTwilioSettings,
@@ -128,7 +120,6 @@ async function ensureServicePostsSchema() {
     .query(`
       CREATE TABLE IF NOT EXISTS service_posts (
         id serial PRIMARY KEY,
-        service_id integer NOT NULL UNIQUE REFERENCES services(id),
         title text NOT NULL,
         slug text NOT NULL UNIQUE,
         content text NOT NULL DEFAULT '',
@@ -137,10 +128,36 @@ async function ensureServicePostsSchema() {
         focus_keyword text,
         feature_image_url text,
         status text NOT NULL DEFAULT 'published',
+        "order" integer NOT NULL DEFAULT 0,
         published_at timestamp,
         created_at timestamp DEFAULT now(),
         updated_at timestamp DEFAULT now()
       );
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS content text NOT NULL DEFAULT '';
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS excerpt text;
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS meta_description text;
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS focus_keyword text;
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS feature_image_url text;
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'published';
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS "order" integer NOT NULL DEFAULT 0;
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS published_at timestamp;
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT now();
+      ALTER TABLE service_posts ADD COLUMN IF NOT EXISTS updated_at timestamp DEFAULT now();
+      ALTER TABLE service_posts ALTER COLUMN content SET DEFAULT '';
+      ALTER TABLE service_posts ALTER COLUMN status SET DEFAULT 'published';
+      ALTER TABLE service_posts ALTER COLUMN "order" SET DEFAULT 0;
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'service_posts'
+            AND column_name = 'service_id'
+        ) THEN
+          ALTER TABLE service_posts ALTER COLUMN service_id DROP NOT NULL;
+        END IF;
+      END $$;
       CREATE INDEX IF NOT EXISTS service_posts_status_idx ON service_posts (status);
       CREATE INDEX IF NOT EXISTS service_posts_published_at_idx ON service_posts (published_at DESC);
     `)
@@ -153,23 +170,6 @@ async function ensureServicePostsSchema() {
 }
 
 export interface IStorage {
-  // Categories & Services
-  getCategories(): Promise<Category[]>;
-  getCategoryBySlug(slug: string): Promise<Category | undefined>;
-  getServices(categoryId?: number, subcategoryId?: number, includeHidden?: boolean): Promise<Service[]>;
-  getService(id: number): Promise<Service | undefined>;
-  
-  // Category CRUD
-  createCategory(category: InsertCategory): Promise<Category>;
-  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category>;
-  deleteCategory(id: number): Promise<void>;
-  
-  // Service CRUD
-  createService(service: InsertService): Promise<Service>;
-  updateService(id: number, service: Partial<InsertService>): Promise<Service>;
-  deleteService(id: number): Promise<void>;
-  reorderServices(order: { id: number; order: number }[]): Promise<void>;
-  
   // Company Settings
   getCompanySettings(): Promise<CompanySettings>;
   updateCompanySettings(settings: Partial<CompanySettings>): Promise<CompanySettings>;
@@ -220,15 +220,12 @@ export interface IStorage {
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost>;
   deleteBlogPost(id: number): Promise<void>;
-  getBlogPostServices(postId: number): Promise<Service[]>;
-  setBlogPostServices(postId: number, serviceIds: number[]): Promise<void>;
   countPublishedBlogPosts(): Promise<number>;
 
-  // Service Posts (independent from blog)
+  // Service Posts
   getServicePosts(status?: string): Promise<ServicePost[]>;
   getServicePost(id: number): Promise<ServicePost | undefined>;
   getServicePostBySlug(slug: string): Promise<ServicePost | undefined>;
-  getServicePostByServiceId(serviceId: number): Promise<ServicePost | undefined>;
   getPublishedServicePosts(limit?: number, offset?: number): Promise<ServicePost[]>;
   createServicePost(post: InsertServicePost): Promise<ServicePost>;
   updateServicePost(id: number, post: Partial<InsertServicePost>): Promise<ServicePost>;
@@ -241,6 +238,7 @@ export interface IStorage {
   updateGalleryImage(id: number, image: Partial<InsertGalleryImage>): Promise<GalleryImage>;
   reorderGalleryImages(imageIds: number[]): Promise<void>;
   deleteGalleryImage(id: number): Promise<void>;
+  deleteAllGalleryImages(): Promise<number>;
 
 }
 
@@ -267,96 +265,6 @@ export class DatabaseStorage implements IStorage {
       console.error("ensureChatSchema error:", err);
       this.chatSchemaEnsured = false;
     }
-  }
-
-  async getCategories(): Promise<Category[]> {
-    return await db.select().from(categories).orderBy(categories.order);
-  }
-
-  async getCategoryBySlug(slug: string): Promise<Category | undefined> {
-    const [category] = await db.select().from(categories).where(eq(categories.slug, slug));
-    return category;
-  }
-
-  async getServices(categoryId?: number, subcategoryId?: number, includeHidden: boolean = false): Promise<Service[]> {
-    void subcategoryId;
-    if (categoryId) {
-      if (includeHidden) {
-        return await db
-          .select()
-          .from(services)
-          .where(and(eq(services.categoryId, categoryId), eq(services.isArchived, false)))
-          .orderBy(asc(services.order), asc(services.id));
-      }
-      return await db
-        .select()
-        .from(services)
-        .where(and(eq(services.categoryId, categoryId), eq(services.isHidden, false), eq(services.isArchived, false)))
-        .orderBy(asc(services.order), asc(services.id));
-    }
-    if (includeHidden) {
-      return await db.select().from(services).where(eq(services.isArchived, false)).orderBy(asc(services.order), asc(services.id));
-    }
-    return await db
-      .select()
-      .from(services)
-      .where(and(eq(services.isHidden, false), eq(services.isArchived, false)))
-      .orderBy(asc(services.order), asc(services.id));
-  }
-
-  async getService(id: number): Promise<Service | undefined> {
-    const [service] = await db
-      .select()
-      .from(services)
-      .where(and(eq(services.id, id), eq(services.isArchived, false)));
-    return service;
-  }
-
-  async createCategory(category: InsertCategory): Promise<Category> {
-    const [newCategory] = await db.insert(categories).values(category).returning();
-    return newCategory;
-  }
-
-  async updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category> {
-    const [updated] = await db.update(categories).set(category).where(eq(categories.id, id)).returning();
-    return updated;
-  }
-
-  async deleteCategory(id: number): Promise<void> {
-    await db.delete(categories).where(eq(categories.id, id));
-  }
-
-  async createService(service: InsertService): Promise<Service> {
-    let nextOrder = service.order;
-    if (nextOrder === undefined || nextOrder === null) {
-      const [{ maxOrder }] = await db
-        .select({ maxOrder: sql<number>`coalesce(max(${services.order}), 0)` })
-        .from(services);
-      nextOrder = Number(maxOrder ?? 0) + 1;
-    }
-    const [newService] = await db.insert(services).values({ ...service, order: nextOrder }).returning();
-    return newService;
-  }
-
-  async updateService(id: number, service: Partial<InsertService>): Promise<Service> {
-    const [updated] = await db.update(services).set(service).where(eq(services.id, id)).returning();
-    return updated;
-  }
-
-  async deleteService(id: number): Promise<void> {
-    await db.transaction(async (tx) => {
-      await tx.delete(blogPostServices).where(eq(blogPostServices.serviceId, id));
-      await tx.delete(servicePosts).where(eq(servicePosts.serviceId, id));
-      await tx.update(services).set({ isArchived: true }).where(eq(services.id, id));
-    });
-  }
-
-  async reorderServices(order: { id: number; order: number }[]): Promise<void> {
-    await db.transaction(async (tx) => {
-      for (const item of order) {
-        await tx.update(services).set({ order: item.order }).where(eq(services.id, item.id));
-      }
-    });
   }
 
   async getCompanySettings(): Promise<CompanySettings> {
@@ -841,53 +749,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
-    const { serviceIds, ...postData } = post;
-    const [newPost] = await db.insert(blogPosts).values(postData).returning();
-    
-    if (serviceIds && serviceIds.length > 0) {
-      await this.setBlogPostServices(newPost.id, serviceIds);
-    }
-    
+    const [newPost] = await db.insert(blogPosts).values(post).returning();
     return newPost;
   }
 
   async updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost> {
-    const { serviceIds, ...postData } = post;
     const [updated] = await db.update(blogPosts)
-      .set({ ...postData, updatedAt: new Date() })
+      .set({ ...post, updatedAt: new Date() })
       .where(eq(blogPosts.id, id))
       .returning();
-    
-    if (serviceIds !== undefined) {
-      await this.setBlogPostServices(id, serviceIds);
-    }
-    
     return updated;
   }
 
   async deleteBlogPost(id: number): Promise<void> {
-    await db.delete(blogPostServices).where(eq(blogPostServices.blogPostId, id));
     await db.delete(blogPosts).where(eq(blogPosts.id, id));
-  }
-
-  async getBlogPostServices(postId: number): Promise<Service[]> {
-    const relations = await db.select().from(blogPostServices).where(eq(blogPostServices.blogPostId, postId));
-    if (relations.length === 0) return [];
-    
-    const serviceIds = relations.map(r => r.serviceId);
-    return await db.select().from(services).where(inArray(services.id, serviceIds));
-  }
-
-  async setBlogPostServices(postId: number, serviceIds: number[]): Promise<void> {
-    await db.delete(blogPostServices).where(eq(blogPostServices.blogPostId, postId));
-    
-    if (serviceIds.length > 0) {
-      const values = serviceIds.map(serviceId => ({
-        blogPostId: postId,
-        serviceId
-      }));
-      await db.insert(blogPostServices).values(values);
-    }
   }
 
   async countPublishedBlogPosts(): Promise<number> {
@@ -918,12 +793,6 @@ export class DatabaseStorage implements IStorage {
   async getServicePostBySlug(slug: string): Promise<ServicePost | undefined> {
     await ensureServicePostsSchema();
     const [post] = await db.select().from(servicePosts).where(eq(servicePosts.slug, slug));
-    return post;
-  }
-
-  async getServicePostByServiceId(serviceId: number): Promise<ServicePost | undefined> {
-    await ensureServicePostsSchema();
-    const [post] = await db.select().from(servicePosts).where(eq(servicePosts.serviceId, serviceId));
     return post;
   }
 
@@ -1027,6 +896,12 @@ export class DatabaseStorage implements IStorage {
   async deleteGalleryImage(id: number): Promise<void> {
     await ensureGallerySchema();
     await db.delete(galleryImages).where(eq(galleryImages.id, id));
+  }
+
+  async deleteAllGalleryImages(): Promise<number> {
+    await ensureGallerySchema();
+    const deletedRows = await db.delete(galleryImages).returning({ id: galleryImages.id });
+    return deletedRows.length;
   }
 
 }

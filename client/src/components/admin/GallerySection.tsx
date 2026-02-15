@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -37,6 +39,21 @@ type GalleryFormValues = {
   imageUrl: string;
 };
 
+type UploadStatus = "pending" | "uploading" | "success" | "error" | "cancelled";
+
+type UploadProgressItem = {
+  id: string;
+  fileName: string;
+  progress: number;
+  status: UploadStatus;
+  error?: string;
+};
+
+type UploadFileToServerOptions = {
+  signal?: AbortSignal;
+  onProgress?: (progress: number) => void;
+};
+
 function reorderImagesById(images: GalleryImage[], sourceId: number, targetId: number): GalleryImage[] {
   const sourceIndex = images.findIndex((image) => image.id === sourceId);
   const targetIndex = images.findIndex((image) => image.id === targetId);
@@ -50,30 +67,144 @@ function reorderImagesById(images: GalleryImage[], sourceId: number, targetId: n
   return next;
 }
 
-async function uploadFileToServer(file: File): Promise<string> {
+function isAbortError(error: unknown): boolean {
+  if (error instanceof DOMException) {
+    return error.name === "AbortError";
+  }
+  return error instanceof Error && error.name === "AbortError";
+}
+
+async function uploadFileToServer(file: File, options: UploadFileToServerOptions = {}): Promise<string> {
+  const { signal, onProgress } = options;
+  onProgress?.(5);
+
   const base64Data = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
+    let settled = false;
+
+    const resolveOnce = (value: string) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", abortRead);
+      resolve(value);
+    };
+
+    const rejectOnce = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", abortRead);
+      reject(error);
+    };
+
+    const abortRead = () => {
+      try {
+        reader.abort();
+      } catch {
+        // no-op
+      }
+      rejectOnce(new DOMException("Upload aborted", "AbortError"));
+    };
+
+    if (signal?.aborted) {
+      rejectOnce(new DOMException("Upload aborted", "AbortError"));
+      return;
+    }
+
+    signal?.addEventListener("abort", abortRead, { once: true });
     reader.onload = () => {
       const result = reader.result as string;
-      resolve(result.split(",")[1]);
+      resolveOnce(result.split(",")[1]);
     };
-    reader.onerror = reject;
+    reader.onerror = () => {
+      rejectOnce(reader.error || new Error("Failed to read file"));
+    };
+    reader.onabort = () => {
+      rejectOnce(new DOMException("Upload aborted", "AbortError"));
+    };
     reader.readAsDataURL(file);
   });
 
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ filename: file.name, data: base64Data }),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || "Upload failed");
+  if (signal?.aborted) {
+    throw new DOMException("Upload aborted", "AbortError");
   }
 
-  const { path } = await res.json();
+  onProgress?.(20);
+
+  const path = await new Promise<string>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    let settled = false;
+
+    const resolveOnce = (value: string) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", abortUpload);
+      resolve(value);
+    };
+
+    const rejectOnce = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", abortUpload);
+      reject(error);
+    };
+
+    const abortUpload = () => {
+      try {
+        xhr.abort();
+      } catch {
+        // no-op
+      }
+      rejectOnce(new DOMException("Upload aborted", "AbortError"));
+    };
+
+    if (signal?.aborted) {
+      rejectOnce(new DOMException("Upload aborted", "AbortError"));
+      return;
+    }
+
+    signal?.addEventListener("abort", abortUpload, { once: true });
+
+    xhr.open("POST", "/api/upload");
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || event.total <= 0) return;
+      const networkProgress = (event.loaded / event.total) * 75;
+      onProgress?.(Math.min(95, Math.round(20 + networkProgress)));
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const payload = JSON.parse(xhr.responseText || "{}");
+          if (typeof payload.path === "string" && payload.path.length > 0) {
+            resolveOnce(payload.path);
+            return;
+          }
+          rejectOnce(new Error("Invalid upload response"));
+          return;
+        } catch {
+          rejectOnce(new Error("Invalid upload response"));
+          return;
+        }
+      }
+
+      try {
+        const payload = JSON.parse(xhr.responseText || "{}");
+        rejectOnce(new Error(payload.error || payload.message || "Upload failed"));
+      } catch {
+        rejectOnce(new Error("Upload failed"));
+      }
+    };
+
+    xhr.onerror = () => rejectOnce(new Error("Upload failed"));
+    xhr.onabort = () => rejectOnce(new DOMException("Upload aborted", "AbortError"));
+
+    xhr.send(JSON.stringify({ filename: file.name, data: base64Data, contentType: file.type }));
+  });
+
+  onProgress?.(100);
   return path;
 }
 
@@ -216,11 +347,15 @@ export function GallerySection() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
   const [isQuickUploading, setIsQuickUploading] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [uploadItems, setUploadItems] = useState<UploadProgressItem[]>([]);
   const [isDropzoneActive, setIsDropzoneActive] = useState(false);
   const [orderedImages, setOrderedImages] = useState<GalleryImage[]>([]);
   const [draggedImageId, setDraggedImageId] = useState<number | null>(null);
   const [dragOverImageId, setDragOverImageId] = useState<number | null>(null);
   const quickUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const uploadControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const isCancellingUploadsRef = useRef(false);
 
   const { data: images, isLoading } = useQuery<GalleryImage[]>({
     queryKey: ["/api/gallery"],
@@ -230,27 +365,125 @@ export function GallerySection() {
     setOrderedImages(images || []);
   }, [images]);
 
-  const uploadFiles = async (files: File[]) => {
-    if (files.length === 0) return;
+  const updateUploadItem = (id: string, patch: Partial<UploadProgressItem>) => {
+    setUploadItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
 
+  const cancelAllUploads = () => {
+    isCancellingUploadsRef.current = true;
+    uploadControllersRef.current.forEach((controller) => controller.abort());
+    uploadControllersRef.current.clear();
+    setUploadItems((prev) =>
+      prev.map((item) =>
+        item.status === "pending" || item.status === "uploading"
+          ? { ...item, status: "cancelled", error: "Upload cancelled" }
+          : item,
+      ),
+    );
+    setIsQuickUploading(false);
+    toast({
+      title: "Uploads cancelled",
+      description: "All in-progress uploads were stopped.",
+    });
+  };
+
+  const handleUploadProgressDialogOpenChange = (open: boolean) => {
+    if (!open && isQuickUploading) {
+      cancelAllUploads();
+    }
+    setIsUploadDialogOpen(open);
+  };
+
+  useEffect(() => {
+    return () => {
+      uploadControllersRef.current.forEach((controller) => controller.abort());
+      uploadControllersRef.current.clear();
+    };
+  }, []);
+
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0 || isQuickUploading) return;
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+
+    const batchId = Date.now().toString();
+    const pendingItems: UploadProgressItem[] = imageFiles.map((file, index) => ({
+      id: `${batchId}-${index}-${file.name}`,
+      fileName: file.name,
+      progress: 0,
+      status: "pending",
+    }));
+
+    isCancellingUploadsRef.current = false;
+    setUploadItems(pendingItems);
+    setIsUploadDialogOpen(true);
     setIsQuickUploading(true);
+
     try {
-      const uploadResults = await Promise.allSettled(
-        files.map(async (file) => {
-          const imagePath = await uploadFileToServer(file);
-          const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, "");
-          const body = {
-            title: nameWithoutExtension,
-            altText: nameWithoutExtension,
-            description: null,
-            imageUrl: imagePath,
-          };
-          await apiRequest("POST", "/api/gallery", body);
+      const outcomes = await Promise.all(
+        pendingItems.map(async (item, index) => {
+          const file = imageFiles[index];
+          const controller = new AbortController();
+          uploadControllersRef.current.set(item.id, controller);
+          updateUploadItem(item.id, { status: "uploading", progress: 5, error: undefined });
+
+          try {
+            const imagePath = await uploadFileToServer(file, {
+              signal: controller.signal,
+              onProgress: (progress) => {
+                updateUploadItem(item.id, {
+                  status: "uploading",
+                  progress: Math.min(100, Math.max(0, progress)),
+                });
+              },
+            });
+
+            if (controller.signal.aborted || isCancellingUploadsRef.current) {
+              updateUploadItem(item.id, { status: "cancelled", error: "Upload cancelled" });
+              return "cancelled" as const;
+            }
+
+            const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, "");
+            const res = await fetch("/api/gallery", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              signal: controller.signal,
+              body: JSON.stringify({
+                title: nameWithoutExtension,
+                altText: nameWithoutExtension,
+                description: null,
+                imageUrl: imagePath,
+              }),
+            });
+
+            if (!res.ok) {
+              const message = (await res.text()) || "Failed to save gallery image";
+              throw new Error(message);
+            }
+
+            updateUploadItem(item.id, { status: "success", progress: 100, error: undefined });
+            return "success" as const;
+          } catch (error: any) {
+            if (controller.signal.aborted || isCancellingUploadsRef.current || isAbortError(error)) {
+              updateUploadItem(item.id, { status: "cancelled", error: "Upload cancelled" });
+              return "cancelled" as const;
+            }
+
+            updateUploadItem(item.id, {
+              status: "error",
+              error: error?.message || "Upload failed",
+            });
+            return "error" as const;
+          } finally {
+            uploadControllersRef.current.delete(item.id);
+          }
         }),
       );
 
-      const successCount = uploadResults.filter((result) => result.status === "fulfilled").length;
-      const failedCount = uploadResults.length - successCount;
+      const successCount = outcomes.filter((status) => status === "success").length;
+      const failedCount = outcomes.filter((status) => status === "error").length;
+      const cancelledCount = outcomes.filter((status) => status === "cancelled").length;
 
       if (successCount > 0) {
         queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
@@ -266,8 +499,16 @@ export function GallerySection() {
           variant: "destructive",
         });
       }
+
+      if (cancelledCount > 0 && !isCancellingUploadsRef.current) {
+        toast({
+          title: cancelledCount === 1 ? "1 upload cancelled" : `${cancelledCount} uploads cancelled`,
+        });
+      }
     } finally {
       setIsQuickUploading(false);
+      setIsUploadDialogOpen(false);
+      isCancellingUploadsRef.current = false;
     }
   };
 
@@ -329,6 +570,46 @@ export function GallerySection() {
     },
   });
 
+  const deleteAllImages = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await apiRequest("DELETE", "/api/gallery");
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = (await res.json().catch(() => null)) as { deletedCount?: number } | null;
+          if (data) {
+            return data;
+          }
+        }
+      } catch {
+        // Fallback below for environments where bulk delete endpoint is unavailable.
+      }
+
+      const imageIds = orderedImages.map((image) => image.id);
+      if (imageIds.length === 0) {
+        return { deletedCount: 0 };
+      }
+
+      const results = await Promise.allSettled(imageIds.map((id) => apiRequest("DELETE", `/api/gallery/${id}`)));
+      const failedCount = results.filter((result) => result.status === "rejected").length;
+      const deletedCount = imageIds.length - failedCount;
+      if (failedCount > 0) {
+        throw new Error("Some images could not be deleted. Please try again.");
+      }
+      return { deletedCount };
+    },
+    onSuccess: ({ deletedCount }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
+      const count = typeof deletedCount === "number" ? deletedCount : orderedImages.length;
+      toast({
+        title: count === 1 ? "1 gallery image deleted" : `${count} gallery images deleted`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to delete all images", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleDropzoneDragOver = (e: DragEvent<HTMLDivElement>) => {
     if (!Array.from(e.dataTransfer.types).includes("Files")) return;
     e.preventDefault();
@@ -345,6 +626,10 @@ export function GallerySection() {
     if (!Array.from(e.dataTransfer.types).includes("Files")) return;
     e.preventDefault();
     setIsDropzoneActive(false);
+    if (isQuickUploading) {
+      setIsUploadDialogOpen(true);
+      return;
+    }
     const files = Array.from(e.dataTransfer.files || []).filter((file) => file.type.startsWith("image/"));
     await uploadFiles(files);
   };
@@ -378,6 +663,45 @@ export function GallerySection() {
     reorderImages.mutate(next.map((image) => image.id));
   };
 
+  const getUploadStatusLabel = (status: UploadStatus) => {
+    switch (status) {
+      case "pending":
+        return "Pending";
+      case "uploading":
+        return "Uploading";
+      case "success":
+        return "Done";
+      case "error":
+        return "Error";
+      case "cancelled":
+        return "Cancelled";
+      default:
+        return "Pending";
+    }
+  };
+
+  const getUploadStatusVariant = (status: UploadStatus) => {
+    switch (status) {
+      case "success":
+        return "success" as const;
+      case "error":
+        return "destructive" as const;
+      default:
+        return "secondary" as const;
+    }
+  };
+
+  const lightBlueBadgeClass =
+    "border-sky-200 bg-sky-100 text-sky-700 dark:border-sky-400/30 dark:bg-sky-500/15 dark:text-sky-300";
+  const borderlessOutlineButtonClass = "!border-0 !shadow-none hover:!border-0";
+
+  const getUploadStatusClass = (status: UploadStatus) => {
+    if (status === "pending" || status === "uploading" || status === "cancelled") {
+      return lightBlueBadgeClass;
+    }
+    return "";
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -396,17 +720,55 @@ export function GallerySection() {
           data-testid="input-gallery-quick-upload"
         />
 
-        <Button
-          onClick={() => {
-            setEditingImage(null);
-            quickUploadInputRef.current?.click();
-          }}
-          disabled={isQuickUploading}
-          data-testid="button-add-gallery-image"
-        >
-          {isQuickUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-          {isQuickUploading ? "Uploading..." : "Add Image"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                className={borderlessOutlineButtonClass}
+                disabled={isQuickUploading || deleteAllImages.isPending || orderedImages.length === 0}
+                data-testid="button-delete-all-gallery-images"
+              >
+                {deleteAllImages.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                )}
+                Delete All
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete all gallery images?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone and will remove every image from the website gallery.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => deleteAllImages.mutate()}
+                  variant="destructive"
+                  disabled={deleteAllImages.isPending}
+                >
+                  Delete All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Button
+            onClick={() => {
+              setEditingImage(null);
+              quickUploadInputRef.current?.click();
+            }}
+            disabled={isQuickUploading || deleteAllImages.isPending}
+            data-testid="button-add-gallery-image"
+          >
+            {isQuickUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+            {isQuickUploading ? "Uploading..." : "Add Image"}
+          </Button>
+        </div>
 
         <Dialog
           open={isDialogOpen}
@@ -439,13 +801,54 @@ export function GallerySection() {
         </Dialog>
       </div>
 
+      <Dialog open={isUploadDialogOpen} onOpenChange={handleUploadProgressDialogOpenChange}>
+        <DialogContent className="sm:max-w-2xl" data-testid="dialog-gallery-upload-progress">
+          <DialogHeader>
+            <DialogTitle>{isQuickUploading ? "Uploading Gallery Images" : "Upload Summary"}</DialogTitle>
+            <DialogDescription>
+              {isQuickUploading
+                ? "Click the X to stop all uploads in progress."
+                : "Review the result of each uploaded file."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+            {uploadItems.map((item) => (
+              <div key={item.id} className="rounded-md border border-border p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="min-w-0 flex-1 truncate text-sm font-medium">{item.fileName}</p>
+                  <Badge variant={getUploadStatusVariant(item.status)} className={getUploadStatusClass(item.status)}>
+                    {getUploadStatusLabel(item.status)}
+                  </Badge>
+                </div>
+                <Progress value={item.progress} className="h-2 bg-sky-100 dark:bg-slate-700" />
+                <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>{item.progress}%</span>
+                  {item.error ? <span className="truncate text-destructive">{item.error}</span> : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Card
         role="button"
         tabIndex={0}
-        onClick={() => quickUploadInputRef.current?.click()}
+        onClick={() => {
+          if (isQuickUploading) {
+            setIsUploadDialogOpen(true);
+            return;
+          }
+          quickUploadInputRef.current?.click();
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
+            if (isQuickUploading) {
+              setIsUploadDialogOpen(true);
+              return;
+            }
             quickUploadInputRef.current?.click();
           }
         }}
@@ -517,7 +920,9 @@ export function GallerySection() {
                     <h3 className="truncate font-semibold">{image.title || "Untitled image"}</h3>
                     <p className="text-xs text-muted-foreground line-clamp-2">{image.altText}</p>
                   </div>
-                  <Badge variant="secondary">#{image.id}</Badge>
+                  <Badge variant="secondary" className={lightBlueBadgeClass}>
+                    #{image.id}
+                  </Badge>
                 </div>
 
                 {image.description ? (
@@ -528,6 +933,7 @@ export function GallerySection() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className={borderlessOutlineButtonClass}
                     onClick={() => {
                       setEditingImage(image);
                       setIsDialogOpen(true);
@@ -540,7 +946,12 @@ export function GallerySection() {
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" data-testid={`button-delete-gallery-${image.id}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={borderlessOutlineButtonClass}
+                        data-testid={`button-delete-gallery-${image.id}`}
+                      >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </AlertDialogTrigger>
@@ -576,3 +987,4 @@ export function GallerySection() {
     </div>
   );
 }
+

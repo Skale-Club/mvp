@@ -25,10 +25,48 @@ function normalizeEmbedUrl(raw: string) {
   return trimmed;
 }
 
+function toEmbeddableMapUrl(rawUrl: string) {
+  if (!rawUrl) return "";
+
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.toLowerCase();
+    const isGoogleMapsHost = host.includes("google.");
+
+    // Already an embeddable URL.
+    if (url.pathname.includes("/maps/embed")) {
+      return url.toString();
+    }
+
+    if (!isGoogleMapsHost) {
+      return rawUrl;
+    }
+
+    // Pattern: /maps/@lat,lng,zoomz -> convert to q=lat,lng&z=zoom&output=embed
+    const atMatch = url.pathname.match(/\/maps\/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+(?:\.\d+)?)z/i);
+    if (atMatch) {
+      const [, lat, lng, zoom] = atMatch;
+      const parsedZoom = Number(zoom);
+      const safeZoom = Number.isFinite(parsedZoom)
+        ? Math.min(21, Math.max(1, Math.round(parsedZoom)))
+        : null;
+      const zoomQuery = safeZoom ? `&z=${safeZoom}` : "";
+      return `https://www.google.com/maps?output=embed&q=${lat},${lng}${zoomQuery}`;
+    }
+
+    // Generic Google Maps URL -> request embed mode.
+    url.searchParams.set("output", "embed");
+    return url.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
 export function AreasServedMap({ mapEmbedUrl, content }: AreasServedMapProps) {
   const sectionContent = content || {};
 
-  const embedUrl = normalizeEmbedUrl(mapEmbedUrl || "");
+  const normalizedUrl = normalizeEmbedUrl(mapEmbedUrl || "");
+  const embedUrl = toEmbeddableMapUrl(normalizedUrl);
 
   return (
     <div className="container-custom mx-auto">

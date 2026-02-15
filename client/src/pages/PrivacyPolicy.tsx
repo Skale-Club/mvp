@@ -7,8 +7,8 @@ export default function PrivacyPolicy() {
     queryKey: ['/api/company-settings'],
   });
 
-  const companyName = settings?.companyName || "Company Name";
-  const companyEmail = settings?.companyEmail || "contact@company.com";
+  const companyName = settings?.companyName?.trim() || "";
+  const companyEmail = settings?.companyEmail || "";
   const companyPhone = settings?.companyPhone || "";
   const companyAddress = settings?.companyAddress || "";
 
@@ -79,7 +79,7 @@ export default function PrivacyPolicy() {
             <p>We use the information we collect for various purposes, including:</p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
               <li><strong>Service Delivery:</strong> To schedule, provide, and manage your marketing services</li>
-              <li><strong>Communication:</strong> To send booking confirmations, reminders, and service updates</li>
+              <li><strong>Communication:</strong> To send project confirmations, reminders, and service updates</li>
               <li><strong>Customer Support:</strong> To respond to your inquiries and resolve issues</li>
               <li><strong>Payment Processing:</strong> To process transactions and send invoices</li>
               <li><strong>Improvement:</strong> To analyze usage patterns and improve our services</li>
@@ -95,7 +95,7 @@ export default function PrivacyPolicy() {
           >
             <p>We do not sell your personal information. We may share your information in the following circumstances:</p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
-              <li><strong>Service Providers:</strong> With trusted third parties who assist in operating our business (payment processors, scheduling software, email services)</li>
+              <li><strong>Service Providers:</strong> With trusted third parties who assist in operating our business (payment processors, project management tools, email services)</li>
               <li><strong>Team Members:</strong> With our staff to the extent necessary to provide the requested services</li>
               <li><strong>Legal Requirements:</strong> When required by law, court order, or government request</li>
               <li><strong>Business Transfers:</strong> In connection with a merger, acquisition, or sale of assets</li>

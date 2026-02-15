@@ -1,6 +1,6 @@
-# Design System - Skale Club
+# Design System - [companyname]
 
-Unified design system for the Skale Club platform, including brand identity, technical components, and guidelines for both public frontend and admin dashboard.
+Unified design system for the [companyname] platform, including brand identity, technical components, and guidelines for both public frontend and admin dashboard.
 
 **Last updated**: January 2026
 
@@ -21,7 +21,7 @@ Unified design system for the Skale Club platform, including brand identity, tec
 ## Brand Identity
 
 ### Core Essence
-Skale Club is a professional marketing service platform that emphasizes trust, quality, and ease of use.
+[companyname] is a professional marketing service platform that emphasizes trust, quality, and ease of use.
 
 ### Brand Voice
 - Simple, everyday language
@@ -622,4 +622,5 @@ Small `rounded-full` pills with colored backgrounds:
 ---
 
 **Last updated**: January 2026
-**Maintained by**: Skale Club Development Team
+**Maintained by**: [companyname] Development Team
+

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { Category, Service, ServicePost } from "@shared/schema";
+import type { ServicePost } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,17 +10,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, Image, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { clsx } from "clsx";
-import { getServicePostPath } from "@/lib/service-path";
+
 
 type ServicePostFormValues = {
   title: string;
@@ -106,7 +109,7 @@ async function uploadFileToServer(file: File): Promise<string> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ filename: file.name, data: base64Data }),
+    body: JSON.stringify({ filename: file.name, data: base64Data, contentType: file.type }),
   });
 
   if (!res.ok) {
@@ -128,36 +131,16 @@ export function ServicePostsSection() {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const lastContentRef = useRef("");
 
-  const [formValues, setFormValues] = useState<ServicePostFormValues>({
-    title: "",
-    slug: "",
-    status: "published",
-    excerpt: "",
-    content: "",
-    metaDescription: "",
-    focusKeyword: "",
-    featureImageUrl: "",
-  });
-
-  const { data: services } = useQuery<Service[]>({
-    queryKey: ["/api/services", { includeHidden: true }],
-    queryFn: () => fetch("/api/services?includeHidden=true").then((res) => res.json()),
-  });
-
-  const { data: categories } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
-
   const { data: posts, isLoading } = useQuery<ServicePost[]>({
     queryKey: ["/api/service-posts", "admin"],
     queryFn: () => fetch("/api/service-posts").then((res) => res.json()),
   });
-
-  const serviceById = useMemo(() => new Map((services || []).map((service) => [service.id, service])), [services]);
+  const postsList = Array.isArray(posts) ? posts : [];
 
   const resetCreateState = useCallback(() => {
     setCreateForm(CREATE_INITIAL_VALUES);
     setIsEditorExpanded(false);
+    setEditingPost(null);
     if (contentRef.current) {
       contentRef.current.innerHTML = "";
     }
@@ -166,16 +149,13 @@ export function ServicePostsSection() {
 
   const rows = useMemo(() => {
     const lower = search.toLowerCase();
-    return (posts || []).filter((post) => {
-      const service = serviceById.get(post.serviceId);
-      const serviceName = service?.name || "";
+    return postsList.filter((post) => {
       return (
         post.title.toLowerCase().includes(lower) ||
-        post.slug.toLowerCase().includes(lower) ||
-        serviceName.toLowerCase().includes(lower)
+        post.slug.toLowerCase().includes(lower)
       );
     });
-  }, [posts, serviceById, search]);
+  }, [postsList, search]);
 
   const syncEditorContent = useCallback(() => {
     if (!contentRef.current) return;
@@ -209,6 +189,26 @@ export function ServicePostsSection() {
     runEditorCommand("createLink", url);
   }, [runEditorCommand]);
 
+  const handleEditorImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imagePath = await uploadFileToServer(file);
+      if (contentRef.current) {
+        contentRef.current.focus();
+        document.execCommand("insertImage", false, imagePath);
+        syncEditorContent();
+      }
+      toast({ title: "Image inserted successfully" });
+    } catch (error: any) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+    }
+    
+    // Reset input
+    event.target.value = "";
+  };
+
   useEffect(() => {
     if (!isCreateOpen || !contentRef.current) return;
     if (createForm.content === lastContentRef.current) return;
@@ -219,12 +219,16 @@ export function ServicePostsSection() {
 
   const updatePost = useMutation({
     mutationFn: async ({ id, values }: { id: number; values: ServicePostFormValues }) => {
+      const cleanContent = values.content.trim();
+      const plainContent = stripHtml(cleanContent);
+      const excerpt = values.excerpt.trim() || plainContent.slice(0, 220) || values.title.trim();
+
       const payload = {
         title: values.title.trim(),
         slug: values.slug.trim(),
         status: values.status,
-        excerpt: values.excerpt.trim() || null,
-        content: values.content,
+        excerpt,
+        content: cleanContent,
         metaDescription: values.metaDescription.trim() || null,
         focusKeyword: values.focusKeyword.trim() || null,
         featureImageUrl: values.featureImageUrl.trim() || null,
@@ -243,61 +247,28 @@ export function ServicePostsSection() {
     },
   });
 
-  const createServiceWithPage = useMutation({
+  const deletePost = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/service-posts/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/service-posts"] });
+      toast({ title: "Service page deleted" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to delete service page", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const createServicePost = useMutation({
     mutationFn: async (values: CreateServiceFormValues) => {
       const cleanName = values.name.trim();
       const cleanSlug = slugify(values.slug || cleanName);
       const cleanContent = values.content.trim();
       const plainContent = stripHtml(cleanContent);
       const excerpt = values.metaDescription.trim() || plainContent.slice(0, 220) || cleanName;
-      let availableCategories = categories || [];
-      if (!availableCategories.length) {
-        const categoriesRes = await fetch("/api/categories", { credentials: "include" });
-        availableCategories = await parseJsonOrThrow<Category[]>(categoriesRes, "Failed to load categories.");
-      }
 
-      let defaultCategoryId = availableCategories?.[0]?.id;
-      if (!defaultCategoryId) {
-        try {
-          const fallbackCategoryName = "General";
-          const fallbackCategorySlug = "general";
-          const createdCategoryRes = await apiRequest("POST", "/api/categories", {
-            name: fallbackCategoryName,
-            slug: fallbackCategorySlug,
-            description: "Default category for service pages",
-            order: 0,
-          });
-          const createdCategory = await parseJsonOrThrow<Category>(createdCategoryRes, "Failed to create default category.");
-          defaultCategoryId = createdCategory.id;
-        } catch {
-          // If category already exists or creation fails due a race, try loading categories again.
-          const categoriesRes = await fetch("/api/categories", { credentials: "include" });
-          availableCategories = await parseJsonOrThrow<Category[]>(categoriesRes, "Failed to reload categories.");
-          defaultCategoryId = availableCategories?.[0]?.id;
-        }
-      }
-
-      if (!defaultCategoryId) {
-        throw new Error("Unable to resolve a category for this service.");
-      }
-
-      const serviceRes = await apiRequest("POST", "/api/services", {
-        name: cleanName,
-        categoryId: defaultCategoryId,
-        description: excerpt,
-        price: "0.00",
-        durationMinutes: 60,
-        imageUrl: values.featureImageUrl.trim() || null,
-      });
-      const service = await parseJsonOrThrow<Service>(serviceRes, "Failed to create service.");
-
-      const postRes = await fetch(`/api/services/${service.id}/post`, { credentials: "include" });
-      if (!postRes.ok) {
-        throw new Error("Failed to load the generated service page");
-      }
-      const { post } = await parseJsonOrThrow<{ post: ServicePost }>(postRes, "Failed to parse generated service page.");
-
-      await apiRequest("PUT", `/api/service-posts/${post.id}`, {
+      await apiRequest("POST", "/api/service-posts", {
         title: cleanName,
         slug: cleanSlug,
         status: values.status,
@@ -310,30 +281,33 @@ export function ServicePostsSection() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/services"] });
       queryClient.invalidateQueries({ queryKey: ["/api/service-posts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      toast({ title: "Service created successfully" });
+      toast({ title: "Service post created successfully" });
       setIsCreateOpen(false);
       resetCreateState();
     },
     onError: (error: Error) => {
-      toast({ title: "Failed to create service", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to create service post", description: error.message, variant: "destructive" });
     },
   });
 
   const openEditor = (post: ServicePost) => {
     setEditingPost(post);
-    setFormValues({
-      title: post.title || "",
+    setCreateForm({
+      name: post.title || "",
       slug: post.slug || "",
-      status: post.status || "draft",
-      excerpt: post.excerpt || "",
+      focusKeyword: post.focusKeyword || "",
       content: post.content || "",
       metaDescription: post.metaDescription || "",
-      focusKeyword: post.focusKeyword || "",
       featureImageUrl: post.featureImageUrl || "",
+      status: (post.status as "draft" | "published") || "draft",
     });
+
+    if (contentRef.current) {
+      contentRef.current.innerHTML = post.content || "";
+    }
+    lastContentRef.current = post.content || "";
+    setIsCreateOpen(true);
   };
 
   const handleCreateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -404,10 +378,26 @@ export function ServicePostsSection() {
           setCreateForm((prev) => ({ ...prev, content: normalizedContent }));
         }
 
-        createServiceWithPage.mutate({
-          ...createForm,
-          content: normalizedContent,
-        });
+        if (editingPost) {
+          updatePost.mutate({
+            id: editingPost.id,
+            values: {
+              title: createForm.name,
+              slug: createForm.slug,
+              status: createForm.status,
+              excerpt: createForm.metaDescription, // Use metaDescription as excerpt
+              content: normalizedContent,
+              metaDescription: createForm.metaDescription,
+              focusKeyword: createForm.focusKeyword,
+              featureImageUrl: createForm.featureImageUrl,
+            },
+          });
+        } else {
+          createServicePost.mutate({
+            ...createForm,
+            content: normalizedContent,
+          });
+        }
       }}
     >
       <div className="grid gap-4 md:grid-cols-3">
@@ -420,7 +410,7 @@ export function ServicePostsSection() {
               setCreateForm((prev) => ({
                 ...prev,
                 name: e.target.value,
-                slug: prev.slug || slugify(e.target.value),
+                slug: editingPost ? prev.slug : (prev.slug || slugify(e.target.value)), // Don't auto-update slug on edit unless empty
               }))
             }
             placeholder="Enter service title"
@@ -485,6 +475,13 @@ export function ServicePostsSection() {
             <button type="button" onClick={() => runEditorCommand("insertUnorderedList")} className="rounded-md px-2 py-1 text-xs text-foreground hover:bg-muted">UL</button>
             <button type="button" onClick={() => runEditorCommand("insertOrderedList")} className="rounded-md px-2 py-1 text-xs text-foreground hover:bg-muted">OL</button>
             <button type="button" onClick={insertEditorLink} className="rounded-md px-2 py-1 text-xs text-foreground hover:bg-muted">Link</button>
+            <button
+              type="button"
+              onClick={() => document.getElementById("editorImageUpload")?.click()}
+              className="rounded-md px-2 py-1 text-xs text-foreground hover:bg-muted"
+            >
+              Img
+            </button>
             <button type="button" onClick={() => runEditorCommand("removeFormat")} className="rounded-md px-2 py-1 text-xs text-foreground hover:bg-muted">Clear</button>
             <button
               type="button"
@@ -572,6 +569,13 @@ export function ServicePostsSection() {
               className="hidden"
               data-testid="input-service-create-feature-image"
             />
+            <input
+              id="editorImageUpload"
+              type="file"
+              accept="image/*"
+              onChange={handleEditorImageUpload}
+              className="hidden"
+            />
           </div>
         </div>
       </div>
@@ -616,14 +620,15 @@ export function ServicePostsSection() {
           <Button
             type="submit"
             disabled={
-              createServiceWithPage.isPending ||
+              createServicePost.isPending ||
+              updatePost.isPending ||
               !createForm.name.trim() ||
               !createForm.slug.trim()
             }
             data-testid="button-service-create-submit"
           >
-            {createServiceWithPage.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Create Service
+            {createServicePost.isPending || updatePost.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {editingPost ? "Save Changes" : "Create Service Post"}
           </Button>
         </div>
       </div>
@@ -644,7 +649,7 @@ export function ServicePostsSection() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Services
             </Button>
-            <h1 className="text-2xl font-bold">Create New Service</h1>
+            <h1 className="text-2xl font-bold">{editingPost ? "Edit Service" : "Create New Service"}</h1>
           </div>
         </div>
         <div className="space-y-6 rounded-lg bg-muted p-4 transition-all sm:p-6">{renderCreateServiceForm()}</div>
@@ -686,20 +691,28 @@ export function ServicePostsSection() {
 
         {rows.length > 0 ? (
           <div className="divide-y divide-border">
-            {rows.map((post) => {
-              const service = serviceById.get(post.serviceId);
-              return (
-                <div key={post.id} className="p-4">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {rows.map((post) => (
+              <div key={post.id} className="p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-4 min-w-0">
+                    {post.featureImageUrl && (
+                      <div className="h-16 w-[5.33rem] shrink-0 overflow-hidden rounded-md border bg-muted">
+                        <img
+                          src={post.featureImageUrl}
+                          alt={post.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <h3 className="truncate text-lg font-semibold">{post.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Service: {service?.name || `Service #${post.serviceId}`} | Slug: /services/{post.serviceId}/{post.slug}
+                        Slug: /services/{post.slug}
                       </p>
                       <div className="mt-2 flex items-center gap-2">
                         <Badge variant={post.status === "published" ? "default" : "secondary"}>{post.status}</Badge>
                         <a
-                          href={getServicePostPath(post.serviceId, post.slug)}
+                          href={`/services/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm font-medium text-primary hover:underline"
@@ -708,15 +721,43 @@ export function ServicePostsSection() {
                         </a>
                       </div>
                     </div>
+                  </div>
 
+                  <div className="flex gap-2">
                     <Button variant="outline" onClick={() => openEditor(post)} data-testid={`button-edit-service-post-${post.id}`}>
                       <Pencil className="mr-2 h-4 w-4" />
                       Edit
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" className="text-destructive hover:text-destructive" data-testid={`button-delete-service-post-${post.id}`}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Service Page</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{post.title}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deletePost.mutate(post.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {deletePost.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="p-12 text-center">
@@ -726,126 +767,7 @@ export function ServicePostsSection() {
           </div>
         )}
       </div>
-
-      <Dialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Service Page</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="service-post-title">Title *</Label>
-              <Input
-                id="service-post-title"
-                value={formValues.title}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormValues((prev) => ({
-                    ...prev,
-                    title: value,
-                    slug: prev.slug || slugify(value),
-                  }));
-                }}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="service-post-slug">Slug *</Label>
-              <Input
-                id="service-post-slug"
-                value={formValues.slug}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, slug: slugify(e.target.value) }))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={formValues.status} onValueChange={(value) => setFormValues((prev) => ({ ...prev, status: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="service-post-excerpt">Excerpt</Label>
-              <Textarea
-                id="service-post-excerpt"
-                value={formValues.excerpt}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, excerpt: e.target.value }))}
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="service-post-content">Content (HTML supported) *</Label>
-              <Textarea
-                id="service-post-content"
-                value={formValues.content}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, content: e.target.value }))}
-                rows={12}
-                required
-              />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="service-post-meta-description">Meta Description</Label>
-                <Textarea
-                  id="service-post-meta-description"
-                  value={formValues.metaDescription}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, metaDescription: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="service-post-keyword">Focus Keyword</Label>
-                <Input
-                  id="service-post-keyword"
-                  value={formValues.focusKeyword}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, focusKeyword: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="service-post-feature-image">Feature Image URL</Label>
-              <Input
-                id="service-post-feature-image"
-                value={formValues.featureImageUrl}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, featureImageUrl: e.target.value }))}
-                placeholder="https://..."
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" type="button">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button
-              onClick={() => {
-                if (!editingPost) return;
-                updatePost.mutate({ id: editingPost.id, values: formValues });
-              }}
-              disabled={updatePost.isPending || !formValues.title.trim() || !formValues.slug.trim() || !formValues.content.trim()}
-            >
-              {updatePost.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
+

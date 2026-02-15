@@ -1,8 +1,8 @@
-# Skale Club - Service Booking Platform
+# [companyname] - Service Booking Platform
 
 ## Overview
 
-This is a full-stack service booking application for a marketing company (Skale Club) built with React, Express, and PostgreSQL. The platform allows customers to browse marketing services by category, add multiple services to a cart, select available time slots based on total service duration, and complete bookings with customer details. It includes an admin dashboard for viewing and managing bookings.
+This is a full-stack service booking application for a marketing company ([companyname]) built with React, Express, and PostgreSQL. The platform allows customers to browse marketing services by category, add multiple services to a cart, select available time slots based on total service duration, and complete bookings with customer details. It includes an admin dashboard for viewing and managing bookings.
 
 ## User Preferences
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Skale Club is a full-stack service booking platform for a marketing company. Customers browse services by category, add to cart, select available time slots, and complete bookings. Includes admin dashboard and GoHighLevel CRM integration.
+[companyname] is a full-stack service booking platform for a marketing company. Customers browse services by category, add to cart, select available time slots, and complete bookings. Includes admin dashboard and GoHighLevel CRM integration.
 
 ## Commands
 
@@ -76,3 +76,4 @@ Required:
 - **Colors**: Primary Blue `#1C53A3`, Brand Yellow `#FFFF01` (for CTAs)
 - **Fonts**: Outfit (headings), Inter (body)
 - **CTA Buttons**: Brand Yellow with black bold text, pill-shaped (`rounded-full`)
+

@@ -1,17 +1,45 @@
 import type { Express, Request, Response } from "express";
 
+const MIME_BY_EXTENSION: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  svg: "image/svg+xml",
+  ico: "image/x-icon",
+  avif: "image/avif",
+};
+
+function resolveContentType(filename: string, providedType?: string): string | undefined {
+  if (providedType && providedType.includes("/")) {
+    return providedType;
+  }
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  return MIME_BY_EXTENSION[ext];
+}
+
 export async function registerStorageRoutes(app: Express, requireAdmin: any) {
   const { SupabaseStorageService } = await import("./supabaseStorage.js");
   const storageService = new SupabaseStorageService();
 
   const handleUpload = async (req: Request, res: Response) => {
     try {
-      const { filename, data } = req.body;
+      const { filename, data, contentType } = req.body;
       if (!filename || !data) {
         return res.status(400).json({ error: "Missing filename or data" });
       }
-      const buffer = Buffer.from(data, 'base64');
-      const publicUrl = await storageService.uploadBuffer(buffer, filename);
+      const base64Data = typeof data === "string" ? data.split(",").pop() : "";
+      if (!base64Data) {
+        return res.status(400).json({ error: "Invalid base64 payload" });
+      }
+
+      const buffer = Buffer.from(base64Data, "base64");
+      const publicUrl = await storageService.uploadBuffer(
+        buffer,
+        filename,
+        resolveContentType(filename, contentType),
+      );
       res.json({ path: publicUrl });
     } catch (error) {
       console.error("Upload error:", error);

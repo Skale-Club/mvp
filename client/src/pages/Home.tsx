@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useCategories, useServices } from "@/hooks/use-booking";
-import { Link, useLocation } from "wouter";
+
+import { Link } from "wouter";
 import { ArrowRight, Star, Shield, Clock, Sparkles, Heart, BadgeCheck, ThumbsUp, Trophy, Calendar, FileText, ImageIcon } from "lucide-react";
 import { AboutSection } from "@/components/AboutSection";
 import { AreasServedMap } from "@/components/AreasServedMap";
 import { useQuery } from "@tanstack/react-query";
-import type { CompanySettings, BlogPost, HomepageContent, Service, ServicePost, GalleryImage } from "@shared/schema";
+import type { CompanySettings, BlogPost, HomepageContent, ServicePost, GalleryImage } from "@shared/schema";
 import { format } from "date-fns";
 import { trackCTAClick } from "@/lib/analytics";
 import { LeadFormModal } from "@/components/LeadFormModal";
@@ -105,23 +105,20 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
 }
 
 export default function Home() {
-  const { data: categories, isLoading: isCategoriesLoading } = useCategories();
-  const { data: services, isLoading: isServicesLoading } = useServices();
-  const [, setLocation] = useLocation();
   const { data: companySettings } = useQuery<CompanySettings>({
     queryKey: ['/api/company-settings'],
   });
   const { data: galleryPreview } = useQuery<GalleryImage[]>({
-    queryKey: ['/api/gallery', 'home', 12],
-    queryFn: () => fetch('/api/gallery?limit=12').then((res) => res.json()),
+    queryKey: ['/api/gallery', 'home', 8],
+    queryFn: () => fetch('/api/gallery?limit=8').then((res) => res.json()),
   });
   const { data: servicePosts } = useQuery<ServicePost[]>({
     queryKey: ['/api/service-posts', 'published', 12, 0],
     queryFn: () => fetch('/api/service-posts?status=published&limit=12&offset=0').then((res) => res.json()),
   });
+  const servicePostsList = Array.isArray(servicePosts) ? servicePosts : [];
 
-  const isLoading = isCategoriesLoading || isServicesLoading;
-  const consultingStepsSection: HomepageContent["consultingStepsSection"] = companySettings?.homepageContent?.consultingStepsSection || { enabled: false, steps: [] };
+const consultingStepsSection: HomepageContent["consultingStepsSection"] = companySettings?.homepageContent?.consultingStepsSection || { enabled: false, steps: [] };
   const homepageContent: Partial<HomepageContent> = companySettings?.homepageContent || {};
   const areasServedSection: HomepageContent["areasServedSection"] = {
     ...DEFAULT_HOMEPAGE_CONTENT.areasServedSection,
@@ -145,18 +142,13 @@ export default function Home() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const heroImageUrl = (companySettings?.heroImageUrl || '').trim();
+  const hasHeroImage = heroImageUrl.length > 0;
+  const heroBackgroundImageUrl = (companySettings?.heroBackgroundImageUrl || '').trim();
+
   const handleConsultingCta = () => {
     setIsFormOpen(true);
     trackCTAClick('consulting-steps', consultingStepsSection.ctaButtonLabel || '{companySettings?.ctaText || ""}');
   };
-  const handleCategoryClick = (categoryId: number) => {
-    setLocation(`/services?category=${categoryId}&scroll=true`);
-  };
-
-  // Filter categories that have at least one service
-  const activeCategories = categories?.filter(category =>
-    services?.some(service => service.categoryId === category.id)
-  );
 
   // Handle hash navigation on mount (e.g., /#about)
   useEffect(() => {
@@ -192,10 +184,10 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative flex items-center lg:items-end pt-16 sm:pt-20 lg:pt-16 pb-12 sm:pb-16 lg:pb-20 overflow-hidden bg-[#1C53A3] min-h-[65vh] sm:min-h-[50vh] lg:min-h-[500px] xl:min-h-[550px]">
         <div className="container-custom mx-auto relative z-10 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 sm:gap-6 lg:gap-8 items-center lg:items-center">
-            <div className="order-1 lg:order-2 text-white pt-6 sm:pt-8 lg:pt-16 pb-1 sm:pb-5 lg:pb-[5.5rem] lg:translate-y-0 relative z-20">
+          <div className={hasHeroImage ? "grid grid-cols-1 lg:grid-cols-2 gap-1 sm:gap-6 lg:gap-8 items-center lg:items-center" : "grid grid-cols-1 place-items-center"}>
+            <div className={hasHeroImage ? "order-1 lg:order-2 text-white pt-6 sm:pt-8 lg:pt-16 pb-1 sm:pb-5 lg:pb-[5.5rem] lg:translate-y-0 relative z-20" : "order-1 text-white pt-6 sm:pt-8 pb-1 sm:pb-5 relative z-20 w-full max-w-4xl text-center"}>
               {homepageContent.heroBadgeImageUrl ? (
-                <div className="mt-4 sm:mt-0 mb-3 lg:mb-6">
+                <div className={hasHeroImage ? "mt-4 sm:mt-0 mb-3 lg:mb-6" : "mt-4 sm:mt-0 mb-3 lg:mb-6 flex justify-center"}>
                   <img
                     src={homepageContent.heroBadgeImageUrl}
                     alt={homepageContent.heroBadgeAlt || ''}
@@ -208,10 +200,10 @@ export default function Home() {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{companySettings.heroTitle}</span>
                 ) : null}
               </h1>
-              <p className="text-base sm:text-xl text-blue-50/80 mb-4 lg:mb-8 leading-relaxed max-w-xl">
+              <p className={hasHeroImage ? "text-base sm:text-xl text-blue-50/80 mb-4 lg:mb-8 leading-relaxed max-w-xl" : "text-base sm:text-xl text-blue-50/80 mb-4 lg:mb-8 leading-relaxed max-w-xl mx-auto"}>
                 {companySettings?.heroSubtitle || ""}
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 lg:gap-5 flex-wrap">
+              <div className={hasHeroImage ? "flex flex-col sm:flex-row gap-3 lg:gap-5 flex-wrap" : "flex flex-col sm:flex-row gap-3 lg:gap-5 flex-wrap justify-center"}>
                 {companySettings?.ctaText ? (
                   <button
                     data-form-trigger="lead-form"
@@ -227,17 +219,15 @@ export default function Home() {
                 ) : null}
               </div>
             </div>
-            <div className="order-2 lg:order-1 relative flex h-full items-end justify-center lg:justify-end self-end w-full lg:min-h-[400px] z-10 lg:ml-[-3%] mt-0 sm:mt-0 lg:-mt-10">
-              {heroImageUrl ? (
+            {hasHeroImage ? (
+              <div className="order-2 lg:order-1 relative flex h-full items-end justify-center lg:justify-end self-end w-full lg:min-h-[400px] z-10 lg:ml-[-3%] mt-0 sm:mt-0 lg:-mt-10">
                 <img
                   src={heroImageUrl}
                   alt={companySettings?.companyName || ""}
                   className="w-[92vw] sm:w-[98%] lg:w-full max-w-[380px] sm:max-w-[360px] md:max-w-[430px] lg:max-w-[500px] xl:max-w-[560px] object-contain drop-shadow-2xl -translate-y-[2%] sm:-translate-y-[1%] lg:translate-y-[0%] scale-100 sm:scale-100 lg:scale-98 origin-bottom"
                 />
-              ) : (
-                <div className="w-[92vw] sm:w-[98%] lg:w-full max-w-[380px] sm:max-w-[360px] md:max-w-[430px] lg:max-w-[500px] xl:max-w-[560px]" />
-              )}
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -245,8 +235,9 @@ export default function Home() {
         <div
           className="absolute inset-0"
           style={{
-            background: `
-              linear-gradient(
+            background: heroBackgroundImageUrl
+              ? `linear-gradient(to right bottom, rgba(9, 21, 45, 0.9), rgba(11, 21, 42, 0.9)), url(${heroBackgroundImageUrl}) center/cover no-repeat`
+              : `linear-gradient(
                 to right bottom,
                 #09152d,
                 #0b152a,
@@ -260,16 +251,15 @@ export default function Home() {
                 #21202e,
                 #262332,
                 #2c2637
-              )
-            `
+              )`
           }}
         ></div>
       </section>
       {/* Trust Badges */}
       {trustBadges.length > 0 && (
-      <section className="relative z-20 -mt-16 sm:-mt-16 lg:-mt-24 bg-transparent">
+      <section className="relative z-20 -mt-8 sm:-mt-12 lg:-mt-16 bg-transparent">
         <div className="container-custom mx-auto relative">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100 overflow-hidden relative z-30 -translate-y-10 sm:-translate-y-6 lg:-translate-y-8">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100 overflow-hidden relative z-30">
             {trustBadges.map((feature, i) => {
               const iconKey = (feature.icon || '').toLowerCase();
               const Icon = badgeIconMap[iconKey] || badgeIconMap.star || Star;
@@ -294,14 +284,6 @@ export default function Home() {
         section={consultingStepsSection}
         onCtaClick={handleConsultingCta}
       />
-      )}
-      {(companySettings?.mapEmbedUrl || homepageContent.areasServedSection?.heading || homepageContent.areasServedSection?.description) && (
-      <section id="areas-served" className="bg-white py-20">
-        <AreasServedMap
-          mapEmbedUrl={companySettings?.mapEmbedUrl}
-          content={areasServedSection}
-        />
-      </section>
       )}
       <div className="h-0 bg-[#111111]"></div>
       {/* Reviews Section */}
@@ -338,7 +320,7 @@ export default function Home() {
         </div>
       </section>
       )}
-      <ServicesCarouselSection posts={servicePosts || []} services={services || []} />
+      <ServicesCarouselSection posts={servicePostsList} />
       <GalleryShowcaseSection images={galleryPreview || []} />
       <BlogSection content={homepageContent.blogSection} />
       {(companySettings?.aboutImageUrl || homepageContent.aboutSection?.description || (homepageContent.aboutSection?.highlights && homepageContent.aboutSection.highlights.length > 0)) && (
@@ -349,26 +331,60 @@ export default function Home() {
         />
       </section>
       )}
+      {(companySettings?.mapEmbedUrl || homepageContent.areasServedSection?.heading || homepageContent.areasServedSection?.description) && (
+      <section id="areas-served" className="bg-white py-20">
+        <AreasServedMap
+          mapEmbedUrl={companySettings?.mapEmbedUrl}
+          content={areasServedSection}
+        />
+      </section>
+      )}
       <LeadFormModal open={isFormOpen} onClose={() => setIsFormOpen(false)} />
     </div>
   );
 }
 
-function ServicesCarouselSection({ posts, services }: { posts: ServicePost[]; services: Service[] }) {
+function ServiceCard({ post }: { post: ServicePost }) {
+  return (
+    <Link
+      href={getServicePostPath(post.id, post.slug)}
+      className="group block h-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+      data-testid={`link-home-service-post-${post.id}`}
+    >
+      {post.featureImageUrl ? (
+        <img src={post.featureImageUrl} alt={post.title} className="aspect-[4/3] w-full object-cover" />
+      ) : (
+        <div className="flex aspect-[4/3] items-center justify-center bg-slate-100">
+          <ImageIcon className="h-10 w-10 text-slate-400" />
+        </div>
+      )}
+      <div className="space-y-3 p-5">
+        <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors">
+          {post.title}
+        </h3>
+        <p className="line-clamp-2 text-sm text-slate-600">
+          {post.excerpt || "Professional service tailored to your needs."}
+        </p>
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+          View service page
+          <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function ServicesCarouselSection({ posts }: { posts: ServicePost[] }) {
   const [api, setApi] = useState<CarouselApi>();
-  const serviceById = new Map(services.map((service) => [service.id, service]));
-  const featuredPosts = posts
+  const safePosts = Array.isArray(posts) ? posts : [];
+  const featuredPosts = safePosts
     .filter((post) => post.status === "published")
-    .map((post) => {
-      const service = serviceById.get(post.serviceId);
-      if (!service || service.isHidden) return null;
-      return { post, service };
-    })
-    .filter((item): item is { post: ServicePost; service: Service } => !!item)
     .slice(0, 12);
 
+  const enableCarousel = featuredPosts.length > 3;
+
   useEffect(() => {
-    if (!api || featuredPosts.length <= 1) return;
+    if (!api || !enableCarousel) return;
     const interval = setInterval(() => {
       if (api.canScrollNext()) {
         api.scrollNext();
@@ -377,7 +393,7 @@ function ServicesCarouselSection({ posts, services }: { posts: ServicePost[]; se
       }
     }, 4500);
     return () => clearInterval(interval);
-  }, [api, featuredPosts.length]);
+  }, [api, enableCarousel]);
 
   if (featuredPosts.length === 0) return null;
 
@@ -395,50 +411,32 @@ function ServicesCarouselSection({ posts, services }: { posts: ServicePost[]; se
           </Link>
         </div>
 
-        <Carousel
-          setApi={setApi}
-          opts={{
-            align: "start",
-            loop: featuredPosts.length > 3,
-          }}
-          className="w-full"
-        >
-          <CarouselContent>
-            {featuredPosts.map(({ post, service }) => (
-              <CarouselItem key={post.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
-                <Link
-                  href={getServicePostPath(service.id, post.slug)}
-                  className="group block h-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
-                  data-testid={`link-home-service-post-${post.id}`}
-                >
-                  {(post.featureImageUrl || service.imageUrl) ? (
-                    <img src={post.featureImageUrl || service.imageUrl || ""} alt={post.title} className="aspect-[4/3] w-full object-cover" />
-                  ) : (
-                    <div className="flex aspect-[4/3] items-center justify-center bg-slate-100">
-                      <ImageIcon className="h-10 w-10 text-slate-400" />
-                    </div>
-                  )}
-                  <div className="space-y-3 p-5">
-                    <div className="flex items-center justify-between text-sm text-slate-500">
-                      <span>{service.durationMinutes} mins</span>
-                      <span className="font-semibold text-primary">${service.price}</span>
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h3>
-                    <p className="line-clamp-2 text-sm text-slate-600">
-                      {post.excerpt || service.description || "Professional service tailored to your needs."}
-                    </p>
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                      View service page
-                      <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </Link>
-              </CarouselItem>
+        {enableCarousel ? (
+          <Carousel
+            setApi={setApi}
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {featuredPosts.map((post) => (
+                <CarouselItem key={post.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
+                  <ServiceCard post={post} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-6">
+            {featuredPosts.map((post) => (
+              <div key={post.id} className="w-full max-w-md sm:w-[calc(50%-12px)] lg:w-[calc(33.33%-16px)]">
+                <ServiceCard post={post} />
+              </div>
             ))}
-          </CarouselContent>
-        </Carousel>
+          </div>
+        )}
 
         <div className="mt-8 text-center md:hidden">
           <Link href="/services" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-white hover:bg-primary/90">
@@ -469,7 +467,7 @@ function GalleryShowcaseSection({ images }: { images: GalleryImage[] }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {images.slice(0, 12).map((image) => (
+          {images.slice(0, 8).map((image) => (
             <Link
               key={image.id}
               href="/gallery"

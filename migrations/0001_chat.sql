@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS "chat_settings" (
   "id" serial PRIMARY KEY,
   "enabled" boolean DEFAULT false,
-  "agent_name" text DEFAULT 'Company Assistant',
+  "agent_name" text DEFAULT '',
   "welcome_message" text DEFAULT 'Hi! How can I help you today?',
   "excluded_url_rules" jsonb DEFAULT '[]',
   "updated_at" timestamp DEFAULT now()

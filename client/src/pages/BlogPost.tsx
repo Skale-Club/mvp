@@ -13,11 +13,10 @@ import {
   Facebook, 
   Twitter, 
   Linkedin,
-  Share2,
-  ImageIcon
+  Share2
 } from 'lucide-react';
 import { format } from 'date-fns';
-import type { BlogPost, Service, CompanySettings } from '@shared/schema';
+import type { BlogPost, CompanySettings } from '@shared/schema';
 
 export default function BlogPostPage() {
   const params = useParams<{ slug: string }>();
@@ -33,12 +32,6 @@ export default function BlogPostPage() {
   const { data: relatedPosts } = useQuery<BlogPost[]>({
     queryKey: ['/api/blog', post?.id, 'related'],
     queryFn: () => fetch(`/api/blog/${post?.id}/related?limit=2`).then(r => r.json()),
-    enabled: !!post?.id,
-  });
-
-  const { data: relatedServices } = useQuery<Service[]>({
-    queryKey: ['/api/blog', post?.id, 'services'],
-    queryFn: () => fetch(`/api/blog/${post?.id}/services`).then(r => r.json()),
     enabled: !!post?.id,
   });
 
@@ -116,7 +109,7 @@ export default function BlogPostPage() {
   return (
     <div className="min-h-screen bg-background">
       <article>
-        <div className="bg-primary/5 py-8 md:py-12">
+        <div className="bg-primary/5 pt-32 pb-10">
           <div className="container-custom">
             <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4" data-testid="nav-post-breadcrumb">
               <Link href="/" className="hover:text-primary">Home</Link>
@@ -145,11 +138,6 @@ export default function BlogPostPage() {
                   <User className="w-4 h-4" />
                   <span data-testid="text-post-author">{post.authorName}</span>
                 </div>
-              )}
-              {post.focusKeyword && (
-                <Badge variant="secondary" data-testid="badge-post-keyword">
-                  {post.focusKeyword}
-                </Badge>
               )}
             </div>
           </div>
@@ -270,55 +258,17 @@ export default function BlogPostPage() {
                   </Card>
                 )}
 
-                {relatedServices && relatedServices.length > 0 && (
-                  <Card className="border-0 shadow-none rounded-none bg-transparent p-0 pt-8">
-                    <CardHeader className="p-0 pb-3">
-                      <CardTitle className="text-lg" data-testid="text-related-services-title">
-                        Related Services
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4 p-0">
-                      {relatedServices.map(service => (
-                        <div key={service.id} className="flex gap-3 items-stretch" data-testid={`card-service-${service.id}`}>
-                          {service.imageUrl ? (
-                            <div className="w-20 aspect-[4/3] overflow-hidden rounded flex-shrink-0">
-                              <img
-                                src={service.imageUrl}
-                                alt={service.name}
-                                className="w-full h-full object-cover"
-                                data-testid={`img-service-${service.id}`}
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-20 aspect-[4/3] bg-muted rounded flex items-center justify-center flex-shrink-0">
-                              <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0 flex flex-col">
-                            <h4 className="text-base font-semibold text-foreground line-clamp-1" data-testid={`text-service-name-${service.id}`}>
-                              {service.name}
-                            </h4>
-                            <p className="text-sm font-bold text-primary" data-testid={`text-service-price-${service.id}`}>
-                              ${service.price}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-
                 <Card className="border-0 shadow-none rounded-none bg-transparent p-0 pt-8">
                   <CardHeader className="p-0 pb-3">
-                    <CardTitle className="text-lg">Need Marketing Services?</CardTitle>
+                    <CardTitle className="text-lg">Ready to Renovate?</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
                     <p className="text-sm text-muted-foreground mb-4">
-                      Book our professional marketing services today and watch your business grow.
+                      Transform your home with our expert remodeling services. Contact us today for a free consultation.
                     </p>
-                    <Link href="/services">
-                      <Button className="w-full" data-testid="button-browse-services">
-                        Browse Services
+                    <Link href="/contact">
+                      <Button className="w-full" data-testid="button-get-quote">
+                        Get a Free Quote
                       </Button>
                     </Link>
                   </CardContent>
@@ -344,7 +294,7 @@ export default function BlogPostPage() {
           },
           "publisher": {
             "@type": "Organization",
-            "name": settings?.companyName || "Company Name",
+            "name": settings?.companyName?.trim() || "",
             "logo": {
               "@type": "ImageObject",
               "url": settings?.logoMain || ""

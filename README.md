@@ -1,4 +1,4 @@
-# Skale Club
+# [companyname]
 
 A full-stack service booking platform for a marketing company. Customers can browse services by category, add items to cart, select available time slots, and complete bookings. Includes an admin dashboard and GoHighLevel CRM integration.
 
@@ -114,3 +114,4 @@ shared/
 ## License
 
 MIT
+

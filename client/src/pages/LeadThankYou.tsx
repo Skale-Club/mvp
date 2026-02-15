@@ -10,7 +10,7 @@ export default function LeadThankYou() {
     queryKey: ["/api/company-settings"],
   });
 
-  const companyName = companySettings?.companyName || "Company Name";
+  const companyName = companySettings?.companyName?.trim() || "";
   const headline = `Obrigado por confiar no ${companyName}.`;
 
   const heroGradient = `

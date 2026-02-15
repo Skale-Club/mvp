@@ -4,7 +4,7 @@
 
 The application displayed a **FODC (Flash of Default Content)** for ~2 seconds after loading:
 
-- **Browser tab**: "Skale Club | Your 5-Star Marketing Company" → then changed to the correct title
+- **Browser tab**: "[companyname] | Your 5-Star Marketing Company" → then changed to the correct title
 - **Cause**: Hardcoded values in `index.html` while React Query fetched real data
 
 ## ✅ Implemented Solution
@@ -35,7 +35,7 @@ The application displayed a **FODC (Flash of Default Content)** for ~2 seconds a
 
 #### 1. **[client/index.html](../client/index.html)**
 ```diff
-- <title>Skale Club | Your 5-Star Marketing Company</title>
+- <title>[companyname] | Your 5-Star Marketing Company</title>
 - <meta name="description" content="Professional marketing services..." />
 + <!-- SEO meta tags are injected at build time -->
 + <title>Loading...</title>
@@ -109,7 +109,7 @@ building client...
 ✅ SEO data fetched successfully
 📄 Reading index.html...
 ✏️  Injecting SEO data:
-   - Title: Skale Club
+   - Title: [companyname]
    - Description: Professional marketing...
 ✅ SEO data injected successfully!
 ```
@@ -134,7 +134,7 @@ npm start
 ```bash
 curl -s http://localhost:5000 | grep "<title>"
 ```
-**Expected:** `<title>Skale Club</title>` (or the value in database)
+**Expected:** `<title>[companyname]</title>` (or the value in database)
 
 ## 📊 Benefits
 
@@ -207,4 +207,5 @@ tsx scripts/inject-seo-build.ts
 ---
 
 **Implemented on:** 2026-01-24
-**Maintained by:** Skale Club Team
+**Maintained by:** [companyname] Team
+

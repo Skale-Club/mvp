@@ -1,13 +1,13 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { CompanySettings } from "@shared/schema";
-import { 
-  SiFacebook, 
-  SiInstagram, 
-  SiX, 
-  SiYoutube, 
-  SiLinkedin, 
-  SiTiktok 
+import {
+  SiFacebook,
+  SiInstagram,
+  SiX,
+  SiYoutube,
+  SiLinkedin,
+  SiTiktok
 } from "react-icons/si";
 
 const platformIcons: Record<string, any> = {
@@ -40,13 +40,13 @@ export function Footer() {
               <img
                 src={companySettings.logoDark}
                 alt={companyName}
-                className="h-auto w-[54px] object-contain p-1.5"
+                className="h-16 w-auto object-contain p-1"
               />
             ) : companySettings?.logoIcon ? (
               <img
                 src={companySettings.logoIcon}
                 alt={companyName}
-                className="h-auto w-[54px] object-contain p-1.5 brightness-0 invert"
+                className="h-16 w-auto object-contain p-1 brightness-0 invert"
               />
             ) : (
               companyName ? <span className="text-white font-semibold">{companyName}</span> : null
@@ -60,7 +60,7 @@ export function Footer() {
 
           {companySettings && (companySettings as any).socialLinks && Array.isArray((companySettings as any).socialLinks) && (companySettings as any).socialLinks.length > 0 && (
             <div className="flex gap-4">
-              {((companySettings as any).socialLinks as {platform: string, url: string}[]).map((link, i) => {
+              {((companySettings as any).socialLinks as { platform: string, url: string }[]).map((link, i) => {
                 const Icon = platformIcons[link.platform.toLowerCase()] || SiFacebook;
                 return (
                   <a

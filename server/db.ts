@@ -4,11 +4,24 @@ import * as schema from "#shared/schema.js";
 
 const { Pool } = pg;
 
-const rawDatabaseUrl = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const databaseUrlEnvCandidates = [
+  "SUPABASE_DATABASE_URL",
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "POSTGRES_URL_NON_POOLING",
+  "POSTGRES_PRISMA_URL",
+  "SUPABASE_DB_URL",
+] as const;
+
+const rawDatabaseUrl =
+  databaseUrlEnvCandidates
+    .map((key) => process.env[key])
+    .find((value) => typeof value === "string" && value.trim().length > 0)
+    ?.trim() || "";
 
 if (!rawDatabaseUrl) {
   throw new Error(
-    "DATABASE_URL or POSTGRES_URL must be set. Did you forget to provision a database?",
+    `Database connection string is missing. Set one of: ${databaseUrlEnvCandidates.join(", ")}`,
   );
 }
 

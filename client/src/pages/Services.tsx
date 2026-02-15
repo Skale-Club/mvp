@@ -1,84 +1,87 @@
-import { useCategories, useServices } from "@/hooks/use-booking";
-import { ServiceCard } from "@/components/ui/ServiceCard";
-import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { useState, useEffect, useRef } from "react";
 import { clsx } from "clsx";
-import { useQuery } from "@tanstack/react-query";
-import { Search, X } from "lucide-react";
+import { Search, X, ImageIcon } from "lucide-react";
+import type { ServicePost } from "@shared/schema";
+import { getServicePostPath } from "@/lib/service-path";
 import { trackViewServices } from "@/lib/analytics";
 
+function ServicePostCard({ post }: { post: ServicePost }) {
+  return (
+    <Link 
+      href={getServicePostPath(post.id, post.slug)} 
+      className="group bg-light-gray rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
+    >
+      <div className="relative w-full pt-[75%] bg-slate-100 overflow-hidden">
+        {post.featureImageUrl ? (
+          <img
+            src={post.featureImageUrl}
+            alt={post.title}
+            className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-slate-300">
+            <ImageIcon className="w-12 h-12" />
+          </div>
+        )}
+      </div>
+
+      <div className="p-6 flex flex-col flex-grow">
+        <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors mb-1">
+          {post.title}
+        </h3>
+        <p className="text-slate-500 text-sm mb-4 flex-grow">
+          {post.excerpt || "Professional service tailored to your needs."}
+        </p>
+        <span className="text-sm font-medium text-primary">
+          Learn more &rarr;
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 export default function Services() {
-  const [location] = useLocation();
-  // Simple query param parsing (wouter doesn't have built-in hook for this)
-  const searchParams = new URLSearchParams(window.location.search);
-  const initialCatId = searchParams.get("category") ? Number(searchParams.get("category")) : undefined;
-  
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(initialCatId);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
-  const { data: categories } = useCategories();
-  const { data: services, isLoading } = useServices(selectedCategory);
-  const { data: allServices } = useQuery<any[]>({
-    queryKey: ['/api/services'],
+
+  const { data: servicePostsRaw, isLoading } = useQuery<ServicePost[]>({
+    queryKey: ['/api/service-posts', 'published'],
+    queryFn: () => fetch('/api/service-posts?status=published').then(r => r.json()),
   });
 
-  const categoriesWithServices = categories?.filter(cat => 
-    allServices?.some(s => s.categoryId === cat.id)
-  );
+  const servicePosts = Array.isArray(servicePostsRaw) ? servicePostsRaw : [];
 
-  const filteredServices = services?.filter(service => {
+  const filteredPosts = servicePosts.filter(post => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
-      service.name.toLowerCase().includes(query) ||
-      (service.description?.toLowerCase().includes(query))
+      post.title.toLowerCase().includes(query) ||
+      (post.excerpt?.toLowerCase().includes(query))
     );
   });
 
   const hasTrackedView = useRef(false);
 
   useEffect(() => {
-    if (!hasTrackedView.current && services && services.length > 0) {
-      const categoryName = selectedCategory 
-        ? categories?.find(c => c.id === selectedCategory)?.name 
-        : 'All Services';
+    if (!hasTrackedView.current && servicePosts.length > 0) {
       trackViewServices(
-        categoryName,
-        services.slice(0, 10).map(s => ({ id: s.id, name: s.name, price: Number(s.price) }))
+        'All Services',
+        servicePosts.slice(0, 10).map(p => ({ id: p.id, name: p.title, price: 0 }))
       );
       hasTrackedView.current = true;
     }
-  }, [services, selectedCategory, categories]);
-
-  // Update state if URL changes (optional, but good for linking)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const catId = params.get("category");
-    if (catId) setSelectedCategory(Number(catId));
-    else setSelectedCategory(undefined);
-
-    // Scroll to services top if requested
-    if (params.get("scroll") === "true") {
-      const element = document.getElementById("services-top");
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-    
-    hasTrackedView.current = false;
-  }, [location]);
+  }, [servicePosts]);
 
   return (
-    <div className="min-h-[60vh] pb-32 pt-10" id="services-top">
+    <div className="min-h-[60vh] pb-32 pt-24" id="services-top">
       <div className="container-custom mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-slate-900">Select Services</h1>
+          <h1 className="text-4xl font-bold mb-4 text-slate-900">Our Services</h1>
 
-          {/* Search + Category Filter Pills */}
           <div className="relative">
-            {/* Expanded Search Overlay */}
             {isSearchOpen && (
               <div className="absolute inset-0 z-10 flex items-center justify-center">
                 <div className="w-full max-w-md relative">
@@ -115,8 +118,6 @@ export default function Services() {
               "flex overflow-x-auto w-full pb-4 lg:pb-0 gap-3 no-scrollbar lg:flex-wrap lg:justify-center scroll-smooth transition-opacity duration-200",
               isSearchOpen ? "opacity-0 pointer-events-none" : "opacity-100"
             )}>
-
-              {/* Search Button (Circle) */}
               <button
                 onClick={() => {
                   setIsSearchOpen(true);
@@ -127,63 +128,26 @@ export default function Services() {
               >
                 <Search className="w-5 h-5 text-slate-500" />
               </button>
-
-              {/* Category Filter Pills */}
-                <button
-                  onClick={() => {
-                    setSelectedCategory(undefined);
-                    window.history.pushState(null, "", "/services");
-                  }}
-                  className={clsx(
-                    "px-6 py-2.5 rounded-full font-medium transition-all duration-200 whitespace-nowrap shrink-0",
-                    selectedCategory === undefined
-                      ? "bg-slate-900 text-white"
-                      : "bg-white text-slate-600 border border-gray-200 hover:bg-gray-50"
-                  )}
-                  data-testid="button-filter-all"
-                >
-                  All Services
-                </button>
-                {categoriesWithServices?.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setSelectedCategory(cat.id);
-                      window.history.pushState(null, "", `/services?category=${cat.id}`);
-                    }}
-                    className={clsx(
-                      "px-6 py-2.5 rounded-full font-medium transition-all duration-200 whitespace-nowrap shrink-0",
-                      selectedCategory === cat.id
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-slate-600 border border-gray-200 hover:bg-gray-50"
-                    )}
-                    data-testid={`button-filter-category-${cat.id}`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
             </div>
           </div>
         </div>
 
-        {!selectedCategory && <div className="mb-6" />}
-        {selectedCategory && <div className="mb-6" />}
-
-        {/* Services Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="flex flex-wrap justify-center gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>
+              <div key={i} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)] h-64 bg-gray-100 rounded-lg animate-pulse"></div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredServices?.map((service) => (
-              <ServiceCard key={service.id} service={service} />
+          <div className="flex flex-wrap justify-center gap-4">
+            {filteredPosts?.map((post) => (
+              <div key={post.id} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
+                <ServicePostCard post={post} />
+              </div>
             ))}
-            {filteredServices?.length === 0 && (
-              <div className="col-span-full text-center py-20 text-slate-400">
-                No services found in this category.
+            {filteredPosts?.length === 0 && (
+              <div className="w-full text-center py-20 text-slate-400">
+                No services found.
               </div>
             )}
           </div>

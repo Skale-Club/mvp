@@ -138,8 +138,7 @@ function Router() {
         <Suspense fallback={fallback}>
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/services/:id/:slug" component={ServiceDetails} />
-            <Route path="/services/:id" component={ServiceDetails} />
+            <Route path="/services/:slug" component={ServiceDetails} />
             <Route path="/services" component={Services} />
             <Route path="/gallery" component={Gallery} />
             <Route path="/thankyou" component={LeadThankYou} />

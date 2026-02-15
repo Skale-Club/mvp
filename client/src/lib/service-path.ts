@@ -12,7 +12,7 @@ export function getServicePath(service: { id: number; name: string }): string {
   return getServicePostPath(service.id, slug);
 }
 
-export function getServicePostPath(serviceId: number, slug?: string): string {
-  const safeSlug = slugifyServiceName(slug || "") || `service-${serviceId}`;
-  return `/services/${serviceId}/${safeSlug}`;
+export function getServicePostPath(postId: number, slug?: string): string {
+  const safeSlug = slugifyServiceName(slug || "") || `service-${postId}`;
+  return `/services/${safeSlug}`;
 }

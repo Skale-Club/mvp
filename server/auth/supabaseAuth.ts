@@ -1,16 +1,51 @@
 import type { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import crypto from "crypto";
 import { getSupabaseAdmin } from "../lib/supabase.js";
 import { db, pool } from "../db.js";
 import { users } from "#shared/models/auth.js";
 import { eq } from "drizzle-orm";
+
+function resolveSessionSecret(): { secret: string; source: string } {
+  const explicitSecret = process.env.SESSION_SECRET?.trim();
+  if (explicitSecret) {
+    return { secret: explicitSecret, source: "SESSION_SECRET" };
+  }
+
+  const fallbackCandidates = [
+    { value: process.env.SUPABASE_SERVICE_ROLE_KEY, source: "SUPABASE_SERVICE_ROLE_KEY" },
+    { value: process.env.SUPABASE_DATABASE_URL, source: "SUPABASE_DATABASE_URL" },
+    { value: process.env.DATABASE_URL, source: "DATABASE_URL" },
+    { value: process.env.POSTGRES_URL, source: "POSTGRES_URL" },
+    { value: process.env.VERCEL_GIT_COMMIT_SHA, source: "VERCEL_GIT_COMMIT_SHA" },
+  ];
+
+  const fallback = fallbackCandidates.find(
+    (item) => typeof item.value === "string" && item.value.trim().length > 0
+  );
+
+  if (fallback) {
+    return { secret: fallback.value!.trim(), source: fallback.source };
+  }
+
+  return {
+    secret: crypto.randomBytes(32).toString("hex"),
+    source: "random-generated",
+  };
+}
 
 export async function setupSupabaseAuth(app: Express) {
   app.set("trust proxy", 1);
 
   // Setup session store — reuses the existing pool (already configured with SSL)
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const { secret: sessionSecret, source: sessionSecretSource } = resolveSessionSecret();
+  if (sessionSecretSource !== "SESSION_SECRET") {
+    console.warn(
+      `[auth] SESSION_SECRET is missing; using fallback from ${sessionSecretSource}. Set SESSION_SECRET in production.`
+    );
+  }
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     pool: pool,
@@ -21,7 +56,7 @@ export async function setupSupabaseAuth(app: Express) {
 
   app.use(
     session({
-      secret: process.env.SESSION_SECRET!,
+      secret: sessionSecret,
       store: sessionStore,
       resave: false,
       saveUninitialized: false,

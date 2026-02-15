@@ -103,7 +103,7 @@ export function UsersSection() {
       </div>
 
       {/* Users Table */}
-      <Card>
+      <Card className="border border-border/30 shadow-none">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
@@ -118,7 +118,7 @@ export function UsersSection() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b border-border/30 bg-muted/50">
                     <th className="text-left px-6 py-4 font-medium text-muted-foreground">User</th>
                     <th className="text-left px-6 py-4 font-medium text-muted-foreground">Email</th>
                     <th className="text-left px-6 py-4 font-medium text-muted-foreground">Role</th>
@@ -127,7 +127,7 @@ export function UsersSection() {
                 </thead>
                 <tbody>
                   {users.map((user) => (
-                    <tr key={user.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                    <tr key={user.id} className="border-b border-border/30 last:border-0 hover:bg-muted/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {user.profileImageUrl ? (
