@@ -2,9 +2,13 @@ import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
 import { rm, readFile } from "fs/promises";
 import { spawn } from "child_process";
+import { createRequire } from "module";
 
-// server deps to bundle to reduce openat(2) syscalls
-// which helps cold start times
+const require = createRequire(import.meta.url);
+const tsxCliPath = require.resolve("tsx/cli");
+
+// Server deps to bundle to reduce openat(2) syscalls,
+// which helps cold start times.
 const allowlist = [
   "@google/generative-ai",
   "axios",
@@ -34,24 +38,23 @@ const allowlist = [
 ];
 
 async function injectSEO() {
-  return new Promise<void>((resolve, reject) => {
-    console.log("\n🔧 Injecting dynamic SEO data...");
-    const child = spawn("tsx", ["scripts/inject-seo-build.ts"], {
+  return new Promise<void>((resolve) => {
+    console.log("\nInjecting dynamic SEO data...");
+    const child = spawn(process.execPath, [tsxCliPath, "scripts/inject-seo-build.ts"], {
       stdio: "inherit",
-      shell: true,
     });
 
     child.on("close", (code) => {
       if (code === 0) {
         resolve();
       } else {
-        console.warn("⚠️  SEO injection had warnings, but build continues...");
+        console.warn("SEO injection had warnings, but build continues...");
         resolve(); // Don't fail build even if SEO injection fails
       }
     });
 
     child.on("error", (err) => {
-      console.warn("⚠️  SEO injection error:", err.message);
+      console.warn("SEO injection error:", err.message);
       resolve(); // Don't fail build
     });
   });

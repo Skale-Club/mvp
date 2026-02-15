@@ -1,13 +1,16 @@
 import { build as viteBuild } from "vite";
 import { rm } from "fs/promises";
 import { spawn } from "child_process";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const tsxCliPath = require.resolve("tsx/cli");
 
 async function injectSEO() {
   return new Promise<void>((resolve) => {
     console.log("\nInjecting dynamic SEO data...");
-    const child = spawn("tsx", ["scripts/inject-seo-build.ts"], {
+    const child = spawn(process.execPath, [tsxCliPath, "scripts/inject-seo-build.ts"], {
       stdio: "inherit",
-      shell: true,
     });
 
     child.on("close", (code) => {
