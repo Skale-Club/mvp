@@ -388,7 +388,7 @@ export function ChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-24 right-4 z-50">
+    <div className="fixed bottom-[5.5rem] right-4 z-50">
       {renderLauncher()}
 
       {isOpen && (

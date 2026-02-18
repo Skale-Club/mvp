@@ -61,10 +61,8 @@ import {
   Users,
   Puzzle,
   Globe,
-  Search,
+  Palette,
   ChevronDown,
-  LayoutGrid,
-  List,
   MessageSquare,
   Archive,
   RotateCcw,
@@ -76,9 +74,6 @@ import {
   BadgeCheck,
   ThumbsUp,
   Trophy,
-  Target,
-  PhoneCall,
-  LineChart,
   HelpCircle,
   FileText,
   AlertCircle,
@@ -95,7 +90,6 @@ import type {
   FormConfig,
   FormQuestion,
   FormOption,
-  ConsultingStep,
   TwilioSettings,
 } from '@shared/schema';
 import { DEFAULT_FORM_CONFIG, calculateMaxScore, getSortedQuestions } from '@shared/form';
@@ -119,6 +113,11 @@ import {
 import { ensureArray, uploadFileToServer } from '@/components/admin/shared/utils';
 
 const menuItems = SIDEBAR_MENU_ITEMS;
+
+function normalizeColorInputValue(value: string | null | undefined, fallback: string): string {
+  return /^#[0-9A-Fa-f]{6}$/.test(value || '') ? (value as string) : fallback;
+}
+
 export function HeroSettingsSection() {
   const { toast } = useToast();
   const { data: settings, isLoading } = useQuery<CompanySettingsData>({
@@ -132,12 +131,33 @@ export function HeroSettingsSection() {
     ctaText: '',
     image: '',
   };
+  const WEBSITE_COLOR_DEFAULTS = {
+    websitePrimaryColor: '#1C53A3',
+    websiteSecondaryColor: '#FFFF01',
+    websiteAccentColor: '#FFFF01',
+    websiteBackgroundColor: '#FFFFFF',
+    websiteForegroundColor: '#1D1D1D',
+    websiteNavBackgroundColor: '#1C1E24',
+    websiteFooterBackgroundColor: '#18191F',
+    websiteCtaBackgroundColor: '#406EF1',
+    websiteCtaHoverColor: '#355CD0',
+  };
 
   const [heroTitle, setHeroTitle] = useState('');
   const [heroSubtitle, setHeroSubtitle] = useState('');
   const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [heroBackgroundImageUrl, setHeroBackgroundImageUrl] = useState('');
   const [aboutImageUrl, setAboutImageUrl] = useState('');
   const [ctaText, setCtaText] = useState('');
+  const [websitePrimaryColor, setWebsitePrimaryColor] = useState(WEBSITE_COLOR_DEFAULTS.websitePrimaryColor);
+  const [websiteSecondaryColor, setWebsiteSecondaryColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteSecondaryColor);
+  const [websiteAccentColor, setWebsiteAccentColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteAccentColor);
+  const [websiteBackgroundColor, setWebsiteBackgroundColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteBackgroundColor);
+  const [websiteForegroundColor, setWebsiteForegroundColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteForegroundColor);
+  const [websiteNavBackgroundColor, setWebsiteNavBackgroundColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteNavBackgroundColor);
+  const [websiteFooterBackgroundColor, setWebsiteFooterBackgroundColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteFooterBackgroundColor);
+  const [websiteCtaBackgroundColor, setWebsiteCtaBackgroundColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteCtaBackgroundColor);
+  const [websiteCtaHoverColor, setWebsiteCtaHoverColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteCtaHoverColor);
   const [homepageContent, setHomepageContent] = useState<HomepageContent>(DEFAULT_HOMEPAGE_CONTENT);
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -155,8 +175,18 @@ export function HeroSettingsSection() {
       setHeroTitle(settings.heroTitle || HERO_DEFAULTS.title);
       setHeroSubtitle(settings.heroSubtitle || HERO_DEFAULTS.subtitle);
       setHeroImageUrl(settings.heroImageUrl || HERO_DEFAULTS.image);
+      setHeroBackgroundImageUrl(settings.heroBackgroundImageUrl || '');
       setAboutImageUrl(settings.aboutImageUrl || '');
       setCtaText(settings.ctaText || HERO_DEFAULTS.ctaText);
+      setWebsitePrimaryColor(normalizeColorInputValue(settings.websitePrimaryColor, WEBSITE_COLOR_DEFAULTS.websitePrimaryColor));
+      setWebsiteSecondaryColor(normalizeColorInputValue(settings.websiteSecondaryColor, WEBSITE_COLOR_DEFAULTS.websiteSecondaryColor));
+      setWebsiteAccentColor(normalizeColorInputValue(settings.websiteAccentColor, WEBSITE_COLOR_DEFAULTS.websiteAccentColor));
+      setWebsiteBackgroundColor(normalizeColorInputValue(settings.websiteBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteBackgroundColor));
+      setWebsiteForegroundColor(normalizeColorInputValue(settings.websiteForegroundColor, WEBSITE_COLOR_DEFAULTS.websiteForegroundColor));
+      setWebsiteNavBackgroundColor(normalizeColorInputValue(settings.websiteNavBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteNavBackgroundColor));
+      setWebsiteFooterBackgroundColor(normalizeColorInputValue(settings.websiteFooterBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteFooterBackgroundColor));
+      setWebsiteCtaBackgroundColor(normalizeColorInputValue(settings.websiteCtaBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteCtaBackgroundColor));
+      setWebsiteCtaHoverColor(normalizeColorInputValue(settings.websiteCtaHoverColor, WEBSITE_COLOR_DEFAULTS.websiteCtaHoverColor));
       setHomepageContent({
         ...DEFAULT_HOMEPAGE_CONTENT,
         ...(settings.homepageContent || {}),
@@ -166,10 +196,6 @@ export function HeroSettingsSection() {
         categoriesSection: {
           ...DEFAULT_HOMEPAGE_CONTENT.categoriesSection,
           ...(settings.homepageContent?.categoriesSection || {}),
-        },
-        reviewsSection: {
-          ...DEFAULT_HOMEPAGE_CONTENT.reviewsSection,
-          ...(settings.homepageContent?.reviewsSection || {}),
         },
         blogSection: {
           ...DEFAULT_HOMEPAGE_CONTENT.blogSection,
@@ -183,13 +209,6 @@ export function HeroSettingsSection() {
           ...DEFAULT_HOMEPAGE_CONTENT.areasServedSection,
           ...(settings.homepageContent?.areasServedSection || {}),
         },
-        consultingStepsSection: {
-          ...DEFAULT_HOMEPAGE_CONTENT.consultingStepsSection,
-          ...(settings.homepageContent?.consultingStepsSection || {}),
-          steps: (settings.homepageContent?.consultingStepsSection?.steps?.length
-            ? settings.homepageContent.consultingStepsSection.steps
-            : DEFAULT_HOMEPAGE_CONTENT.consultingStepsSection?.steps) || [],
-        },
       });
     }
   }, [settings]);
@@ -199,8 +218,18 @@ export function HeroSettingsSection() {
       setHeroTitle(HERO_DEFAULTS.title);
       setHeroSubtitle(HERO_DEFAULTS.subtitle);
       setHeroImageUrl(HERO_DEFAULTS.image);
+      setHeroBackgroundImageUrl('');
       setAboutImageUrl('');
       setCtaText(HERO_DEFAULTS.ctaText);
+      setWebsitePrimaryColor(WEBSITE_COLOR_DEFAULTS.websitePrimaryColor);
+      setWebsiteSecondaryColor(WEBSITE_COLOR_DEFAULTS.websiteSecondaryColor);
+      setWebsiteAccentColor(WEBSITE_COLOR_DEFAULTS.websiteAccentColor);
+      setWebsiteBackgroundColor(WEBSITE_COLOR_DEFAULTS.websiteBackgroundColor);
+      setWebsiteForegroundColor(WEBSITE_COLOR_DEFAULTS.websiteForegroundColor);
+      setWebsiteNavBackgroundColor(WEBSITE_COLOR_DEFAULTS.websiteNavBackgroundColor);
+      setWebsiteFooterBackgroundColor(WEBSITE_COLOR_DEFAULTS.websiteFooterBackgroundColor);
+      setWebsiteCtaBackgroundColor(WEBSITE_COLOR_DEFAULTS.websiteCtaBackgroundColor);
+      setWebsiteCtaHoverColor(WEBSITE_COLOR_DEFAULTS.websiteCtaHoverColor);
       setHomepageContent(DEFAULT_HOMEPAGE_CONTENT);
     }
   }, [isLoading, settings]);
@@ -225,21 +254,9 @@ export function HeroSettingsSection() {
     { label: 'Thumbs Up', value: 'thumbsUp', icon: ThumbsUp },
     { label: 'Trophy', value: 'trophy', icon: Trophy },
   ];
-  const consultingIconOptions = [
-    { label: 'Pesquisa', value: 'search', icon: Search },
-    { label: 'Diferencial', value: 'sparkles', icon: Sparkles },
-    { label: 'Layout', value: 'layout', icon: LayoutGrid },
-    { label: 'Foco', value: 'target', icon: Target },
-    { label: 'Atendimento', value: 'phone-call', icon: PhoneCall },
-    { label: 'Resultados', value: 'line-chart', icon: LineChart },
-  ];
   const categoriesSection = {
     ...DEFAULT_HOMEPAGE_CONTENT.categoriesSection,
     ...(homepageContent.categoriesSection || {}),
-  };
-  const reviewsSection = {
-    ...DEFAULT_HOMEPAGE_CONTENT.reviewsSection,
-    ...(homepageContent.reviewsSection || {}),
   };
   const blogSection = {
     ...DEFAULT_HOMEPAGE_CONTENT.blogSection,
@@ -253,27 +270,6 @@ export function HeroSettingsSection() {
     ...DEFAULT_HOMEPAGE_CONTENT.areasServedSection,
     ...(homepageContent.areasServedSection || {}),
   };
-  const consultingStepsSection = useMemo(() => {
-    const base = {
-      ...DEFAULT_HOMEPAGE_CONTENT.consultingStepsSection,
-      ...(homepageContent.consultingStepsSection || {}),
-    };
-    const steps = base.steps?.length
-      ? base.steps
-      : DEFAULT_HOMEPAGE_CONTENT.consultingStepsSection?.steps || [];
-    return { ...base, steps };
-  }, [homepageContent.consultingStepsSection]);
-  const consultingSteps = useMemo(
-    () =>
-      [...(consultingStepsSection.steps || [])].sort(
-        (a, b) => (a.order || 0) - (b.order || 0) || a.numberLabel.localeCompare(b.numberLabel)
-      ),
-    [consultingStepsSection.steps]
-  );
-  const practicalBullets =
-    consultingStepsSection.practicalBullets?.length && consultingStepsSection.practicalBullets.length > 0
-      ? consultingStepsSection.practicalBullets
-      : DEFAULT_HOMEPAGE_CONTENT.consultingStepsSection?.practicalBullets || [];
 
   const markFieldsSaved = useCallback((fields: string[]) => {
     fields.forEach(field => {
@@ -330,99 +326,6 @@ export function HeroSettingsSection() {
       return updated;
     });
   }, [triggerAutoSave]);
-
-  const updateConsultingSection = useCallback(
-    (updater: (section: NonNullable<HomepageContent['consultingStepsSection']>) => NonNullable<HomepageContent['consultingStepsSection']>, fieldKey?: string) => {
-      updateHomepageContent(prev => {
-        const currentSection = {
-          ...DEFAULT_HOMEPAGE_CONTENT.consultingStepsSection,
-          ...(prev.consultingStepsSection || {}),
-        } as NonNullable<HomepageContent['consultingStepsSection']>;
-        const updatedSection = updater(currentSection);
-        return { ...prev, consultingStepsSection: updatedSection };
-      }, fieldKey);
-    },
-    [updateHomepageContent]
-  );
-
-  const updateConsultingSteps = useCallback(
-    (updater: (steps: ConsultingStep[]) => ConsultingStep[], fieldKey = 'homepageContent.consultingStepsSection.steps') => {
-      updateConsultingSection(
-        section => ({
-          ...section,
-          steps: updater([...(section.steps || [])]),
-        }),
-        fieldKey
-      );
-    },
-    [updateConsultingSection]
-  );
-
-  const handleMoveStep = useCallback(
-    (index: number, direction: -1 | 1) => {
-      updateConsultingSteps(steps => {
-        const ordered = [...steps].sort(
-          (a, b) => (a.order || 0) - (b.order || 0) || a.numberLabel.localeCompare(b.numberLabel)
-        );
-        const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= ordered.length) return ordered;
-        const reordered = arrayMove(ordered, index, targetIndex).map((step, idx) => ({
-          ...step,
-          order: idx + 1,
-        }));
-        return reordered;
-      });
-    },
-    [updateConsultingSteps]
-  );
-
-  const handleAddStep = useCallback(() => {
-    const nextOrder = (consultingStepsSection.steps?.length || 0) + 1;
-    const newStep: ConsultingStep = {
-      order: nextOrder,
-      numberLabel: String(nextOrder).padStart(2, '0'),
-      icon: 'sparkles',
-      title: 'New Step',
-      whatWeDo: '',
-      outcome: '',
-    };
-    updateConsultingSteps(steps => [...steps, newStep]);
-  }, [consultingStepsSection.steps, updateConsultingSteps]);
-
-  const handleDeleteStep = useCallback(
-    (index: number) => {
-      updateConsultingSteps(steps => {
-        const ordered = [...steps].sort(
-          (a, b) => (a.order || 0) - (b.order || 0) || a.numberLabel.localeCompare(b.numberLabel)
-        );
-        const filtered = ordered.filter((_, i) => i !== index);
-        return filtered.map((step, idx) => ({ ...step, order: step.order ?? idx + 1 }));
-      });
-    },
-    [updateConsultingSteps]
-  );
-
-  const handleStepChange = useCallback(
-    (index: number, updater: (step: ConsultingStep) => ConsultingStep, fieldKey: string, resort = false) => {
-      updateConsultingSteps(
-        steps => {
-          const ordered = [...steps].sort(
-            (a, b) => (a.order || 0) - (b.order || 0) || a.numberLabel.localeCompare(b.numberLabel)
-          );
-          if (!ordered[index]) return ordered;
-          ordered[index] = updater(ordered[index]);
-          const next = resort
-            ? [...ordered].sort(
-                (a, b) => (a.order || 0) - (b.order || 0) || a.numberLabel.localeCompare(b.numberLabel)
-              )
-            : ordered;
-          return next;
-        },
-        fieldKey
-      );
-    },
-    [updateConsultingSteps]
-  );
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -533,37 +436,319 @@ export function HeroSettingsSection() {
           </div>
 
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="heroImage">Hero Image</Label>
-              <div className="flex flex-col gap-3">
-                <div className="aspect-[4/3] w-full max-w-xs rounded-lg border-2 border-dashed border-border bg-card flex items-center justify-center overflow-hidden relative group">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Foreground Image</Label>
+                <div className="aspect-[4/3] w-full rounded-lg border-2 border-dashed border-border bg-card flex items-center justify-center overflow-hidden relative group">
                   {heroImageUrl ? (
-                    <img src={heroImageUrl} alt="Hero preview" className="w-full h-full object-cover" />
+                    <img src={heroImageUrl} alt="Foreground preview" className="w-full h-full object-contain" />
                   ) : (
                     <div className="text-center p-4">
-                      <Image className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">Background Image</p>
+                      <User className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Foreground</p>
                     </div>
                   )}
-                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-lg">
                     <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
                     <Plus className="w-8 h-8 text-white" />
                   </label>
                 </div>
-                <div className="flex gap-2 max-w-xs">
-                  <div className="relative w-full">
-                    <Input 
-                      value={heroImageUrl} 
-                      onChange={(e) => {
-                        setHeroImageUrl(e.target.value);
-                        triggerAutoSave({ heroImageUrl: e.target.value }, ['heroImageUrl']);
+              </div>
+              <div className="space-y-2">
+                <Label>Background Image</Label>
+                <div className="aspect-[4/3] w-full rounded-lg border-2 border-dashed border-border bg-card flex items-center justify-center overflow-hidden relative group">
+                  {heroBackgroundImageUrl ? (
+                    <img src={heroBackgroundImageUrl} alt="Background preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center p-4">
+                      <Image className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">Background</p>
+                    </div>
+                  )}
+                  <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-lg">
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const imagePath = await uploadFileToServer(file);
+                          setHeroBackgroundImageUrl(imagePath);
+                          await saveHeroSettings({ heroBackgroundImageUrl: imagePath }, ['heroBackgroundImageUrl']);
+                          toast({ title: 'Background image uploaded and saved' });
+                        } catch (error: any) {
+                          toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+                        }
                       }}
-                      placeholder="Or enter image URL (https://...)"
-                      data-testid="input-hero-image"
                     />
-                    <SavedIndicator field="heroImageUrl" />
-                  </div>
+                    <Plus className="w-8 h-8 text-white" />
+                  </label>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border pt-5 space-y-3 max-w-5xl">
+          <h3 className="text-base font-semibold flex items-center gap-2">
+            <Palette className="w-4 h-4 text-primary" />
+            Website Colors
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Customize the public website palette (navbar, footer and CTA buttons).
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="websitePrimaryColor">Primary</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websitePrimaryColor"
+                  type="color"
+                  value={normalizeColorInputValue(websitePrimaryColor, WEBSITE_COLOR_DEFAULTS.websitePrimaryColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsitePrimaryColor(value);
+                    triggerAutoSave({ websitePrimaryColor: value }, ['websitePrimaryColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websitePrimaryColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsitePrimaryColor(value);
+                    triggerAutoSave({ websitePrimaryColor: value }, ['websitePrimaryColor']);
+                  }}
+                  placeholder="#1C53A3"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websitePrimaryColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteSecondaryColor">Secondary</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteSecondaryColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteSecondaryColor, WEBSITE_COLOR_DEFAULTS.websiteSecondaryColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteSecondaryColor(value);
+                    triggerAutoSave({ websiteSecondaryColor: value }, ['websiteSecondaryColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteSecondaryColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteSecondaryColor(value);
+                    triggerAutoSave({ websiteSecondaryColor: value }, ['websiteSecondaryColor']);
+                  }}
+                  placeholder="#FFFF01"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteSecondaryColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteAccentColor">Accent</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteAccentColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteAccentColor, WEBSITE_COLOR_DEFAULTS.websiteAccentColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteAccentColor(value);
+                    triggerAutoSave({ websiteAccentColor: value }, ['websiteAccentColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteAccentColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteAccentColor(value);
+                    triggerAutoSave({ websiteAccentColor: value }, ['websiteAccentColor']);
+                  }}
+                  placeholder="#FFFF01"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteAccentColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteBackgroundColor">Background</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteBackgroundColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteBackgroundColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteBackgroundColor(value);
+                    triggerAutoSave({ websiteBackgroundColor: value }, ['websiteBackgroundColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteBackgroundColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteBackgroundColor(value);
+                    triggerAutoSave({ websiteBackgroundColor: value }, ['websiteBackgroundColor']);
+                  }}
+                  placeholder="#FFFFFF"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteBackgroundColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteForegroundColor">Text</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteForegroundColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteForegroundColor, WEBSITE_COLOR_DEFAULTS.websiteForegroundColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteForegroundColor(value);
+                    triggerAutoSave({ websiteForegroundColor: value }, ['websiteForegroundColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteForegroundColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteForegroundColor(value);
+                    triggerAutoSave({ websiteForegroundColor: value }, ['websiteForegroundColor']);
+                  }}
+                  placeholder="#1D1D1D"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteForegroundColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteNavBackgroundColor">Navbar Background</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteNavBackgroundColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteNavBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteNavBackgroundColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteNavBackgroundColor(value);
+                    triggerAutoSave({ websiteNavBackgroundColor: value }, ['websiteNavBackgroundColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteNavBackgroundColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteNavBackgroundColor(value);
+                    triggerAutoSave({ websiteNavBackgroundColor: value }, ['websiteNavBackgroundColor']);
+                  }}
+                  placeholder="#1C1E24"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteNavBackgroundColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteFooterBackgroundColor">Footer Background</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteFooterBackgroundColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteFooterBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteFooterBackgroundColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteFooterBackgroundColor(value);
+                    triggerAutoSave({ websiteFooterBackgroundColor: value }, ['websiteFooterBackgroundColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteFooterBackgroundColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteFooterBackgroundColor(value);
+                    triggerAutoSave({ websiteFooterBackgroundColor: value }, ['websiteFooterBackgroundColor']);
+                  }}
+                  placeholder="#18191F"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteFooterBackgroundColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteCtaBackgroundColor">CTA Background</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteCtaBackgroundColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteCtaBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteCtaBackgroundColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteCtaBackgroundColor(value);
+                    triggerAutoSave({ websiteCtaBackgroundColor: value }, ['websiteCtaBackgroundColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteCtaBackgroundColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteCtaBackgroundColor(value);
+                    triggerAutoSave({ websiteCtaBackgroundColor: value }, ['websiteCtaBackgroundColor']);
+                  }}
+                  placeholder="#406EF1"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteCtaBackgroundColor" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="websiteCtaHoverColor">CTA Hover</Label>
+              <div className="relative flex items-center gap-1.5">
+                <Input
+                  id="websiteCtaHoverColor"
+                  type="color"
+                  value={normalizeColorInputValue(websiteCtaHoverColor, WEBSITE_COLOR_DEFAULTS.websiteCtaHoverColor)}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteCtaHoverColor(value);
+                    triggerAutoSave({ websiteCtaHoverColor: value }, ['websiteCtaHoverColor']);
+                  }}
+                  className="h-9 w-12 p-1"
+                />
+                <Input
+                  value={websiteCtaHoverColor}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    setWebsiteCtaHoverColor(value);
+                    triggerAutoSave({ websiteCtaHoverColor: value }, ['websiteCtaHoverColor']);
+                  }}
+                  placeholder="#355CD0"
+                  className="h-9 pr-9 text-sm"
+                />
+                <SavedIndicator field="websiteCtaHoverColor" />
               </div>
             </div>
           </div>
@@ -574,23 +759,22 @@ export function HeroSettingsSection() {
             <BadgeCheck className="w-4 h-4 text-primary" />
             Hero Badge
           </h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Badge Image URL</Label>
-              <div className="flex flex-col gap-2">
-                <div className="relative">
-                  <Input
-                    value={homepageContent.heroBadgeImageUrl || ''}
-                    onChange={(e) =>
-                      updateHomepageContent(prev => ({ ...prev, heroBadgeImageUrl: e.target.value }), 'homepageContent.heroBadgeImageUrl')
-                    }
-                    placeholder="https://..."
-                  />
-                  <SavedIndicator field="homepageContent.heroBadgeImageUrl" />
-                </div>
-                <div>
-                  <Input
+          <div className="flex gap-6 items-start">
+            <div className="shrink-0 space-y-2">
+              <Label>Image</Label>
+              <div className="w-[100px] h-[100px] rounded-lg border-2 border-dashed border-border bg-card flex items-center justify-center overflow-hidden relative group">
+                {homepageContent.heroBadgeImageUrl ? (
+                  <img src={homepageContent.heroBadgeImageUrl} alt={homepageContent.heroBadgeAlt || 'Badge preview'} className="w-full h-full object-contain p-1" />
+                ) : (
+                  <div className="text-center p-2">
+                    <BadgeCheck className="w-6 h-6 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-[10px] text-muted-foreground">Upload</p>
+                  </div>
+                )}
+                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-lg">
+                  <input
                     type="file"
+                    className="hidden"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -598,8 +782,6 @@ export function HeroSettingsSection() {
                       try {
                         const imagePath = await uploadFileToServer(file);
                         updateHomepageContent(prev => ({ ...prev, heroBadgeImageUrl: imagePath }), 'homepageContent.heroBadgeImageUrl');
-                        setHomepageContent(prev => ({ ...prev, heroBadgeImageUrl: imagePath }));
-                        triggerAutoSave({ homepageContent: { ...(homepageContent || {}), heroBadgeImageUrl: imagePath } }, ['homepageContent.heroBadgeImageUrl']);
                         toast({ title: 'Badge uploaded and saved' });
                       } catch (error: any) {
                         toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
@@ -610,48 +792,51 @@ export function HeroSettingsSection() {
                       }
                     }}
                   />
+                  <Plus className="w-6 h-6 text-white" />
+                </label>
+              </div>
+            </div>
+            <div className="flex-1 space-y-4">
+              <div className="space-y-2">
+                <Label>Badge Alt Text</Label>
+                <div className="relative">
+                  <Input
+                    value={homepageContent.heroBadgeAlt || ''}
+                    onChange={(e) =>
+                      updateHomepageContent(prev => ({ ...prev, heroBadgeAlt: e.target.value }), 'homepageContent.heroBadgeAlt')
+                    }
+                    placeholder="Trusted Experts"
+                  />
+                  <SavedIndicator field="homepageContent.heroBadgeAlt" />
                 </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Badge Alt Text</Label>
-              <div className="relative">
-                <Input
-                  value={homepageContent.heroBadgeAlt || ''}
-                  onChange={(e) =>
-                    updateHomepageContent(prev => ({ ...prev, heroBadgeAlt: e.target.value }), 'homepageContent.heroBadgeAlt')
-                  }
-                  placeholder="Trusted Experts"
-                />
-                <SavedIndicator field="homepageContent.heroBadgeAlt" />
+              <div className="space-y-2">
+                <Label>Badge Icon</Label>
+                <Select
+                  value={homepageContent.trustBadges?.[0]?.icon || 'star'}
+                  onValueChange={(value) => {
+                    updateHomepageContent(prev => {
+                      const badges = [...(prev.trustBadges || DEFAULT_HOMEPAGE_CONTENT.trustBadges || [])];
+                      badges[0] = { ...(badges[0] || {}), icon: value };
+                      return { ...prev, trustBadges: badges };
+                    }, 'homepageContent.trustBadges.0.icon');
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {badgeIconOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2">
+                          <option.icon className="w-4 h-4" />
+                          <span>{option.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Badge Icon</Label>
-              <Select
-                value={homepageContent.trustBadges?.[0]?.icon || 'star'}
-                onValueChange={(value) => {
-                  updateHomepageContent(prev => {
-                    const badges = [...(prev.trustBadges || DEFAULT_HOMEPAGE_CONTENT.trustBadges || [])];
-                    badges[0] = { ...(badges[0] || {}), icon: value };
-                    return { ...prev, trustBadges: badges };
-                  }, 'homepageContent.trustBadges.0.icon');
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {badgeIconOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center gap-2">
-                        <option.icon className="w-4 h-4" />
-                        <span>{option.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
         </div>
@@ -835,72 +1020,6 @@ export function HeroSettingsSection() {
                 }
               />
               <SavedIndicator field="homepageContent.categoriesSection.ctaText" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-muted p-6 rounded-lg transition-all space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Star className="w-5 h-5 text-primary" />
-            Reviews Section
-          </h2>
-          <div className="space-y-2">
-            <Label>Heading</Label>
-            <div className="relative">
-              <Input
-                value={reviewsSection.title || ''}
-                onChange={(e) =>
-                  updateHomepageContent(prev => ({
-                    ...prev,
-                    reviewsSection: {
-                      ...DEFAULT_HOMEPAGE_CONTENT.reviewsSection,
-                      ...(prev.reviewsSection || {}),
-                      title: e.target.value,
-                    },
-                  }), 'homepageContent.reviewsSection.title')
-                }
-              />
-              <SavedIndicator field="homepageContent.reviewsSection.title" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Subtitle</Label>
-            <div className="relative">
-              <Textarea
-                value={reviewsSection.subtitle || ''}
-                onChange={(e) =>
-                  updateHomepageContent(prev => ({
-                    ...prev,
-                    reviewsSection: {
-                      ...DEFAULT_HOMEPAGE_CONTENT.reviewsSection,
-                      ...(prev.reviewsSection || {}),
-                      subtitle: e.target.value,
-                    },
-                  }), 'homepageContent.reviewsSection.subtitle')
-                }
-                className="min-h-[100px]"
-              />
-              <SavedIndicator field="homepageContent.reviewsSection.subtitle" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Review Widget Embed URL</Label>
-            <div className="relative">
-              <Input
-                value={reviewsSection.embedUrl || ''}
-                onChange={(e) =>
-                  updateHomepageContent(prev => ({
-                    ...prev,
-                    reviewsSection: {
-                      ...DEFAULT_HOMEPAGE_CONTENT.reviewsSection,
-                      ...(prev.reviewsSection || {}),
-                      embedUrl: e.target.value,
-                    },
-                  }), 'homepageContent.reviewsSection.embedUrl')
-                }
-                placeholder="https://..."
-              />
-              <SavedIndicator field="homepageContent.reviewsSection.embedUrl" />
             </div>
           </div>
         </div>
@@ -1090,19 +1209,7 @@ export function HeroSettingsSection() {
                   />
                   <Plus className="w-8 h-8 text-white" />
                 </label>
-              </div>
-              <div className="relative max-w-md">
-                <Input
-                  value={aboutImageUrl}
-                  onChange={(e) => {
-                    setAboutImageUrl(e.target.value);
-                    triggerAutoSave({ aboutImageUrl: e.target.value }, ['aboutImageUrl']);
-                  }}
-                  placeholder="Ou cole a URL da imagem (https://...)"
-                  data-testid="input-about-image"
-                />
-                <SavedIndicator field="aboutImageUrl" />
-              </div>
+               </div>
             </div>
           </div>
         </div>
@@ -1191,515 +1298,7 @@ export function HeroSettingsSection() {
           </div>
         </div>
       </div>
-      <div className="bg-muted p-6 rounded-lg transition-all space-y-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <LayoutGrid className="w-5 h-5 text-primary" />
-              Consulting - How It Works
-            </h2>
-            <p className="text-sm text-muted-foreground">Edit the step-by-step displayed on the landing page.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={consultingStepsSection.enabled ?? true}
-                onCheckedChange={(checked) =>
-                  updateConsultingSection(
-                    section => ({ ...section, enabled: checked }),
-                    'homepageContent.consultingStepsSection.enabled'
-                  )
-                }
-              />
-              <span className="text-sm text-muted-foreground">
-                {consultingStepsSection.enabled ? 'Section active' : 'Section hidden'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Title</Label>
-            <div className="relative">
-              <Input
-                value={consultingStepsSection.title || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, title: e.target.value }),
-                    'homepageContent.consultingStepsSection.title'
-                  )
-                }
-                placeholder="How Consulting Works"
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.title" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Subtitle</Label>
-            <div className="relative">
-              <Textarea
-                value={consultingStepsSection.subtitle || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, subtitle: e.target.value }),
-                    'homepageContent.consultingStepsSection.subtitle'
-                  )
-                }
-                className="min-h-[96px]"
-                placeholder="A clear, step-by-step process to help you generate clients predictably."
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.subtitle" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Section Slug/ID</Label>
-            <div className="relative">
-              <Input
-                value={consultingStepsSection.sectionId || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, sectionId: e.target.value }),
-                    'homepageContent.consultingStepsSection.sectionId'
-                  )
-                }
-                placeholder="how-it-works"
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.sectionId" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Helper Text (optional)</Label>
-            <div className="relative">
-              <Textarea
-                value={consultingStepsSection.helperText || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, helperText: e.target.value }),
-                    'homepageContent.consultingStepsSection.helperText'
-                  )
-                }
-                className="min-h-[80px]"
-                placeholder="Short text below the CTA"
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.helperText" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>CTA - Button Text</Label>
-            <div className="relative">
-              <Input
-                value={consultingStepsSection.ctaButtonLabel || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, ctaButtonLabel: e.target.value }),
-                    'homepageContent.consultingStepsSection.ctaButtonLabel'
-                  )
-                }
-                placeholder="Schedule a Free Consultation"
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.ctaButtonLabel" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>CTA - Link/Action</Label>
-            <div className="relative">
-              <Input
-                value={consultingStepsSection.ctaButtonLink || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, ctaButtonLink: e.target.value }),
-                    'homepageContent.consultingStepsSection.ctaButtonLink'
-                  )
-                }
-                placeholder="#lead-form"
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.ctaButtonLink" />
-            </div>
-            <p className="text-xs text-muted-foreground">Use an anchor (#lead-form) or an internal link.</p>
-          </div>
-          <div className="space-y-2">
-            <Label>In Practice Block - Title</Label>
-            <div className="relative">
-              <Input
-                value={consultingStepsSection.practicalBlockTitle || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, practicalBlockTitle: e.target.value }),
-                    'homepageContent.consultingStepsSection.practicalBlockTitle'
-                  )
-                }
-                placeholder="In Practice"
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.practicalBlockTitle" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>In Practice Block - Subtitle</Label>
-            <div className="relative">
-              <Input
-                value={consultingStepsSection.practicalBlockSubtitle || ''}
-                onChange={(e) =>
-                  updateConsultingSection(
-                    section => ({ ...section, practicalBlockSubtitle: e.target.value }),
-                    'homepageContent.consultingStepsSection.practicalBlockSubtitle'
-                  )
-                }
-                placeholder="How the work happens day to day"
-              />
-              <SavedIndicator field="homepageContent.consultingStepsSection.practicalBlockSubtitle" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-muted p-6 rounded-lg transition-all space-y-4">
-          <h2 className="text-lg font-semibold">Custom Labels</h2>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Tag Label (e.g., Consulting)</Label>
-              <div className="relative">
-                <Input
-                  value={consultingStepsSection.tagLabel || ''}
-                  onChange={(e) =>
-                    updateConsultingSection(
-                      section => ({ ...section, tagLabel: e.target.value }),
-                      'homepageContent.consultingStepsSection.tagLabel'
-                    )
-                  }
-                  placeholder="Consulting"
-                />
-                <SavedIndicator field="homepageContent.consultingStepsSection.tagLabel" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Step Label (e.g., Step)</Label>
-              <div className="relative">
-                <Input
-                  value={consultingStepsSection.stepLabel || ''}
-                  onChange={(e) =>
-                    updateConsultingSection(
-                      section => ({ ...section, stepLabel: e.target.value }),
-                      'homepageContent.consultingStepsSection.stepLabel'
-                    )
-                  }
-                  placeholder="Step"
-                />
-                <SavedIndicator field="homepageContent.consultingStepsSection.stepLabel" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>What We Do Label</Label>
-              <div className="relative">
-                <Input
-                  value={consultingStepsSection.whatWeDoLabel || ''}
-                  onChange={(e) =>
-                    updateConsultingSection(
-                      section => ({ ...section, whatWeDoLabel: e.target.value }),
-                      'homepageContent.consultingStepsSection.whatWeDoLabel'
-                    )
-                  }
-                  placeholder="What We Do"
-                />
-                <SavedIndicator field="homepageContent.consultingStepsSection.whatWeDoLabel" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Outcome Label (e.g., You Walk Away With)</Label>
-              <div className="relative">
-                <Input
-                  value={consultingStepsSection.outcomeLabel || ''}
-                  onChange={(e) =>
-                    updateConsultingSection(
-                      section => ({ ...section, outcomeLabel: e.target.value }),
-                      'homepageContent.consultingStepsSection.outcomeLabel'
-                    )
-                  }
-                  placeholder="You Walk Away With"
-                />
-                <SavedIndicator field="homepageContent.consultingStepsSection.outcomeLabel" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Next Step Label</Label>
-              <div className="relative">
-                <Input
-                  value={consultingStepsSection.nextStepLabel || ''}
-                  onChange={(e) =>
-                    updateConsultingSection(
-                      section => ({ ...section, nextStepLabel: e.target.value }),
-                      'homepageContent.consultingStepsSection.nextStepLabel'
-                    )
-                  }
-                  placeholder="Next Step"
-                />
-                <SavedIndicator field="homepageContent.consultingStepsSection.nextStepLabel" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Next Step Text</Label>
-              <div className="relative">
-                <Input
-                  value={consultingStepsSection.nextStepText || ''}
-                  onChange={(e) =>
-                    updateConsultingSection(
-                      section => ({ ...section, nextStepText: e.target.value }),
-                      'homepageContent.consultingStepsSection.nextStepText'
-                    )
-                  }
-                  placeholder="Open schedule for new projects"
-                />
-                <SavedIndicator field="homepageContent.consultingStepsSection.nextStepText" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <Label>In Practice Block Bullets</Label>
-            {practicalBullets.length < 6 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-dashed"
-                onClick={() =>
-                  updateConsultingSection(
-                    section => ({
-                      ...section,
-                      practicalBullets: [...(section.practicalBullets || []), 'Novo bullet'],
-                    }),
-                    'homepageContent.consultingStepsSection.practicalBullets'
-                  )
-                }
-              >
-                <Plus className="w-4 h-4 mr-2" /> Add Bullet
-              </Button>
-            )}
-          </div>
-          <div className="space-y-2">
-            {practicalBullets.map((bullet, index) => (
-              <div key={index} className="flex gap-2 items-start">
-                <div className="relative flex-1">
-                  <Input
-                    value={bullet}
-                    onChange={(e) =>
-                      updateConsultingSection(
-                        section => {
-                          const current = [...(section.practicalBullets || practicalBullets)];
-                          current[index] = e.target.value;
-                          return { ...section, practicalBullets: current };
-                        },
-                        `homepageContent.consultingStepsSection.practicalBullets.${index}`
-                      )
-                    }
-                  />
-                  <SavedIndicator field={`homepageContent.consultingStepsSection.practicalBullets.${index}`} />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={practicalBullets.length <= 1}
-                  onClick={() =>
-                    updateConsultingSection(
-                      section => {
-                        const current = [...(section.practicalBullets || practicalBullets)];
-                        return { ...section, practicalBullets: current.filter((_, i) => i !== index) };
-                      },
-                      'homepageContent.consultingStepsSection.practicalBullets'
-                    )
-                  }
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
-            ))}
-            {practicalBullets.length === 0 && (
-              <p className="text-sm text-muted-foreground">Sem bullets cadastrados.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="border-t border-border pt-6 space-y-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <h3 className="text-base font-semibold flex items-center gap-2">
-                <List className="w-4 h-4 text-primary" />
-                Steps (cards)
-              </h3>
-              <p className="text-sm text-muted-foreground">Reorder using arrows or by adjusting the Order field.</p>
-            </div>
-            <Button variant="outline" size="sm" className="border-dashed" onClick={handleAddStep}>
-              <Plus className="w-4 h-4 mr-2" /> Add Step
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {consultingSteps.map((step, index) => (
-              <div
-                key={`${step.numberLabel}-${index}`}
-                className="bg-card border border-border rounded-lg p-4 space-y-4 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
-                      {step.numberLabel || String(index + 1).padStart(2, '0')}
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-semibold">{step.title || 'Step'}</p>
-                      <p className="text-xs text-muted-foreground">Order {step.order ?? index + 1}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={index === 0}
-                      onClick={() => handleMoveStep(index, -1)}
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={index === consultingSteps.length - 1}
-                      onClick={() => handleMoveStep(index, 1)}
-                    >
-                      <ArrowDown className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteStep(index)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-4">
-                  <div className="space-y-1">
-                    <Label>Ordem</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={step.order ?? index + 1}
-                        onChange={(e) =>
-                          handleStepChange(
-                            index,
-                            current => ({ ...current, order: Number(e.target.value) || index + 1 }),
-                            `homepageContent.consultingStepsSection.steps.${index}.order`,
-                            true
-                          )
-                        }
-                      />
-                      <SavedIndicator field={`homepageContent.consultingStepsSection.steps.${index}.order`} />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Number</Label>
-                    <div className="relative">
-                      <Input
-                        value={step.numberLabel || ''}
-                        onChange={(e) =>
-                          handleStepChange(
-                            index,
-                            current => ({ ...current, numberLabel: e.target.value }),
-                            `homepageContent.consultingStepsSection.steps.${index}.numberLabel`
-                          )
-                        }
-                        placeholder="01"
-                      />
-                      <SavedIndicator field={`homepageContent.consultingStepsSection.steps.${index}.numberLabel`} />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Icon</Label>
-                    <Select
-                      value={step.icon || consultingIconOptions[0].value}
-                      onValueChange={(value) =>
-                        handleStepChange(
-                          index,
-                          current => ({ ...current, icon: value }),
-                          `homepageContent.consultingStepsSection.steps.${index}.icon`
-                        )
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {consultingIconOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            <div className="flex items-center gap-2">
-                              <option.icon className="w-4 h-4" />
-                              <span>{option.label}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Title</Label>
-                  <div className="relative">
-                    <Input
-                      value={step.title}
-                      onChange={(e) =>
-                        handleStepChange(
-                          index,
-                          current => ({ ...current, title: e.target.value }),
-                          `homepageContent.consultingStepsSection.steps.${index}.title`
-                        )
-                      }
-                    />
-                    <SavedIndicator field={`homepageContent.consultingStepsSection.steps.${index}.title`} />
-                  </div>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>What We Do</Label>
-                    <div className="relative">
-                      <Textarea
-                        value={step.whatWeDo}
-                        onChange={(e) =>
-                          handleStepChange(
-                            index,
-                            current => ({ ...current, whatWeDo: e.target.value }),
-                            `homepageContent.consultingStepsSection.steps.${index}.whatWeDo`
-                          )
-                        }
-                        className="min-h-[110px]"
-                      />
-                      <SavedIndicator field={`homepageContent.consultingStepsSection.steps.${index}.whatWeDo`} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Outcome</Label>
-                    <div className="relative">
-                      <Textarea
-                        value={step.outcome}
-                        onChange={(e) =>
-                          handleStepChange(
-                            index,
-                            current => ({ ...current, outcome: e.target.value }),
-                            `homepageContent.consultingStepsSection.steps.${index}.outcome`
-                          )
-                        }
-                        className="min-h-[110px]"
-                      />
-                      <SavedIndicator field={`homepageContent.consultingStepsSection.steps.${index}.outcome`} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {consultingSteps.length === 0 && (
-              <p className="text-sm text-muted-foreground">No steps added yet.</p>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
-
 

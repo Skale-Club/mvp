@@ -1,0 +1,9 @@
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_primary_color text DEFAULT '#1C53A3';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_secondary_color text DEFAULT '#FFFF01';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_accent_color text DEFAULT '#FFFF01';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_background_color text DEFAULT '#FFFFFF';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_foreground_color text DEFAULT '#1D1D1D';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_nav_background_color text DEFAULT '#1C1E24';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_footer_background_color text DEFAULT '#18191F';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_background_color text DEFAULT '#406EF1';
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_hover_color text DEFAULT '#355CD0';

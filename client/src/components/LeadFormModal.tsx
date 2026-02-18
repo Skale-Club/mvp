@@ -152,9 +152,9 @@ function getFieldError(question: FormQuestion | undefined, answers: Answers, sel
   // Check if required and empty
   if (question.required && !value) {
     if (question.type === "select") {
-      return "Por favor, selecione uma opção";
+        return "Please select an option";
     }
-    return "Este campo é obrigatório";
+      return "This field is required";
   }
 
   // Type-specific validation
@@ -162,21 +162,21 @@ function getFieldError(question: FormQuestion | undefined, answers: Answers, sel
     case "text": {
       // Special validation for name field
       if (question.id === "nome" && value) {
-        if (value.length < 3 || value.length > 100) return "Por favor, insira seu nome completo";
-        if (!NAME_REGEX.test(value)) return "Use apenas letras e espaços";
+        if (value.length < 3 || value.length > 100) return "Please enter your full name";
+        if (!NAME_REGEX.test(value)) return "Use only letters and spaces";
       }
       // Generic text validation
-      if (value && value.length < 3) return "Por favor, insira pelo menos 3 caracteres";
+      if (value && value.length < 3) return "Please enter at least 3 characters";
       break;
     }
     case "email": {
-      if (value && !/.+@.+\..+/.test(value)) return "Por favor, insira um email válido";
+      if (value && !/.+@.+\..+/.test(value)) return "Please enter a valid email";
       break;
     }
     case "tel": {
       if (value && selectedCountry) {
         if (!isValidPhoneForCountry(value, selectedCountry)) {
-          return `Por favor, insira um telefone válido (${selectedCountry.maxDigits} dígitos)`;
+          return `Please enter a valid phone number (${selectedCountry.maxDigits} digits)`;
         }
       }
       break;
@@ -186,7 +186,7 @@ function getFieldError(question: FormQuestion | undefined, answers: Answers, sel
       if (question.conditionalField && value === question.conditionalField.showWhen) {
         const conditionalValue = (answers[question.conditionalField.id] || "").trim();
         if (!conditionalValue) {
-          return `Por favor, preencha o campo adicional`;
+          return `Please fill in the additional field`;
         }
       }
       break;
@@ -473,7 +473,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
           } catch {
             // ignore JSON parse errors
           }
-          throw new Error(friendlyMessage || "Erro ao salvar progresso");
+          throw new Error(friendlyMessage || "Error saving progress");
         }
         const lead = (await res.json()) as FormLead;
         setPendingSync(false);
@@ -574,7 +574,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
     } catch (err: any) {
       // Don't revert step on network errors - just mark as pending sync
       // This allows the user to continue filling the form
-      setErrorMessage(err?.message || "Não conseguimos enviar agora. Tente novamente em instantes.");
+      setErrorMessage(err?.message || "We couldn't send it right now. Please try again in a moment.");
       setPendingSync(true);
     }
   };
@@ -622,10 +622,10 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
       }
 
       setPendingSync(true);
-      setErrorMessage("Não conseguimos enviar agora. Tente novamente em instantes.");
+      setErrorMessage("We couldn't send it right now. Please try again in a moment.");
       setView("form");
     } catch (err: any) {
-      const msg = err?.message || "Não conseguimos enviar agora. Tente novamente em instantes.";
+      const msg = err?.message || "We couldn't send it right now. Please try again in a moment.";
       setErrorMessage(msg);
       setPendingSync(true);
       setView("form");
@@ -716,7 +716,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                   <form onSubmit={handleSubmit}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-[#406EF1] uppercase tracking-wide">Vamos começar!</p>
+                        <p className="text-sm font-semibold text-[#406EF1] uppercase tracking-wide">Let's get started!</p>
                         <h2 className="text-2xl sm:text-3xl font-bold leading-tight mt-1">{currentQuestion.title}</h2>
                       </div>
                     </div>

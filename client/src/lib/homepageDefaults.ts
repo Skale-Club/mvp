@@ -31,7 +31,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     label: 'Service Area',
     heading: 'Areas We Serve',
     description: '',
-    ctaText: 'Check Availability',
+    ctaText: 'Get a Estimate',
   },
   consultingStepsSection: {
     enabled: false,

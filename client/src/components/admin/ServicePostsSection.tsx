@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Image, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, FileText, Image, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { clsx } from "clsx";
 
 
@@ -136,6 +136,14 @@ export function ServicePostsSection() {
     queryFn: () => fetch("/api/service-posts").then((res) => res.json()),
   });
   const postsList = Array.isArray(posts) ? posts : [];
+  const orderedPosts = useMemo(() => {
+    return [...postsList].sort((a, b) => {
+      const orderA = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+      const orderB = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.title.localeCompare(b.title);
+    });
+  }, [postsList]);
 
   const resetCreateState = useCallback(() => {
     setCreateForm(CREATE_INITIAL_VALUES);
@@ -149,13 +157,13 @@ export function ServicePostsSection() {
 
   const rows = useMemo(() => {
     const lower = search.toLowerCase();
-    return postsList.filter((post) => {
+    return orderedPosts.filter((post) => {
       return (
         post.title.toLowerCase().includes(lower) ||
         post.slug.toLowerCase().includes(lower)
       );
     });
-  }, [postsList, search]);
+  }, [orderedPosts, search]);
 
   const syncEditorContent = useCallback(() => {
     if (!contentRef.current) return;
@@ -211,9 +219,10 @@ export function ServicePostsSection() {
 
   useEffect(() => {
     if (!isCreateOpen || !contentRef.current) return;
-    if (createForm.content === lastContentRef.current) return;
     if (document.activeElement === contentRef.current) return;
-    contentRef.current.innerHTML = createForm.content;
+    if (contentRef.current.innerHTML !== createForm.content) {
+      contentRef.current.innerHTML = createForm.content;
+    }
     lastContentRef.current = createForm.content;
   }, [createForm.content, isCreateOpen]);
 
@@ -260,6 +269,19 @@ export function ServicePostsSection() {
     },
   });
 
+  const reorderPosts = useMutation({
+    mutationFn: async (ids: number[]) => {
+      await apiRequest("POST", "/api/service-posts/reorder", { ids });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/service-posts"] });
+      toast({ title: "Service order updated" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to reorder services", description: error.message, variant: "destructive" });
+    },
+  });
+
   const createServicePost = useMutation({
     mutationFn: async (values: CreateServiceFormValues) => {
       const cleanName = values.name.trim();
@@ -272,6 +294,7 @@ export function ServicePostsSection() {
         title: cleanName,
         slug: cleanSlug,
         status: values.status,
+        order: orderedPosts.length + 1,
         content: cleanContent,
         excerpt,
         metaDescription: values.metaDescription.trim() || excerpt,
@@ -305,10 +328,27 @@ export function ServicePostsSection() {
 
     if (contentRef.current) {
       contentRef.current.innerHTML = post.content || "";
+      lastContentRef.current = post.content || "";
+    } else {
+      // Force post-open effect sync when editor mounts
+      lastContentRef.current = "";
     }
-    lastContentRef.current = post.content || "";
     setIsCreateOpen(true);
   };
+
+  const movePost = useCallback((postId: number, direction: "up" | "down") => {
+    const currentIndex = orderedPosts.findIndex((post) => post.id === postId);
+    if (currentIndex < 0) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= orderedPosts.length) return;
+
+    const ids = orderedPosts.map((post) => post.id);
+    const temp = ids[currentIndex];
+    ids[currentIndex] = ids[targetIndex];
+    ids[targetIndex] = temp;
+    reorderPosts.mutate(ids);
+  }, [orderedPosts, reorderPosts]);
 
   const handleCreateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -695,20 +735,25 @@ export function ServicePostsSection() {
               <div key={post.id} className="p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4 min-w-0">
-                    {post.featureImageUrl && (
-                      <div className="h-16 w-[5.33rem] shrink-0 overflow-hidden rounded-md border bg-muted">
+                    <div className="aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-md border bg-muted">
+                      {post.featureImageUrl ? (
                         <img
                           src={post.featureImageUrl}
                           alt={post.title}
                           className="h-full w-full object-cover"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                          <Image className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
                     <div className="min-w-0">
                       <h3 className="truncate text-lg font-semibold">{post.title}</h3>
                       <p className="text-sm text-muted-foreground">
                         Slug: /services/{post.slug}
                       </p>
+                      <p className="text-xs text-muted-foreground">Order: {post.order ?? 0}</p>
                       <div className="mt-2 flex items-center gap-2">
                         <Badge variant={post.status === "published" ? "default" : "secondary"}>{post.status}</Badge>
                         <a
@@ -724,6 +769,26 @@ export function ServicePostsSection() {
                   </div>
 
                   <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => movePost(post.id, "up")}
+                      disabled={reorderPosts.isPending || orderedPosts[0]?.id === post.id}
+                      title="Move up"
+                      data-testid={`button-move-up-service-post-${post.id}`}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => movePost(post.id, "down")}
+                      disabled={reorderPosts.isPending || orderedPosts[orderedPosts.length - 1]?.id === post.id}
+                      title="Move down"
+                      data-testid={`button-move-down-service-post-${post.id}`}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
                     <Button variant="outline" onClick={() => openEditor(post)} data-testid={`button-edit-service-post-${post.id}`}>
                       <Pencil className="mr-2 h-4 w-4" />
                       Edit

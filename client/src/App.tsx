@@ -13,6 +13,7 @@ import { PageLoader } from "@/components/ui/spinner";
 import { useEffect, Suspense, lazy, useRef, useState, createContext, useContext } from "react";
 import type { CompanySettings } from "@shared/schema";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { StickyBottomBar } from "@/components/layout/StickyBottomBar";
 
 // Context to track initial app load state
 const InitialLoadContext = createContext<{ isInitialLoad: boolean; markLoaded: () => void }>({
@@ -64,6 +65,62 @@ const Faq = lazy(() => import("@/pages/Faq").then(m => ({ default: () => <PageWr
 const Blog = lazy(() => import("@/pages/Blog").then(m => ({ default: () => <PageWrapper><m.default /></PageWrapper> })));
 const BlogPost = lazy(() => import("@/pages/BlogPost").then(m => ({ default: () => <PageWrapper><m.default /></PageWrapper> })));
 
+const DEFAULT_WEBSITE_COLORS = {
+  websitePrimaryColor: "#1C53A3",
+  websiteSecondaryColor: "#FFFF01",
+  websiteAccentColor: "#FFFF01",
+  websiteBackgroundColor: "#FFFFFF",
+  websiteForegroundColor: "#1D1D1D",
+  websiteNavBackgroundColor: "#1C1E24",
+  websiteFooterBackgroundColor: "#18191F",
+  websiteCtaBackgroundColor: "#406EF1",
+  websiteCtaHoverColor: "#355CD0",
+} as const;
+
+function normalizeHexColor(value: string | null | undefined, fallback: string): string {
+  const candidate = (value || "").trim();
+  const hex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+  if (!hex.test(candidate)) return fallback;
+  if (candidate.length === 4) {
+    const r = candidate[1];
+    const g = candidate[2];
+    const b = candidate[3];
+    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
+  }
+  return candidate.toUpperCase();
+}
+
+function hexToHslToken(hex: string): string {
+  const normalized = normalizeHexColor(hex, "#000000");
+  const r = parseInt(normalized.slice(1, 3), 16) / 255;
+  const g = parseInt(normalized.slice(3, 5), 16) / 255;
+  const b = parseInt(normalized.slice(5, 7), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
+    }
+    h /= 6;
+  }
+
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
 function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const { data: settings } = useQuery<CompanySettings>({
     queryKey: ['/api/company-settings'],
@@ -87,6 +144,46 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     trackPageView(location);
   }, [location]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const isAdminRoute = location.startsWith('/admin');
+
+    if (isAdminRoute) {
+      root.style.removeProperty("--primary");
+      root.style.removeProperty("--secondary");
+      root.style.removeProperty("--accent");
+      root.style.removeProperty("--background");
+      root.style.removeProperty("--foreground");
+      root.style.removeProperty("--ring");
+      root.style.removeProperty("--website-nav-bg");
+      root.style.removeProperty("--website-footer-bg");
+      root.style.removeProperty("--website-cta-bg");
+      root.style.removeProperty("--website-cta-hover");
+      return;
+    }
+
+    const primary = normalizeHexColor(settings?.websitePrimaryColor, DEFAULT_WEBSITE_COLORS.websitePrimaryColor);
+    const secondary = normalizeHexColor(settings?.websiteSecondaryColor, DEFAULT_WEBSITE_COLORS.websiteSecondaryColor);
+    const accent = normalizeHexColor(settings?.websiteAccentColor, DEFAULT_WEBSITE_COLORS.websiteAccentColor);
+    const background = normalizeHexColor(settings?.websiteBackgroundColor, DEFAULT_WEBSITE_COLORS.websiteBackgroundColor);
+    const foreground = normalizeHexColor(settings?.websiteForegroundColor, DEFAULT_WEBSITE_COLORS.websiteForegroundColor);
+    const navBg = normalizeHexColor(settings?.websiteNavBackgroundColor, DEFAULT_WEBSITE_COLORS.websiteNavBackgroundColor);
+    const footerBg = normalizeHexColor(settings?.websiteFooterBackgroundColor, DEFAULT_WEBSITE_COLORS.websiteFooterBackgroundColor);
+    const ctaBg = normalizeHexColor(settings?.websiteCtaBackgroundColor, DEFAULT_WEBSITE_COLORS.websiteCtaBackgroundColor);
+    const ctaHover = normalizeHexColor(settings?.websiteCtaHoverColor, DEFAULT_WEBSITE_COLORS.websiteCtaHoverColor);
+
+    root.style.setProperty("--primary", hexToHslToken(primary));
+    root.style.setProperty("--secondary", hexToHslToken(secondary));
+    root.style.setProperty("--accent", hexToHslToken(accent));
+    root.style.setProperty("--background", hexToHslToken(background));
+    root.style.setProperty("--foreground", hexToHslToken(foreground));
+    root.style.setProperty("--ring", hexToHslToken(primary));
+    root.style.setProperty("--website-nav-bg", navBg);
+    root.style.setProperty("--website-footer-bg", footerBg);
+    root.style.setProperty("--website-cta-bg", ctaBg);
+    root.style.setProperty("--website-cta-hover", ctaHover);
+  }, [location, settings]);
+
   return <>{children}</>;
 }
 
@@ -96,6 +193,7 @@ function SEOProvider({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
+  const footerRef = useRef<HTMLElement | null>(null);
   const [location] = useLocation();
   const { isInitialLoad } = useContext(InitialLoadContext);
   const isAdminRoute = location.startsWith('/admin');
@@ -152,7 +250,8 @@ function Router() {
           </Switch>
         </Suspense>
       </main>
-      <Footer />
+      <Footer ref={footerRef} />
+      <StickyBottomBar footerRef={footerRef} />
       <ChatWidget />
     </div>
   );

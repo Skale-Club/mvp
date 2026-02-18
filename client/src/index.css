@@ -53,6 +53,12 @@
   /* Warning color */
   --warning: 38 92% 50%;
   --warning-foreground: 0 0% 11%;
+
+  /* Website-specific custom colors */
+  --website-nav-bg: #1c1e24;
+  --website-footer-bg: #18191f;
+  --website-cta-bg: #406ef1;
+  --website-cta-hover: #355cd0;
 }
 
 /* Dark Mode Colors */
@@ -101,6 +107,12 @@
   /* Warning color */
   --warning: 38 92% 50%;
   --warning-foreground: 0 0% 11%;
+
+  /* Website stays visually consistent even when admin is dark */
+  --website-nav-bg: #1c1e24;
+  --website-footer-bg: #18191f;
+  --website-cta-bg: #406ef1;
+  --website-cta-hover: #355cd0;
 }
 
 @layer base {

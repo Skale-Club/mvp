@@ -52,7 +52,14 @@ export default function Services() {
     queryFn: () => fetch('/api/service-posts?status=published').then(r => r.json()),
   });
 
-  const servicePosts = Array.isArray(servicePostsRaw) ? servicePostsRaw : [];
+  const servicePosts = Array.isArray(servicePostsRaw)
+    ? [...servicePostsRaw].sort((a, b) => {
+        const orderA = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+        const orderB = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.title.localeCompare(b.title);
+      })
+    : [];
 
   const filteredPosts = servicePosts.filter(post => {
     if (!searchQuery) return true;

@@ -144,7 +144,7 @@ export function LeadsSection() {
     }
   });
 
-  const { data: leads, isLoading } = useQuery<FormLead[]>({
+  const { data: leads, isLoading, isFetching } = useQuery<FormLead[]>({
     queryKey: ['/api/form-leads', filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -343,8 +343,8 @@ export function LeadsSection() {
           <p className="text-muted-foreground">See who started the form, where they stopped, and update the status quickly.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/form-leads'] })}>
-            <RotateCcw className="w-4 h-4 mr-2" />
+          <Button variant="outline" disabled={isFetching} onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/form-leads'] })}>
+            {isFetching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
             Refresh
           </Button>
           <Sheet open={isFormEditorOpen} onOpenChange={setIsFormEditorOpen}>
@@ -520,19 +520,32 @@ export function LeadsSection() {
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          if (window.confirm('Delete this lead?')) {
-                            deleteLead.mutate(lead.id);
-                          }
-                        }}
-                        disabled={deleteLead.isPending}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={deleteLead.isPending}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this lead?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. The lead and all associated data will be permanently removed.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteLead.mutate(lead.id)} className="bg-red-600 hover:bg-red-700">
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </td>
                 </tr>
@@ -854,11 +867,7 @@ function FormEditorContent() {
                     key={question.id}
                     question={question}
                     onEdit={(q) => { setEditingQuestion(q); setIsDialogOpen(true); }}
-                    onDelete={(id) => {
-                      if (window.confirm('Are you sure you want to delete this question?')) {
-                        handleDeleteQuestion(id);
-                      }
-                    }}
+                    onDelete={handleDeleteQuestion}
                     typeBadge={getQuestionTypeBadge(question.type)}
                     maxPoints={getQuestionMaxPoints(question)}
                   />

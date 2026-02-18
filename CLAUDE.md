@@ -73,7 +73,7 @@ Required:
 
 ## Brand Guidelines
 
-- **Colors**: Primary Blue `#1C53A3`, Brand Yellow `#FFFF01` (for CTAs)
+- **Colors**: Primary Blue `#1C53A3`, Brand Yellow `#FFFF01`
 - **Fonts**: Outfit (headings), Inter (body)
-- **CTA Buttons**: Brand Yellow with black bold text, pill-shaped (`rounded-full`)
+- **CTA Buttons**: Primary Blue with white bold text, pill-shaped (`rounded-full`) — use `bg-primary text-primary-foreground`
 

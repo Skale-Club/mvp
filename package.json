@@ -13,7 +13,9 @@
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "print:db:dev": "cross-env NODE_ENV=development tsx temp_db_url.ts"
+    "seed:services:parents": "tsx scripts/seed_remodeling_service_parents.ts",
+    "print:db:dev": "cross-env NODE_ENV=development tsx temp_db_url.ts",
+    "supabase:keepalive": "tsx scripts/supabase-keepalive.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -19,6 +19,7 @@ import { IntegrationsSection } from '@/components/admin/IntegrationsSection';
 import { BlogSection } from '@/components/admin/BlogSection';
 import { GallerySection } from '@/components/admin/GallerySection';
 import { ServicePostsSection } from '@/components/admin/ServicePostsSection';
+import { ReviewsSection } from '@/components/admin/ReviewsSection';
 import { SIDEBAR_MENU_ITEMS } from '@/components/admin/shared/constants';
 import type { AdminSection, CompanySettingsData } from '@/components/admin/shared/types';
 
@@ -137,6 +138,7 @@ function AdminContent() {
           )}
           {activeSection === 'leads' && <LeadsSection />}
           {activeSection === 'hero' && <HeroSettingsSection />}
+          {activeSection === 'reviews' && <ReviewsSection />}
           {activeSection === 'company' && <CompanySettingsSection />}
           {activeSection === 'gallery' && <GallerySection />}
           {activeSection === 'servicePosts' && <ServicePostsSection />}

@@ -419,6 +419,15 @@ export const companySettings = pgTable("company_settings", {
   heroBackgroundImageUrl: text("hero_background_image_url").default(''),
   aboutImageUrl: text("about_image_url").default(''),
   ctaText: text("cta_text").default(''),
+  websitePrimaryColor: text("website_primary_color").default('#1C53A3'),
+  websiteSecondaryColor: text("website_secondary_color").default('#FFFF01'),
+  websiteAccentColor: text("website_accent_color").default('#FFFF01'),
+  websiteBackgroundColor: text("website_background_color").default('#FFFFFF'),
+  websiteForegroundColor: text("website_foreground_color").default('#1D1D1D'),
+  websiteNavBackgroundColor: text("website_nav_background_color").default('#1C1E24'),
+  websiteFooterBackgroundColor: text("website_footer_background_color").default('#18191F'),
+  websiteCtaBackgroundColor: text("website_cta_background_color").default('#406EF1'),
+  websiteCtaHoverColor: text("website_cta_hover_color").default('#355CD0'),
   timeFormat: text("time_format").default('12h'), // '12h' or '24h'
   businessHours: jsonb("business_hours"), // Day-by-day business hours
   seoTitle: text("seo_title").default(''),
@@ -553,3 +562,58 @@ export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({
 
 export type GalleryImage = typeof galleryImages.$inferSelect;
 export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
+
+// Reviews module
+export const reviewsSettings = pgTable("reviews_settings", {
+  id: serial("id").primaryKey(),
+  sectionTitle: text("section_title").notNull().default(""),
+  sectionSubtitle: text("section_subtitle").notNull().default(""),
+  displayMode: text("display_mode").notNull().default("auto"), // auto | widget | fallback
+  widgetEnabled: boolean("widget_enabled").notNull().default(false),
+  widgetEmbedUrl: text("widget_embed_url").notNull().default(""),
+  fallbackEnabled: boolean("fallback_enabled").notNull().default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const reviewItems = pgTable("review_items", {
+  id: serial("id").primaryKey(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  authorName: text("author_name").notNull(),
+  authorMeta: text("author_meta").notNull().default(""),
+  content: text("content").notNull(),
+  rating: integer("rating").notNull().default(5),
+  sourceLabel: text("source_label").notNull().default(""),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  sortOrderIdx: index("review_items_sort_order_idx").on(table.sortOrder, table.createdAt),
+  ratingRange: check("review_items_rating_range", sql`${table.rating} >= 1 AND ${table.rating} <= 5`),
+}));
+
+const reviewsDisplayModeSchema = z.enum(["auto", "widget", "fallback"]);
+
+export const insertReviewsSettingsSchema = createInsertSchema(reviewsSettings).omit({
+  id: true,
+  updatedAt: true,
+}).extend({
+  displayMode: reviewsDisplayModeSchema.optional(),
+});
+
+export const insertReviewItemSchema = createInsertSchema(reviewItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  authorName: z.string().min(1).max(120),
+  authorMeta: z.string().max(160).optional(),
+  content: z.string().min(1).max(1200),
+  rating: z.number().int().min(1).max(5).optional(),
+  sourceLabel: z.string().max(120).optional(),
+  sortOrder: z.number().int().min(0).optional(),
+});
+
+export type ReviewsSettings = typeof reviewsSettings.$inferSelect;
+export type ReviewItem = typeof reviewItems.$inferSelect;
+export type InsertReviewsSettings = z.infer<typeof insertReviewsSettingsSchema>;
+export type InsertReviewItem = z.infer<typeof insertReviewItemSchema>;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { CompanySettings, ServicePost } from "@shared/schema";
@@ -41,6 +41,54 @@ function upsertJsonLd(id: string, data: unknown) {
   script.textContent = JSON.stringify(data);
 }
 
+function toAnchorId(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+function extractIncludedServices(content?: string | null): string[] {
+  if (!content) return [];
+
+  try {
+    const doc = new DOMParser().parseFromString(content, "text/html");
+    const headings = Array.from(doc.querySelectorAll("h2, h3, h4"));
+    const includedHeading = headings.find((heading) =>
+      (heading.textContent || "").toLowerCase().includes("included services")
+    );
+
+    let list: HTMLUListElement | null = null;
+    if (includedHeading) {
+      let next = includedHeading.nextElementSibling;
+      while (next) {
+        const tag = next.tagName.toLowerCase();
+        if (tag === "ul") {
+          list = next as HTMLUListElement;
+          break;
+        }
+        if (tag === "h2" || tag === "h3" || tag === "h4") {
+          break;
+        }
+        next = next.nextElementSibling;
+      }
+    }
+
+    if (!list) {
+      list = doc.querySelector("ul");
+    }
+    if (!list) return [];
+
+    return Array.from(list.querySelectorAll("li"))
+      .map((li) => (li.textContent || "").trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 export default function ServiceDetails() {
@@ -70,6 +118,11 @@ export default function ServiceDetails() {
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const includedServices = useMemo(
+    () => extractIncludedServices(post?.content).slice(0, 8),
+    [post?.content]
+  );
+  const hasHeroImage = !!post?.featureImageUrl;
 
   useEffect(() => {
     if (!post) return;
@@ -116,6 +169,44 @@ export default function ServiceDetails() {
     }
   }, [post, settings]);
 
+  useEffect(() => {
+    if (!post) return;
+
+    const container = document.getElementById("service-content-body");
+    if (!container) return;
+
+    const usedIds = new Set<string>();
+    const elements = Array.from(container.querySelectorAll("h2, h3, h4, li"));
+
+    for (const element of elements) {
+      if (element.id) {
+        usedIds.add(element.id);
+        continue;
+      }
+
+      const text = (element.textContent || "").trim();
+      const baseId = toAnchorId(text);
+      if (!baseId) continue;
+
+      let candidate = baseId;
+      let counter = 2;
+      while (usedIds.has(candidate) || document.getElementById(candidate)) {
+        candidate = `${baseId}-${counter}`;
+        counter += 1;
+      }
+      element.id = candidate;
+      usedIds.add(candidate);
+    }
+
+    if (window.location.hash) {
+      const hashId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+      const target = document.getElementById(hashId);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [post]);
+
   if (!slug) {
     return (
       <div className="container-custom py-16">
@@ -157,49 +248,75 @@ export default function ServiceDetails() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative flex min-h-[35vh] items-center justify-center overflow-hidden bg-slate-900 text-white">
-        {post.featureImageUrl && (
-          <div className="absolute inset-0 z-0">
+      <section className="relative overflow-visible bg-slate-950 text-white">
+        {post.featureImageUrl ? (
+          <div className="absolute inset-0 overflow-hidden">
             <img
               src={post.featureImageUrl}
               alt={post.title}
-              className="h-full w-full object-cover opacity-40"
+              className="h-full w-full object-cover opacity-30"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent" />
+            <div className="absolute inset-0 bg-slate-950/55" />
           </div>
-        )}
-        <div className="container-custom relative z-10 mx-auto px-4 pt-24 pb-6 text-center">
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl" data-testid="text-service-title">
-            {post.title}
-          </h1>
-          <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="h-10 min-w-[180px] border-0 text-base" onClick={() => setIsFormOpen(true)}>
-              Get a Free Quote
-            </Button>
-            <Link href="/services">
-              <Button variant="outline" size="lg" className="h-10 min-w-[180px] border-0 bg-white/10 text-white hover:bg-white/20 hover:text-white text-base">
-                View All Services
-              </Button>
-            </Link>
+        ) : null}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.25),transparent_45%),radial-gradient(circle_at_bottom_left,rgba(30,41,59,0.9),transparent_55%)]" />
+        <div className="container-custom relative z-10 mx-auto w-full px-4 pt-24 pb-8 md:pt-24 md:pb-10">
+          <div className="grid min-h-[320px] items-center gap-8 lg:min-h-[360px] lg:grid-cols-12">
+            <div className={hasHeroImage ? "lg:col-span-6 xl:col-span-5" : "lg:col-span-12"}>
+              <h1 className="mb-5 text-4xl font-bold tracking-tight text-white md:text-5xl lg:text-6xl" data-testid="text-service-title">
+                {post.title}
+              </h1>
+              <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <Button size="lg" className="h-10 min-w-[180px] border-0 text-base" onClick={() => setIsFormOpen(true)}>
+                  Get a Free Quote
+                </Button>
+                <Link href="/services">
+                  <Button variant="outline" size="lg" className="h-10 min-w-[180px] border-0 bg-white/10 text-white hover:bg-white/20 hover:text-white text-base">
+                    View All Services
+                  </Button>
+                </Link>
+              </div>
+
+              {includedServices.length > 0 ? (
+                <div className="mt-6 text-sm text-blue-100/90 leading-relaxed">
+                  {includedServices.map((serviceItem, index) => (
+                    <Fragment key={serviceItem}>
+                      <a
+                        href={`#${toAnchorId(serviceItem)}`}
+                        className="transition-colors hover:text-white hover:underline"
+                      >
+                        {serviceItem}
+                      </a>
+                      {index < includedServices.length - 1 ? (
+                        <span className="mx-2 text-white/50">/</span>
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {post.featureImageUrl ? (
+              <div className="lg:col-span-6 xl:col-span-7 flex justify-center lg:justify-end">
+                <div className="relative z-20 w-full max-w-[520px] translate-y-10 md:translate-y-14 lg:translate-y-16 lg:-translate-x-3 scale-[1.03] lg:scale-[1.05] overflow-hidden rounded-2xl border border-white/15 shadow-2xl">
+                  <img
+                    src={post.featureImageUrl}
+                    alt={post.title}
+                    className="aspect-[4/3] w-full object-cover"
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
 
       {/* Main Content */}
-      <section className="container-custom py-6 md:py-10">
+      <section className={`container-custom ${hasHeroImage ? "pt-2 md:pt-4 lg:pt-6" : "py-6 md:py-10"} pb-10`}>
         <div className="mx-auto w-full">
-          {post.featureImageUrl && (
-            <div className="mb-8 overflow-hidden rounded-xl border border-border bg-muted shadow-sm">
-              <img
-                src={post.featureImageUrl}
-                alt={post.title}
-                className="h-full w-full object-cover max-h-[600px]"
-              />
-            </div>
-          )}
           <div className="prose prose-lg prose-slate max-w-none mx-auto dark:prose-invert">
             {post.content ? (
-              <div dangerouslySetInnerHTML={{ __html: post.content }} />
+              <div id="service-content-body" dangerouslySetInnerHTML={{ __html: post.content }} />
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                 <ImageIcon className="mb-4 h-16 w-16 opacity-20" />
@@ -234,7 +351,7 @@ export default function ServiceDetails() {
               </Button>
             </Link>
           </div>
-          {related.length > 2 ? (
+          {related.length > 3 ? (
             <Carousel
               opts={{
                 align: "start",
@@ -274,7 +391,7 @@ export default function ServiceDetails() {
           ) : (
             <div className="flex flex-wrap justify-center gap-6">
               {related.map((item) => (
-                <div key={item.id} className="w-full max-w-sm sm:w-[calc(50%-12px)]">
+                <div key={item.id} className="w-full max-w-sm sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]">
                   <Link href={getServicePostPath(item.id, item.slug)} className="group block h-full overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
                     <div className="aspect-[4/3] overflow-hidden bg-muted">
                       {item.featureImageUrl ? (

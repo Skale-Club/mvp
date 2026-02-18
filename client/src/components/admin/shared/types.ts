@@ -4,6 +4,7 @@ export type AdminSection =
   | 'dashboard'
   | 'leads'
   | 'hero'
+  | 'reviews'
   | 'company'
   | 'gallery'
   | 'servicePosts'
@@ -47,8 +48,18 @@ export interface CompanySettingsData {
   heroTitle: string | null;
   heroSubtitle: string | null;
   heroImageUrl: string | null;
+  heroBackgroundImageUrl: string | null;
   aboutImageUrl: string | null;
   ctaText: string | null;
+  websitePrimaryColor: string | null;
+  websiteSecondaryColor: string | null;
+  websiteAccentColor: string | null;
+  websiteBackgroundColor: string | null;
+  websiteForegroundColor: string | null;
+  websiteNavBackgroundColor: string | null;
+  websiteFooterBackgroundColor: string | null;
+  websiteCtaBackgroundColor: string | null;
+  websiteCtaHoverColor: string | null;
   homepageContent: HomepageContent | null;
   timeFormat: string | null;
   businessHours: BusinessHours | null;
@@ -157,4 +168,35 @@ export interface TwilioSettingsForm {
   toPhoneNumber: string;
   toPhoneNumbers: string[];
   notifyOnNewChat: boolean;
+}
+
+export type ReviewDisplayMode = 'auto' | 'widget' | 'fallback';
+
+export interface ReviewsSettingsData {
+  id?: number;
+  sectionTitle: string;
+  sectionSubtitle: string;
+  displayMode: ReviewDisplayMode;
+  widgetEnabled: boolean;
+  widgetEmbedUrl: string;
+  fallbackEnabled: boolean;
+  updatedAt?: string | Date | null;
+}
+
+export interface ReviewItemData {
+  id: number;
+  sortOrder: number;
+  authorName: string;
+  authorMeta: string;
+  content: string;
+  rating: number;
+  sourceLabel: string;
+  isActive: boolean;
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+}
+
+export interface AdminReviewsResponse {
+  settings: ReviewsSettingsData;
+  items: ReviewItemData[];
 }

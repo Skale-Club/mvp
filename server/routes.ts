@@ -7,7 +7,7 @@ import OpenAI from "openai";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { insertServicePostSchema, insertCompanySettingsSchema, insertFaqSchema, insertIntegrationSettingsSchema, insertBlogPostSchema, insertGalleryImageSchema, insertChatSettingsSchema, insertChatIntegrationsSchema, formLeadProgressSchema } from "#shared/schema.js";
+import { insertServicePostSchema, insertCompanySettingsSchema, insertFaqSchema, insertIntegrationSettingsSchema, insertBlogPostSchema, insertGalleryImageSchema, insertChatSettingsSchema, insertChatIntegrationsSchema, formLeadProgressSchema, insertReviewsSettingsSchema, insertReviewItemSchema } from "#shared/schema.js";
 import type { LeadClassification, LeadStatus } from "#shared/schema.js";
 import { DEFAULT_FORM_CONFIG, calculateMaxScore, calculateFormScoresWithConfig, classifyLead, getSortedQuestions, KNOWN_FIELD_IDS } from "#shared/form.js";
 import type { FormAnswers } from "#shared/form.js";
@@ -688,6 +688,22 @@ export async function registerRoutes(
     }
   });
 
+  app.post('/api/service-posts/reorder', requireAdmin, async (req, res) => {
+    try {
+      const payload = z.object({
+        ids: z.array(z.number().int().positive()).min(1),
+      }).parse(req.body);
+
+      await storage.reorderServicePosts(payload.ids);
+      res.json({ success: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: err.errors });
+      }
+      res.status(400).json({ message: (err as Error).message });
+    }
+  });
+
   // Gallery
   app.get('/api/gallery', async (req, res) => {
     try {
@@ -810,109 +826,133 @@ export async function registerRoutes(
     }
   });
 
+  // Reviews (public payload for homepage)
+  app.get('/api/reviews', async (_req, res) => {
+    try {
+      const settings = await storage.getReviewsSettings();
+      const fallbackItems = await storage.getReviewItems(true);
+      const normalizedEmbedUrl = (settings.widgetEmbedUrl || '').trim();
+      const widgetAvailable = settings.widgetEnabled && normalizedEmbedUrl.length > 0;
+      const displayMode = settings.displayMode || 'auto';
+
+      const useWidget = displayMode === 'fallback'
+        ? false
+        : widgetAvailable;
+      const useFallback = settings.fallbackEnabled && !useWidget;
+
+      res.json({
+        settings: {
+          sectionTitle: settings.sectionTitle,
+          sectionSubtitle: settings.sectionSubtitle,
+          displayMode,
+          widgetEnabled: settings.widgetEnabled,
+          widgetEmbedUrl: normalizedEmbedUrl,
+          fallbackEnabled: settings.fallbackEnabled,
+          useWidget,
+          useFallback,
+        },
+        fallbackReviews: useFallback ? fallbackItems : [],
+      });
+    } catch (err) {
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  // Reviews admin endpoints
+  app.get('/api/admin/reviews', requireAdmin, async (_req, res) => {
+    try {
+      const settings = await storage.getReviewsSettings();
+      const items = await storage.getReviewItems(false);
+      res.json({ settings, items });
+    } catch (err) {
+      res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  app.put('/api/admin/reviews/settings', requireAdmin, async (req, res) => {
+    try {
+      const payload = insertReviewsSettingsSchema.partial().parse(req.body);
+      const updated = await storage.upsertReviewsSettings(payload);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: err.errors });
+      }
+      res.status(400).json({ message: (err as Error).message });
+    }
+  });
+
+  app.post('/api/admin/reviews/items', requireAdmin, async (req, res) => {
+    try {
+      const payload = insertReviewItemSchema.parse(req.body);
+      const created = await storage.createReviewItem(payload);
+      res.json(created);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: err.errors });
+      }
+      res.status(400).json({ message: (err as Error).message });
+    }
+  });
+
+  app.put('/api/admin/reviews/items/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid review item id' });
+      }
+      const payload = insertReviewItemSchema.partial().parse(req.body);
+      const updated = await storage.updateReviewItem(id, payload);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: err.errors });
+      }
+      res.status(400).json({ message: (err as Error).message });
+    }
+  });
+
+  app.post('/api/admin/reviews/items/reorder', requireAdmin, async (req, res) => {
+    try {
+      const { itemIds } = z.object({
+        itemIds: z.array(z.number().int()).default([]),
+      }).parse(req.body);
+      await storage.reorderReviewItems(itemIds);
+      res.json({ success: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: err.errors });
+      }
+      res.status(400).json({ message: (err as Error).message });
+    }
+  });
+
+  app.delete('/api/admin/reviews/items/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (Number.isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid review item id' });
+      }
+      await storage.deleteReviewItem(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: (err as Error).message });
+    }
+  });
+
   // Form Config (public GET, admin PUT)
   app.get('/api/form-config', async (req, res) => {
     try {
       const settings = await storage.getCompanySettings();
-      const existing = settings?.formConfig || DEFAULT_FORM_CONFIG;
-      const spec = DEFAULT_FORM_CONFIG;
-      const specById = new Map(spec.questions.map(q => [q.id, q]));
 
-      // Start with existing questions exactly as saved by admin
-      // DO NOT normalize existing questions - respect admin customizations
-      let normalizedQuestions = [...existing.questions];
-
-      // ONLY add missing default questions that don't exist yet
-      // This allows upgrading the form when new questions are added to DEFAULT_FORM_CONFIG
-      for (const specQ of spec.questions) {
-        if (!normalizedQuestions.some(q => q.id === specQ.id)) {
-          normalizedQuestions.push({ ...specQ });
-        }
+      // If admin has saved a config, return it as-is (respect admin customizations)
+      if (settings?.formConfig) {
+        res.json(settings.formConfig);
+        return;
       }
 
-      // Merge standalone conditional questions back into their parent (backward compatibility)
-      // This handles old data where conditional fields were saved as separate questions
-      const idxLocalizacao = normalizedQuestions.findIndex(q => q.id === 'localizacao');
-      if (idxLocalizacao >= 0) {
-        const hasStandaloneCidadeEstado = normalizedQuestions.some(q => q.id === 'cidadeEstado');
-        if (hasStandaloneCidadeEstado) {
-          normalizedQuestions = normalizedQuestions.filter(q => q.id !== 'cidadeEstado');
-          const specLocalizacao = specById.get('localizacao');
-          if (specLocalizacao?.conditionalField) {
-            normalizedQuestions[idxLocalizacao] = {
-              ...normalizedQuestions[idxLocalizacao],
-              conditionalField: {
-                showWhen: specLocalizacao.conditionalField.showWhen,
-                id: specLocalizacao.conditionalField.id,
-                title: specLocalizacao.conditionalField.title,
-                placeholder: specLocalizacao.conditionalField.placeholder,
-              },
-            };
-          }
-        } else if (!normalizedQuestions[idxLocalizacao].conditionalField) {
-          // Add conditional field if missing (backward compatibility)
-          const specLocalizacao = specById.get('localizacao');
-          if (specLocalizacao?.conditionalField) {
-            normalizedQuestions[idxLocalizacao] = {
-              ...normalizedQuestions[idxLocalizacao],
-              conditionalField: specLocalizacao.conditionalField,
-            };
-          }
-        }
-      }
-
-      const idxTipoNegocio = normalizedQuestions.findIndex(q => q.id === 'tipoNegocio');
-      if (idxTipoNegocio >= 0) {
-        const hasStandaloneOutro = normalizedQuestions.some(q => q.id === 'tipoNegocioOutro');
-        if (hasStandaloneOutro) {
-          normalizedQuestions = normalizedQuestions.filter(q => q.id !== 'tipoNegocioOutro');
-          const specTipo = specById.get('tipoNegocio');
-          if (specTipo?.conditionalField) {
-            normalizedQuestions[idxTipoNegocio] = {
-              ...normalizedQuestions[idxTipoNegocio],
-              conditionalField: {
-                showWhen: specTipo.conditionalField.showWhen,
-                id: specTipo.conditionalField.id,
-                title: specTipo.conditionalField.title,
-                placeholder: specTipo.conditionalField.placeholder,
-              },
-            };
-          }
-        } else if (!normalizedQuestions[idxTipoNegocio].conditionalField) {
-          // Add conditional field if missing (backward compatibility)
-          const specTipo = specById.get('tipoNegocio');
-          if (specTipo?.conditionalField) {
-            normalizedQuestions[idxTipoNegocio] = {
-              ...normalizedQuestions[idxTipoNegocio],
-              conditionalField: specTipo.conditionalField,
-            };
-          }
-        }
-      }
-
-      // Sort: known spec questions by spec order, custom questions follow after
-      const isKnown = (qId: string) => specById.has(qId);
-      normalizedQuestions = normalizedQuestions
-        .sort((a, b) => {
-          const aKnown = isKnown(a.id);
-          const bKnown = isKnown(b.id);
-          if (aKnown && bKnown) {
-            const aSpec = specById.get(a.id)!.order;
-            const bSpec = specById.get(b.id)!.order;
-            return aSpec - bSpec;
-          }
-          if (aKnown && !bKnown) return -1;
-          if (!aKnown && bKnown) return 1;
-          return (a.order ?? 999) - (b.order ?? 999);
-        })
-        .map((q, i) => ({ ...q, order: i + 1 }));
-
-      const normalizedConfig: FormConfig = {
-        questions: normalizedQuestions,
-        maxScore: calculateMaxScore({ ...existing, questions: normalizedQuestions }),
-        thresholds: existing.thresholds || spec.thresholds,
-      };
-      res.json(normalizedConfig);
+      // No saved config — return the default
+      res.json(DEFAULT_FORM_CONFIG);
     } catch (err) {
       res.status(500).json({ message: (err as Error).message });
     }

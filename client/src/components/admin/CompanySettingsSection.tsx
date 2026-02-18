@@ -119,11 +119,13 @@ import {
 import { ensureArray, uploadFileToServer } from '@/components/admin/shared/utils';
 
 const menuItems = SIDEBAR_MENU_ITEMS;
+
 export function CompanySettingsSection() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<CompanySettingsData>({
     companyName: 'Company Name',
-    companyEmail: 'contact@company.com',    companyPhone: '',
+    companyEmail: 'contact@company.com',
+    companyPhone: '',
     companyAddress: '',
     workingHoursStart: '08:00',
     workingHoursEnd: '18:00',
@@ -136,8 +138,18 @@ export function CompanySettingsSection() {
     heroTitle: '',
     heroSubtitle: '',
     heroImageUrl: '',
+    heroBackgroundImageUrl: '',
     aboutImageUrl: '',
     ctaText: '',
+    websitePrimaryColor: '#1C53A3',
+    websiteSecondaryColor: '#FFFF01',
+    websiteAccentColor: '#FFFF01',
+    websiteBackgroundColor: '#FFFFFF',
+    websiteForegroundColor: '#1D1D1D',
+    websiteNavBackgroundColor: '#1C1E24',
+    websiteFooterBackgroundColor: '#18191F',
+    websiteCtaBackgroundColor: '#406EF1',
+    websiteCtaHoverColor: '#355CD0',
     homepageContent: DEFAULT_HOMEPAGE_CONTENT,
     timeFormat: '12h',
     businessHours: DEFAULT_BUSINESS_HOURS,

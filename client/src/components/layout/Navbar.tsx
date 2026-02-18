@@ -52,7 +52,10 @@ export function Navbar() {
   }, [location]);
 
   return (
-    <nav className="bg-[#1c1e24]/85 backdrop-blur-md fixed top-0 left-0 right-0 z-50">
+    <nav
+      className="backdrop-blur-md fixed top-0 left-0 right-0 z-50"
+      style={{ backgroundColor: "var(--website-nav-bg)" }}
+    >
       <div className="container-custom mx-auto">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -87,7 +90,7 @@ export function Navbar() {
               ))}
             </div>
             {displayPhone && (
-              <a href={`tel:${telPhone}`} className="px-4 py-2 bg-[#406EF1] hover:bg-[#355CD0] text-white font-bold rounded-full hover-elevate transition-all text-sm flex items-center gap-2">
+              <a href={`tel:${telPhone}`} className="px-4 py-2 bg-[var(--website-cta-bg)] hover:bg-[var(--website-cta-hover)] text-white font-bold rounded-full hover-elevate transition-all text-sm flex items-center gap-2">
                 <Phone className="w-4 h-4 fill-current" />
                 {displayPhone}
               </a>

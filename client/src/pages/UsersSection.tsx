@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Pencil, Trash2, Check, Users } from 'lucide-react';
+import { Loader2, Pencil, Trash2, Check, Users, Camera } from 'lucide-react';
 
 // User type for the users section
 interface UserData {
@@ -28,6 +29,8 @@ export function UsersSection() {
   const { toast } = useToast();
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const { data: users, isLoading } = useQuery<UserData[]>({
     queryKey: ['/api/users'],
@@ -38,8 +41,8 @@ export function UsersSection() {
   });
 
   const updateUser = useMutation({
-    mutationFn: async ({ id, isAdmin }: { id: string; isAdmin: boolean }) => {
-      const res = await apiRequest('PATCH', `/api/users/${id}`, { isAdmin });
+    mutationFn: async ({ id, ...data }: { id: string; firstName?: string; lastName?: string; profileImageUrl?: string; isAdmin?: boolean }) => {
+      const res = await apiRequest('PATCH', `/api/users/${id}`, data);
       return res.json();
     },
     onSuccess: () => {
@@ -74,6 +77,30 @@ export function UsersSection() {
       });
     }
   });
+
+  const handleAvatarUpload = async (file: File) => {
+    setUploadingAvatar(true);
+    try {
+      const reader = new FileReader();
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await apiRequest('POST', '/api/upload', {
+        filename: file.name,
+        data: base64Data,
+        contentType: file.type,
+      });
+      const { path } = await res.json();
+      setEditingUser(prev => prev ? { ...prev, profileImageUrl: path } : null);
+    } catch {
+      toast({ title: 'Error uploading avatar', variant: 'destructive' });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const getDisplayName = (user: UserData) => {
     if (user.firstName || user.lastName) {
@@ -168,29 +195,78 @@ export function UsersSection() {
                               <DialogHeader>
                                 <DialogTitle>Edit User</DialogTitle>
                               </DialogHeader>
-                              <div className="py-4">
-                                <div className="flex items-center gap-3 mb-4">
-                                  {user.profileImageUrl ? (
-                                    <img
-                                      src={user.profileImageUrl}
-                                      alt={getDisplayName(user)}
-                                      className="w-12 h-12 rounded-full object-cover"
+                              <div className="py-4 space-y-4">
+                                {/* Avatar upload */}
+                                <div className="flex items-center gap-4">
+                                  <div className="relative group">
+                                    {editingUser?.profileImageUrl ? (
+                                      <img
+                                        src={editingUser.profileImageUrl}
+                                        alt={getDisplayName(user)}
+                                        className="w-16 h-16 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-medium text-xl">
+                                        {getInitials(editingUser ?? user)}
+                                      </div>
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                      onClick={() => avatarInputRef.current?.click()}
+                                      disabled={uploadingAvatar}
+                                    >
+                                      {uploadingAvatar ? (
+                                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                      ) : (
+                                        <Camera className="w-5 h-5 text-white" />
+                                      )}
+                                    </button>
+                                    <input
+                                      ref={avatarInputRef}
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleAvatarUpload(file);
+                                        e.target.value = '';
+                                      }}
                                     />
-                                  ) : (
-                                    <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-medium text-lg">
-                                      {getInitials(user)}
-                                    </div>
-                                  )}
+                                  </div>
                                   <div>
-                                    <p className="font-medium">{getDisplayName(user)}</p>
                                     <p className="text-sm text-muted-foreground">{user.email}</p>
                                   </div>
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`edit-firstName-${user.id}`}>First Name</Label>
+                                    <Input
+                                      id={`edit-firstName-${user.id}`}
+                                      value={editingUser?.firstName ?? ''}
+                                      onChange={(e) =>
+                                        setEditingUser(prev => prev ? { ...prev, firstName: e.target.value } : null)
+                                      }
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`edit-lastName-${user.id}`}>Last Name</Label>
+                                    <Input
+                                      id={`edit-lastName-${user.id}`}
+                                      value={editingUser?.lastName ?? ''}
+                                      onChange={(e) =>
+                                        setEditingUser(prev => prev ? { ...prev, lastName: e.target.value } : null)
+                                      }
+                                    />
+                                  </div>
+                                </div>
+
                                 <div className="flex items-center space-x-2">
                                   <Checkbox
                                     id={`edit-isAdmin-${user.id}`}
                                     checked={editingUser?.isAdmin ?? user.isAdmin}
-                                    onCheckedChange={(checked) => 
+                                    onCheckedChange={(checked) =>
                                       setEditingUser(prev => prev ? { ...prev, isAdmin: checked as boolean } : null)
                                     }
                                   />
@@ -204,7 +280,13 @@ export function UsersSection() {
                                   Cancel
                                 </Button>
                                 <Button
-                                  onClick={() => editingUser && updateUser.mutate({ id: user.id, isAdmin: editingUser.isAdmin })}
+                                  onClick={() => editingUser && updateUser.mutate({
+                                    id: user.id,
+                                    firstName: editingUser.firstName,
+                                    lastName: editingUser.lastName,
+                                    profileImageUrl: editingUser.profileImageUrl,
+                                    isAdmin: editingUser.isAdmin,
+                                  })}
                                   disabled={updateUser.isPending}
                                   className="bg-blue-600 hover:bg-blue-700"
                                 >

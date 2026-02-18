@@ -634,16 +634,44 @@ export function GallerySection() {
     await uploadFiles(files);
   };
 
+  // Track which card the user is pressing on so we can enable draggable
+  // only for that card — this allows normal scroll wheel on all other cards.
+  const [activeMouseCardId, setActiveMouseCardId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleMouseUp = () => setActiveMouseCardId(null);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => window.removeEventListener("mouseup", handleMouseUp);
+  }, []);
+
+  // Keep a snapshot of the order before the drag started so we can
+  // revert if the user cancels, and commit only on drop.
+  const previewOrderRef = useRef<GalleryImage[] | null>(null);
+
   const handleCardDragStart = (id: number, e: DragEvent<HTMLDivElement>) => {
     setDraggedImageId(id);
+    previewOrderRef.current = orderedImages;
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(id));
+
+    // Use the Card element as the drag ghost so the full card is visible
+    const card = (e.target as HTMLElement).closest("[data-card]") as HTMLElement | null;
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      e.dataTransfer.setDragImage(card, e.clientX - rect.left, e.clientY - rect.top);
+    }
   };
 
   const handleCardDragOver = (id: number, e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (draggedImageId === null || draggedImageId === id) return;
+    if (dragOverImageId === id) return;
     setDragOverImageId(id);
+
+    // Live preview: reorder the grid in real time as the user drags
+    const next = reorderImagesById(orderedImages, draggedImageId, id);
+    const unchanged = next.every((img, i) => img.id === orderedImages[i]?.id);
+    if (!unchanged) setOrderedImages(next);
   };
 
   const handleCardDrop = (targetId: number, e: DragEvent<HTMLDivElement>) => {
@@ -652,15 +680,12 @@ export function GallerySection() {
     const sourceId = draggedImageId ?? Number(e.dataTransfer.getData("text/plain"));
     setDraggedImageId(null);
     setDragOverImageId(null);
+    previewOrderRef.current = null;
 
     if (!Number.isFinite(sourceId) || sourceId === targetId) return;
 
-    const next = reorderImagesById(orderedImages, sourceId, targetId);
-    const unchanged = next.every((image, index) => image.id === orderedImages[index]?.id);
-    if (unchanged) return;
-
-    setOrderedImages(next);
-    reorderImages.mutate(next.map((image) => image.id));
+    // orderedImages already contains the final order from live preview
+    reorderImages.mutate(orderedImages.map((image) => image.id));
   };
 
   const getUploadStatusLabel = (status: UploadStatus) => {
@@ -882,24 +907,36 @@ export function GallerySection() {
           {orderedImages.map((image) => (
             <Card
               key={image.id}
-              draggable={!reorderImages.isPending}
+              data-card
+              draggable={activeMouseCardId === image.id && !reorderImages.isPending}
+              onMouseDown={() => setActiveMouseCardId(image.id)}
               onDragStart={(e) => handleCardDragStart(image.id, e)}
               onDragOver={(e) => handleCardDragOver(image.id, e)}
               onDrop={(e) => handleCardDrop(image.id, e)}
               onDragEnd={() => {
+                // If dropped outside a valid target, revert to the original order
+                if (previewOrderRef.current) {
+                  setOrderedImages(previewOrderRef.current);
+                  previewOrderRef.current = null;
+                }
                 setDraggedImageId(null);
                 setDragOverImageId(null);
+                setActiveMouseCardId(null);
               }}
-              className={`overflow-hidden border-border transition ${
-                draggedImageId === image.id ? "opacity-60" : ""
-              } ${dragOverImageId === image.id ? "ring-2 ring-primary" : ""}`}
+              className={`overflow-hidden border-border transition-all duration-200 cursor-grab active:cursor-grabbing ${
+                draggedImageId === image.id
+                  ? "opacity-40 scale-95 ring-2 ring-primary/50 shadow-lg"
+                  : draggedImageId !== null
+                    ? "hover:ring-2 hover:ring-primary/30"
+                    : ""
+              }`}
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                 {image.imageUrl ? (
                   <img
                     src={image.imageUrl}
                     alt={image.altText || image.title || "Gallery image"}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover pointer-events-none select-none"
                     data-testid={`img-gallery-admin-${image.id}`}
                   />
                 ) : (

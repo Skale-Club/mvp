@@ -8,6 +8,7 @@ import {
   MessageSquare,
   Puzzle,
   Search,
+  Star,
   Sparkles,
   Users,
 } from 'lucide-react';
@@ -38,6 +39,7 @@ export const SIDEBAR_MENU_ITEMS: Array<{ id: AdminSection; title: string; icon: 
   { id: 'dashboard', title: 'Dashboard', icon: LayoutDashboard },
   { id: 'company', title: 'Company Infos', icon: Building2 },
   { id: 'hero', title: 'Website', icon: Image },
+  { id: 'reviews', title: 'Reviews', icon: Star },
   { id: 'gallery', title: 'Gallery', icon: Images },
   { id: 'servicePosts', title: 'Services', icon: FileText },
   { id: 'leads', title: 'Leads', icon: Sparkles },

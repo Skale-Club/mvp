@@ -13,6 +13,8 @@ import {
   blogPosts,
   servicePosts,
   galleryImages,
+  reviewsSettings,
+  reviewItems,
   type CompanySettings,
   type ChatSettings,
   type ChatIntegrations,
@@ -39,6 +41,10 @@ import {
   type InsertBlogPost,
   type InsertServicePost,
   type InsertGalleryImage,
+  type ReviewsSettings,
+  type ReviewItem,
+  type InsertReviewsSettings,
+  type InsertReviewItem,
 } from "#shared/schema.js";
 import { eq, and, or, ilike, gte, lte, lt, inArray, desc, asc, sql, ne } from "drizzle-orm";
 
@@ -169,6 +175,98 @@ async function ensureServicePostsSchema() {
   return ensureServicePostsSchemaPromise;
 }
 
+// Ensure company settings color columns exist for older databases
+let ensureCompanySettingsSchemaPromise: Promise<void> | null = null;
+async function ensureCompanySettingsSchema() {
+  if (ensureCompanySettingsSchemaPromise) return ensureCompanySettingsSchemaPromise;
+  ensureCompanySettingsSchemaPromise = pool
+    .query(`
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_primary_color text DEFAULT '#1C53A3';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_secondary_color text DEFAULT '#FFFF01';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_accent_color text DEFAULT '#FFFF01';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_background_color text DEFAULT '#FFFFFF';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_foreground_color text DEFAULT '#1D1D1D';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_nav_background_color text DEFAULT '#1C1E24';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_footer_background_color text DEFAULT '#18191F';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_background_color text DEFAULT '#406EF1';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_hover_color text DEFAULT '#355CD0';
+    `)
+    .then(() => undefined)
+    .catch((err) => {
+      ensureCompanySettingsSchemaPromise = null;
+      throw err;
+    });
+  return ensureCompanySettingsSchemaPromise;
+}
+
+// Ensure reviews module tables exist for environments without full migrations
+let ensureReviewsSchemaPromise: Promise<void> | null = null;
+async function ensureReviewsSchema() {
+  if (ensureReviewsSchemaPromise) return ensureReviewsSchemaPromise;
+  ensureReviewsSchemaPromise = pool
+    .query(`
+      CREATE TABLE IF NOT EXISTS reviews_settings (
+        id serial PRIMARY KEY,
+        section_title text NOT NULL DEFAULT '',
+        section_subtitle text NOT NULL DEFAULT '',
+        display_mode text NOT NULL DEFAULT 'auto',
+        widget_enabled boolean NOT NULL DEFAULT false,
+        widget_embed_url text NOT NULL DEFAULT '',
+        fallback_enabled boolean NOT NULL DEFAULT true,
+        updated_at timestamp DEFAULT now()
+      );
+      CREATE TABLE IF NOT EXISTS review_items (
+        id serial PRIMARY KEY,
+        sort_order integer NOT NULL DEFAULT 0,
+        author_name text NOT NULL,
+        author_meta text NOT NULL DEFAULT '',
+        content text NOT NULL,
+        rating integer NOT NULL DEFAULT 5,
+        source_label text NOT NULL DEFAULT '',
+        is_active boolean NOT NULL DEFAULT true,
+        created_at timestamp DEFAULT now(),
+        updated_at timestamp DEFAULT now()
+      );
+      ALTER TABLE reviews_settings ADD COLUMN IF NOT EXISTS section_title text NOT NULL DEFAULT '';
+      ALTER TABLE reviews_settings ADD COLUMN IF NOT EXISTS section_subtitle text NOT NULL DEFAULT '';
+      ALTER TABLE reviews_settings ADD COLUMN IF NOT EXISTS display_mode text NOT NULL DEFAULT 'auto';
+      ALTER TABLE reviews_settings ADD COLUMN IF NOT EXISTS widget_enabled boolean NOT NULL DEFAULT false;
+      ALTER TABLE reviews_settings ADD COLUMN IF NOT EXISTS widget_embed_url text NOT NULL DEFAULT '';
+      ALTER TABLE reviews_settings ADD COLUMN IF NOT EXISTS fallback_enabled boolean NOT NULL DEFAULT true;
+      ALTER TABLE reviews_settings ADD COLUMN IF NOT EXISTS updated_at timestamp DEFAULT now();
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS sort_order integer NOT NULL DEFAULT 0;
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS author_name text NOT NULL DEFAULT '';
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS author_meta text NOT NULL DEFAULT '';
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS content text NOT NULL DEFAULT '';
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS rating integer NOT NULL DEFAULT 5;
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS source_label text NOT NULL DEFAULT '';
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT now();
+      ALTER TABLE review_items ADD COLUMN IF NOT EXISTS updated_at timestamp DEFAULT now();
+      ALTER TABLE reviews_settings ALTER COLUMN section_title SET DEFAULT '';
+      ALTER TABLE reviews_settings ALTER COLUMN section_subtitle SET DEFAULT '';
+      ALTER TABLE review_items ALTER COLUMN source_label SET DEFAULT '';
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'review_items_rating_range'
+        ) THEN
+          ALTER TABLE review_items
+            ADD CONSTRAINT review_items_rating_range CHECK (rating >= 1 AND rating <= 5);
+        END IF;
+      END $$;
+      CREATE INDEX IF NOT EXISTS review_items_sort_order_idx ON review_items (sort_order ASC, created_at DESC);
+    `)
+    .then(() => undefined)
+    .catch((err) => {
+      ensureReviewsSchemaPromise = null;
+      throw err;
+    });
+  return ensureReviewsSchemaPromise;
+}
+
 export interface IStorage {
   // Company Settings
   getCompanySettings(): Promise<CompanySettings>;
@@ -229,6 +327,7 @@ export interface IStorage {
   getPublishedServicePosts(limit?: number, offset?: number): Promise<ServicePost[]>;
   createServicePost(post: InsertServicePost): Promise<ServicePost>;
   updateServicePost(id: number, post: Partial<InsertServicePost>): Promise<ServicePost>;
+  reorderServicePosts(postIds: number[]): Promise<void>;
   deleteServicePost(id: number): Promise<void>;
 
   // Gallery
@@ -239,6 +338,15 @@ export interface IStorage {
   reorderGalleryImages(imageIds: number[]): Promise<void>;
   deleteGalleryImage(id: number): Promise<void>;
   deleteAllGalleryImages(): Promise<number>;
+
+  // Reviews
+  getReviewsSettings(): Promise<ReviewsSettings>;
+  upsertReviewsSettings(settings: Partial<InsertReviewsSettings>): Promise<ReviewsSettings>;
+  getReviewItems(onlyActive?: boolean): Promise<ReviewItem[]>;
+  createReviewItem(item: InsertReviewItem): Promise<ReviewItem>;
+  updateReviewItem(id: number, item: Partial<InsertReviewItem>): Promise<ReviewItem>;
+  reorderReviewItems(itemIds: number[]): Promise<void>;
+  deleteReviewItem(id: number): Promise<void>;
 
 }
 
@@ -268,6 +376,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCompanySettings(): Promise<CompanySettings> {
+    await ensureCompanySettingsSchema();
     const [settings] = await db.select().from(companySettings);
     if (settings) return settings;
     
@@ -277,6 +386,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCompanySettings(settings: Partial<CompanySettings>): Promise<CompanySettings> {
+    await ensureCompanySettingsSchema();
     const existing = await this.getCompanySettings();
     const [updated] = await db.update(companySettings).set(settings).where(eq(companySettings.id, existing.id)).returning();
     return updated;
@@ -779,9 +889,9 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(servicePosts)
         .where(eq(servicePosts.status, status))
-        .orderBy(desc(servicePosts.updatedAt));
+        .orderBy(asc(servicePosts.order), desc(servicePosts.updatedAt));
     }
-    return await db.select().from(servicePosts).orderBy(desc(servicePosts.updatedAt));
+    return await db.select().from(servicePosts).orderBy(asc(servicePosts.order), desc(servicePosts.updatedAt));
   }
 
   async getServicePost(id: number): Promise<ServicePost | undefined> {
@@ -802,7 +912,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(servicePosts)
       .where(eq(servicePosts.status, "published"))
-      .orderBy(desc(servicePosts.publishedAt), desc(servicePosts.updatedAt))
+      .orderBy(asc(servicePosts.order), desc(servicePosts.publishedAt), desc(servicePosts.updatedAt))
       .limit(limit)
       .offset(offset);
   }
@@ -821,6 +931,21 @@ export class DatabaseStorage implements IStorage {
       .where(eq(servicePosts.id, id))
       .returning();
     return updated;
+  }
+
+  async reorderServicePosts(postIds: number[]): Promise<void> {
+    await ensureServicePostsSchema();
+    if (!postIds.length) return;
+
+    await db.transaction(async (tx) => {
+      for (let index = 0; index < postIds.length; index += 1) {
+        const id = postIds[index];
+        await tx
+          .update(servicePosts)
+          .set({ order: index + 1, updatedAt: new Date() })
+          .where(eq(servicePosts.id, id));
+      }
+    });
   }
 
   async deleteServicePost(id: number): Promise<void> {
@@ -902,6 +1027,110 @@ export class DatabaseStorage implements IStorage {
     await ensureGallerySchema();
     const deletedRows = await db.delete(galleryImages).returning({ id: galleryImages.id });
     return deletedRows.length;
+  }
+
+  async getReviewsSettings(): Promise<ReviewsSettings> {
+    await ensureReviewsSchema();
+    const [settings] = await db.select().from(reviewsSettings).orderBy(asc(reviewsSettings.id)).limit(1);
+    if (settings) return settings;
+
+    const company = await this.getCompanySettings();
+    const legacyReviews = company.homepageContent?.reviewsSection;
+    const widgetEmbedUrl = (legacyReviews?.embedUrl || "").trim();
+
+    const [created] = await db.insert(reviewsSettings).values({
+      sectionTitle: (legacyReviews?.title || "").trim(),
+      sectionSubtitle: (legacyReviews?.subtitle || "").trim(),
+      displayMode: "auto",
+      widgetEnabled: widgetEmbedUrl.length > 0,
+      widgetEmbedUrl,
+      fallbackEnabled: true,
+      updatedAt: new Date(),
+    }).returning();
+
+    return created;
+  }
+
+  async upsertReviewsSettings(settings: Partial<InsertReviewsSettings>): Promise<ReviewsSettings> {
+    await ensureReviewsSchema();
+    const existing = await this.getReviewsSettings();
+    const [updated] = await db
+      .update(reviewsSettings)
+      .set({
+        ...settings,
+        updatedAt: new Date(),
+      })
+      .where(eq(reviewsSettings.id, existing.id))
+      .returning();
+    return updated;
+  }
+
+  async getReviewItems(onlyActive: boolean = false): Promise<ReviewItem[]> {
+    await ensureReviewsSchema();
+
+    if (onlyActive) {
+      return await db
+        .select()
+        .from(reviewItems)
+        .where(eq(reviewItems.isActive, true))
+        .orderBy(asc(reviewItems.sortOrder), desc(reviewItems.createdAt));
+    }
+
+    return await db
+      .select()
+      .from(reviewItems)
+      .orderBy(asc(reviewItems.sortOrder), desc(reviewItems.createdAt));
+  }
+
+  async createReviewItem(item: InsertReviewItem): Promise<ReviewItem> {
+    await ensureReviewsSchema();
+    const [maxSortOrderRow] = await db
+      .select({
+        maxSortOrder: sql<number>`coalesce(max(${reviewItems.sortOrder}), -1)::int`,
+      })
+      .from(reviewItems);
+
+    const nextSortOrder = Number(maxSortOrderRow?.maxSortOrder ?? -1) + 1;
+    const [created] = await db
+      .insert(reviewItems)
+      .values({
+        ...item,
+        sortOrder: typeof item.sortOrder === "number" ? item.sortOrder : nextSortOrder,
+      })
+      .returning();
+    return created;
+  }
+
+  async updateReviewItem(id: number, item: Partial<InsertReviewItem>): Promise<ReviewItem> {
+    await ensureReviewsSchema();
+    const [updated] = await db
+      .update(reviewItems)
+      .set({
+        ...item,
+        updatedAt: new Date(),
+      })
+      .where(eq(reviewItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async reorderReviewItems(itemIds: number[]): Promise<void> {
+    await ensureReviewsSchema();
+    if (!itemIds.length) return;
+
+    await db.transaction(async (tx) => {
+      for (let index = 0; index < itemIds.length; index += 1) {
+        await tx
+          .update(reviewItems)
+          .set({ sortOrder: index, updatedAt: new Date() })
+          .where(eq(reviewItems.id, itemIds[index]));
+      }
+    });
+  }
+
+  async deleteReviewItem(id: number): Promise<void> {
+    await ensureReviewsSchema();
+    await db.delete(reviewItems).where(eq(reviewItems.id, id));
   }
 
 }

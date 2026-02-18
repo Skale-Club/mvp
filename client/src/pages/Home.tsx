@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Link } from "wouter";
-import { ArrowRight, Star, Shield, Clock, Sparkles, Heart, BadgeCheck, ThumbsUp, Trophy, Calendar, FileText, ImageIcon } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Star, Shield, Clock, Sparkles, Heart, BadgeCheck, ThumbsUp, Trophy, Calendar, FileText, ImageIcon } from "lucide-react";
 import { AboutSection } from "@/components/AboutSection";
 import { AreasServedMap } from "@/components/AreasServedMap";
 import { useQuery } from "@tanstack/react-query";
@@ -9,10 +9,33 @@ import type { CompanySettings, BlogPost, HomepageContent, ServicePost, GalleryIm
 import { format } from "date-fns";
 import { trackCTAClick } from "@/lib/analytics";
 import { LeadFormModal } from "@/components/LeadFormModal";
-import { ConsultingStepsSection } from "@/components/ConsultingStepsSection";
 import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/homepageDefaults";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { getServicePostPath } from "@/lib/service-path";
+
+type FallbackReview = {
+  id: number;
+  authorName: string;
+  authorMeta: string;
+  content: string;
+  rating: number;
+  sourceLabel: string;
+  isActive: boolean;
+};
+
+type PublicReviewsPayload = {
+  settings: {
+    sectionTitle: string;
+    sectionSubtitle: string;
+    displayMode: 'auto' | 'widget' | 'fallback';
+    widgetEnabled: boolean;
+    widgetEmbedUrl: string;
+    fallbackEnabled: boolean;
+    useWidget: boolean;
+    useFallback: boolean;
+  };
+  fallbackReviews: FallbackReview[];
+};
 
 function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
   const sectionContent = {
@@ -35,7 +58,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
   };
 
   return (
-    <section className="py-20 bg-[#F8FAFC]">
+    <section className="py-20 bg-white">
       <div className="container-custom mx-auto">
         <div className="flex items-center justify-between mb-12">
           <div>
@@ -116,9 +139,11 @@ export default function Home() {
     queryKey: ['/api/service-posts', 'published', 12, 0],
     queryFn: () => fetch('/api/service-posts?status=published&limit=12&offset=0').then((res) => res.json()),
   });
+  const { data: reviewsPayload } = useQuery<PublicReviewsPayload>({
+    queryKey: ['/api/reviews'],
+  });
   const servicePostsList = Array.isArray(servicePosts) ? servicePosts : [];
 
-const consultingStepsSection: HomepageContent["consultingStepsSection"] = companySettings?.homepageContent?.consultingStepsSection || { enabled: false, steps: [] };
   const homepageContent: Partial<HomepageContent> = companySettings?.homepageContent || {};
   const areasServedSection: HomepageContent["areasServedSection"] = {
     ...DEFAULT_HOMEPAGE_CONTENT.areasServedSection,
@@ -126,9 +151,14 @@ const consultingStepsSection: HomepageContent["consultingStepsSection"] = compan
   };
 
   const trustBadges = homepageContent.trustBadges || [];
-  const reviewsEmbedUrl = homepageContent.reviewsSection?.embedUrl || '';
-  const reviewsTitle = homepageContent.reviewsSection?.title || '';
-  const reviewsSubtitle = homepageContent.reviewsSection?.subtitle || '';
+  const reviewsTitle = (reviewsPayload?.settings?.sectionTitle || '').trim();
+  const reviewsSubtitle = (reviewsPayload?.settings?.sectionSubtitle || '').trim();
+  const reviewsEmbedUrl = (reviewsPayload?.settings?.widgetEmbedUrl || '').trim();
+  const reviewsUseWidget = !!reviewsPayload?.settings?.useWidget;
+  const reviewsUseFallback = !!reviewsPayload?.settings?.useFallback;
+  const fallbackReviews = Array.isArray(reviewsPayload?.fallbackReviews)
+    ? reviewsPayload.fallbackReviews
+    : [];
   const badgeIconMap: Record<string, React.ComponentType<any>> = {
     star: Star,
     shield: Shield,
@@ -144,11 +174,6 @@ const consultingStepsSection: HomepageContent["consultingStepsSection"] = compan
   const heroImageUrl = (companySettings?.heroImageUrl || '').trim();
   const hasHeroImage = heroImageUrl.length > 0;
   const heroBackgroundImageUrl = (companySettings?.heroBackgroundImageUrl || '').trim();
-
-  const handleConsultingCta = () => {
-    setIsFormOpen(true);
-    trackCTAClick('consulting-steps', consultingStepsSection.ctaButtonLabel || '{companySettings?.ctaText || ""}');
-  };
 
   // Handle hash navigation on mount (e.g., /#about)
   useEffect(() => {
@@ -182,10 +207,10 @@ const consultingStepsSection: HomepageContent["consultingStepsSection"] = compan
   return (
     <div className="pb-0">
       {/* Hero Section */}
-      <section className="relative flex items-center lg:items-end pt-16 sm:pt-20 lg:pt-16 pb-12 sm:pb-16 lg:pb-20 overflow-hidden bg-[#1C53A3] min-h-[65vh] sm:min-h-[50vh] lg:min-h-[500px] xl:min-h-[550px]">
-        <div className="container-custom mx-auto relative z-10 w-full">
+      <section className="relative flex items-center justify-center overflow-hidden bg-[#1C53A3] min-h-[65vh] sm:min-h-[50vh] lg:min-h-[500px] xl:min-h-[550px] py-16 sm:py-20">
+        <div className={`container-custom mx-auto relative z-10 w-full py-8 ${trustBadges.length > 0 ? 'translate-y-4 sm:translate-y-2 lg:translate-y-0' : 'translate-y-8'}`}>
           <div className={hasHeroImage ? "grid grid-cols-1 lg:grid-cols-2 gap-1 sm:gap-6 lg:gap-8 items-center lg:items-center" : "grid grid-cols-1 place-items-center"}>
-            <div className={hasHeroImage ? "order-1 lg:order-2 text-white pt-6 sm:pt-8 lg:pt-16 pb-1 sm:pb-5 lg:pb-[5.5rem] lg:translate-y-0 relative z-20" : "order-1 text-white pt-6 sm:pt-8 pb-1 sm:pb-5 relative z-20 w-full max-w-4xl text-center"}>
+            <div className={hasHeroImage ? "order-1 lg:order-2 text-white relative z-20" : "order-1 text-white relative z-20 w-full max-w-4xl text-center"}>
               {homepageContent.heroBadgeImageUrl ? (
                 <div className={hasHeroImage ? "mt-4 sm:mt-0 mb-3 lg:mb-6" : "mt-4 sm:mt-0 mb-3 lg:mb-6 flex justify-center"}>
                   <img
@@ -195,7 +220,7 @@ const consultingStepsSection: HomepageContent["consultingStepsSection"] = compan
                   />
                 </div>
               ) : null}
-              <h1 className="text-[11vw] sm:text-5xl md:text-6xl lg:text-4xl xl:text-5xl font-bold mb-3 lg:mb-6 font-display leading-[1.05] sm:leading-[1.1]">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 lg:mb-6 font-display leading-[0.95] sm:leading-[1.0] lg:leading-[1.05]">
                 {companySettings?.heroTitle ? (
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{companySettings.heroTitle}</span>
                 ) : null}
@@ -236,7 +261,7 @@ const consultingStepsSection: HomepageContent["consultingStepsSection"] = compan
           className="absolute inset-0"
           style={{
             background: heroBackgroundImageUrl
-              ? `linear-gradient(to right bottom, rgba(9, 21, 45, 0.9), rgba(11, 21, 42, 0.9)), url(${heroBackgroundImageUrl}) center/cover no-repeat`
+              ? `linear-gradient(to right bottom, rgba(0, 0, 0, 0.6), rgba(20, 20, 30, 0.7)), url(${heroBackgroundImageUrl}) center/cover no-repeat`
               : `linear-gradient(
                 to right bottom,
                 #09152d,
@@ -279,34 +304,45 @@ const consultingStepsSection: HomepageContent["consultingStepsSection"] = compan
         </div>
       </section>
       )}
-      {consultingStepsSection?.enabled && (consultingStepsSection?.steps?.length ?? 0) > 0 && (
-      <ConsultingStepsSection
-        section={consultingStepsSection}
-        onCtaClick={handleConsultingCta}
-      />
-      )}
       <div className="h-0 bg-[#111111]"></div>
+      <ServicesCarouselSection posts={servicePostsList} />
+      <GalleryShowcaseSection images={galleryPreview || []} />
+      <BlogSection content={homepageContent.blogSection} />
+      {(companySettings?.aboutImageUrl || homepageContent.aboutSection?.description || (homepageContent.aboutSection?.highlights && homepageContent.aboutSection.highlights.length > 0)) && (
+      <section id="about" className="bg-[#F8FAFC] py-20">
+        <AboutSection
+          aboutImageUrl={companySettings?.aboutImageUrl}
+          content={homepageContent.aboutSection}
+        />
+      </section>
+      )}
       {/* Reviews Section */}
-      {(reviewsEmbedUrl || reviewsTitle || reviewsSubtitle) && (
-      <section className="pt-6 sm:pt-10 lg:pt-12 pb-0 bg-[#111111] overflow-hidden mb-0 text-white">
+      {(reviewsUseWidget || (reviewsUseFallback && fallbackReviews.length > 0) || reviewsTitle || reviewsSubtitle) && (
+      <section className="pt-6 sm:pt-10 lg:pt-12 pb-0 bg-white mb-0 text-slate-800">
         <div className="w-full">
-          <div className="container-custom mx-auto mb-16 text-center">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
-              {reviewsTitle}
-            </h2>
-            <p className="text-slate-300 max-w-2xl mx-auto text-lg">
-              {reviewsSubtitle}
-            </p>
-          </div>
-          {reviewsEmbedUrl ? (
+          {(reviewsTitle || reviewsSubtitle) ? (
+            <div className="container-custom mx-auto mb-16 text-center">
+              {reviewsTitle ? (
+                <h2 className="text-3xl md:text-5xl font-bold mb-4 text-slate-800">
+                  {reviewsTitle}
+                </h2>
+              ) : null}
+              {reviewsSubtitle ? (
+                <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+                  {reviewsSubtitle}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {reviewsUseWidget && reviewsEmbedUrl ? (
             <div className="w-full px-0">
-              <div className="pb-0 bg-[#111111] -mt-6 sm:-mt-8 lg:-mt-10">
+                <div className="pb-0 bg-[#F8FAFC] -mt-6 sm:-mt-8 lg:-mt-10">
                 <iframe 
                   className="lc_reviews_widget rounded-none" 
                   src={reviewsEmbedUrl}
                   frameBorder='0' 
                   scrolling='no' 
-                  style={{ minWidth: '100%', width: '100%', height: '488px', border: 'none', display: 'block', borderRadius: '0', background: '#111111' }}
+                   style={{ minWidth: '100%', width: '100%', height: '488px', border: 'none', display: 'block', borderRadius: '0', background: '#F8FAFC' }}
                   onLoad={() => {
                     const script = document.createElement('script');
                     script.type = 'text/javascript';
@@ -317,22 +353,14 @@ const consultingStepsSection: HomepageContent["consultingStepsSection"] = compan
               </div>
             </div>
           ) : null}
+          {!reviewsUseWidget && reviewsUseFallback && fallbackReviews.length > 0 ? (
+            <ReviewsCarouselSection reviews={fallbackReviews} />
+          ) : null}
         </div>
       </section>
       )}
-      <ServicesCarouselSection posts={servicePostsList} />
-      <GalleryShowcaseSection images={galleryPreview || []} />
-      <BlogSection content={homepageContent.blogSection} />
-      {(companySettings?.aboutImageUrl || homepageContent.aboutSection?.description || (homepageContent.aboutSection?.highlights && homepageContent.aboutSection.highlights.length > 0)) && (
-      <section id="about" className="bg-white py-20">
-        <AboutSection
-          aboutImageUrl={companySettings?.aboutImageUrl}
-          content={homepageContent.aboutSection}
-        />
-      </section>
-      )}
       {(companySettings?.mapEmbedUrl || homepageContent.areasServedSection?.heading || homepageContent.areasServedSection?.description) && (
-      <section id="areas-served" className="bg-white py-20">
+      <section id="areas-served" className="bg-[#F8FAFC] py-20">
         <AreasServedMap
           mapEmbedUrl={companySettings?.mapEmbedUrl}
           content={areasServedSection}
@@ -446,6 +474,98 @@ function ServicesCarouselSection({ posts }: { posts: ServicePost[] }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function FallbackReviewCard({ review }: { review: FallbackReview }) {
+  return (
+    <article
+      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm h-full"
+      data-testid={`card-fallback-review-${review.id}`}
+    >
+      <div className="flex items-center gap-1 mb-3">
+        {Array.from({ length: Math.max(1, Math.min(5, review.rating || 5)) }).map((_, index) => (
+          <Star key={`${review.id}-star-${index}`} className="h-4 w-4 text-amber-500 fill-amber-500" />
+        ))}
+      </div>
+      <p className="text-slate-700 leading-relaxed mb-4">"{review.content}"</p>
+      <p className="font-semibold text-slate-900">{review.authorName}</p>
+      {review.authorMeta ? (
+        <p className="text-sm text-slate-500">{review.authorMeta}</p>
+      ) : null}
+      {review.sourceLabel ? (
+        <span className="inline-flex mt-3 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+          {review.sourceLabel}
+        </span>
+      ) : null}
+    </article>
+  );
+}
+
+function ReviewsCarouselSection({ reviews }: { reviews: FallbackReview[] }) {
+  const [api, setApi] = useState<CarouselApi>();
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
+  const enableCarousel = safeReviews.length > 1;
+
+  useEffect(() => {
+    if (!api || !enableCarousel) return;
+    const interval = setInterval(() => {
+      if (api.canScrollNext()) {
+        api.scrollNext();
+      } else {
+        api.scrollTo(0);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [api, enableCarousel]);
+
+  if (safeReviews.length === 0) return null;
+
+  if (!enableCarousel) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-8 pb-16">
+        <FallbackReviewCard review={safeReviews[0]} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full pb-16">
+      <div className="relative">
+        <Carousel
+          setApi={setApi}
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full px-4 sm:px-6 lg:px-8"
+        >
+          <CarouselContent>
+            {safeReviews.map((review) => (
+              <CarouselItem key={review.id} className="pl-0 px-2 sm:px-3 lg:px-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                <FallbackReviewCard review={review} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+        <button
+          type="button"
+          aria-label="Previous review"
+          onClick={() => api?.scrollPrev()}
+          className="inline-flex absolute left-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-slate-700 hover:text-slate-900"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <button
+          type="button"
+          aria-label="Next review"
+          onClick={() => api?.scrollNext()}
+          className="inline-flex absolute right-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-slate-700 hover:text-slate-900"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+      </div>
+    </div>
   );
 }
 
