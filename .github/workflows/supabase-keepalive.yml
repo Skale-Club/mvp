@@ -9,6 +9,9 @@ on:
 jobs:
   keepalive:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL || secrets.POSTGRES_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_PRISMA_URL || secrets.SUPABASE_DB_URL }}
+      SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL || secrets.POSTGRES_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_PRISMA_URL || secrets.SUPABASE_DB_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,8 +25,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate database URL secret
+        shell: bash
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "::error title=Missing DB URL secret::Set one of these GitHub Actions secrets: SUPABASE_DATABASE_URL, DATABASE_URL, POSTGRES_URL, POSTGRES_URL_NON_POOLING, POSTGRES_PRISMA_URL, SUPABASE_DB_URL."
+            exit 1
+          fi
+
       - name: Write heartbeat timestamp in Supabase
-        env:
-          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npx tsx scripts/supabase-keepalive.ts
