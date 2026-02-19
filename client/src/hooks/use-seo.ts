@@ -12,6 +12,7 @@ interface SeoSettings {
   seoRobotsTag: string | null;
   ogType: string | null;
   ogSiteName: string | null;
+  facebookAppId: string | null;
   twitterCard: string | null;
   twitterSite: string | null;
   twitterCreator: string | null;
@@ -114,6 +115,7 @@ export function useSEO() {
     setMetaTag('og:type', settings.ogType || 'website', true);
     setMetaTag('og:site_name', settings.ogSiteName, true);
     setMetaTag('og:url', settings.seoCanonicalUrl || window.location.href, true);
+    setMetaTag('fb:app_id', settings.facebookAppId, true);
 
     setMetaTag('twitter:card', settings.twitterCard || 'summary_large_image');
     setMetaTag('twitter:title', settings.seoTitle);

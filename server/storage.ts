@@ -190,6 +190,7 @@ async function ensureCompanySettingsSchema() {
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_footer_background_color text DEFAULT '#18191F';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_background_color text DEFAULT '#406EF1';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_hover_color text DEFAULT '#355CD0';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS facebook_app_id text DEFAULT '';
     `)
     .then(() => undefined)
     .catch((err) => {

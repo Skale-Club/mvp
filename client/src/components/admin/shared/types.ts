@@ -75,6 +75,7 @@ export interface SEOSettingsData {
   seoRobotsTag: string | null;
   ogType: string | null;
   ogSiteName: string | null;
+  facebookAppId: string | null;
   twitterCard: string | null;
   twitterSite: string | null;
   twitterCreator: string | null;

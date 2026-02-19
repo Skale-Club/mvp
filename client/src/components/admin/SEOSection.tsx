@@ -131,6 +131,7 @@ export function SEOSection() {
     seoRobotsTag: 'index, follow',
     ogType: 'website',
     ogSiteName: '',
+    facebookAppId: '',
     twitterCard: 'summary_large_image',
     twitterSite: '',
     twitterCreator: '',
@@ -157,6 +158,7 @@ export function SEOSection() {
         seoRobotsTag: fetchedSettings.seoRobotsTag || 'index, follow',
         ogType: fetchedSettings.ogType || 'website',
         ogSiteName: fetchedSettings.ogSiteName || '',
+        facebookAppId: fetchedSettings.facebookAppId || '',
         twitterCard: fetchedSettings.twitterCard || 'summary_large_image',
         twitterSite: fetchedSettings.twitterSite || '',
         twitterCreator: fetchedSettings.twitterCreator || '',
@@ -366,6 +368,20 @@ export function SEOSection() {
                     <SelectItem value="product">Product</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="facebookAppId">Facebook App ID</Label>
+                <Input
+                  id="facebookAppId"
+                  value={settings.facebookAppId || ''}
+                  onChange={(e) => updateField('facebookAppId', e.target.value)}
+                  placeholder="123456789012345"
+                  data-testid="input-facebook-app-id"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional, but recommended to avoid Facebook Sharing Debugger warnings
+                </p>
               </div>
 
               <div className="space-y-2">

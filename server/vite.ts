@@ -5,6 +5,8 @@ import viteConfig from "../vite.config";
 import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import { storage } from "./storage.js";
+import { getRequestOrigin, getRequestPath, injectSeoIntoHtml } from "./seo.js";
 
 const viteLogger = createLogger();
 
@@ -48,6 +50,12 @@ export async function setupVite(server: Server, app: Express) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
+      const settings = await storage.getCompanySettings();
+      template = injectSeoIntoHtml(template, settings, {
+        requestOrigin: getRequestOrigin(req),
+        requestPath: getRequestPath(req),
+        envFacebookAppId: process.env.FACEBOOK_APP_ID,
+      });
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {

@@ -441,6 +441,7 @@ export const companySettings = pgTable("company_settings", {
   // Open Graph extended
   ogType: text("og_type").default('website'),
   ogSiteName: text("og_site_name").default(''),
+  facebookAppId: text("facebook_app_id").default(''),
   // Twitter Cards
   twitterCard: text("twitter_card").default('summary_large_image'),
   twitterSite: text("twitter_site").default(''),
