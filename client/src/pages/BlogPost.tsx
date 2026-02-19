@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { LeadFormModal } from '@/components/LeadFormModal';
 import { 
   Calendar, 
   User, 
@@ -20,6 +21,7 @@ import type { BlogPost, CompanySettings } from '@shared/schema';
 
 export default function BlogPostPage() {
   const params = useParams<{ slug: string }>();
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const { data: post, isLoading, error } = useQuery<BlogPost>({
     queryKey: ['/api/blog', params.slug],
@@ -266,11 +268,13 @@ export default function BlogPostPage() {
                     <p className="text-sm text-muted-foreground mb-4">
                       Transform your home with our expert remodeling services. Contact us today for a free consultation.
                     </p>
-                    <Link href="/contact">
-                      <Button className="w-full" data-testid="button-get-quote">
-                        Get a Free Quote
-                      </Button>
-                    </Link>
+                    <Button
+                      className="w-full"
+                      onClick={() => setIsFormOpen(true)}
+                      data-testid="button-get-quote"
+                    >
+                      Get a Free Quote
+                    </Button>
                   </CardContent>
                 </Card>
               </div>
@@ -278,6 +282,7 @@ export default function BlogPostPage() {
           </div>
         </div>
       </article>
+      <LeadFormModal open={isFormOpen} onClose={() => setIsFormOpen(false)} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{
         __html: JSON.stringify({
