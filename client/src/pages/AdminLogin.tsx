@@ -62,12 +62,12 @@ export default function AdminLogin() {
         </button>
         <Card className="w-full shadow-xl border-0">
           <CardHeader className="text-center pb-6">
-            <div className="mx-auto w-20 h-20 rounded-2xl bg-primary flex items-center justify-center mb-6 shadow-lg overflow-hidden">
+            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
               {companySettings?.logoIcon ? (
                 <img
                   src={companySettings.logoIcon}
                   alt="Logo"
-                  className="w-full h-full object-contain p-3"
+                  className="w-full h-full object-contain"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.nextElementSibling as HTMLElement;
@@ -78,7 +78,7 @@ export default function AdminLogin() {
               <img
                 src="/favicon.svg"
                 alt="Logo"
-                className={`w-full h-full object-contain p-3 ${companySettings?.logoIcon ? 'hidden' : ''}`}
+                className={`w-full h-full object-contain ${companySettings?.logoIcon ? 'hidden' : ''}`}
                 onError={(e) => {
                   const target = e.currentTarget as HTMLImageElement;
                   target.style.display = 'none';
@@ -86,7 +86,7 @@ export default function AdminLogin() {
                   if (span) span.classList.remove('hidden');
                 }}
               />
-              <span className="text-2xl font-bold text-white hidden">
+              <span className="text-2xl font-bold text-slate-800 hidden">
                 {(companySettings?.companyName || 'SK').substring(0, 2).toUpperCase()}
               </span>
             </div>
