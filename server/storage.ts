@@ -606,7 +606,7 @@ export class DatabaseStorage implements IStorage {
       existing = await this.getFormLeadBySession(progress.sessionId);
     }
     if (!existing && !progress.nome) {
-      throw new Error("Nome é obrigatório para iniciar o formulário");
+      throw new Error("Full name is required to start the form");
     }
 
     const config = formConfig || (await this.getCompanySettings()).formConfig || DEFAULT_FORM_CONFIG;

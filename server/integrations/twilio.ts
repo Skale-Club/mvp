@@ -104,9 +104,9 @@ export async function sendNewChatNotification(
 
     const { config } = validation;
     const message = [
-      `🔔 Novo chat em ${config.companyName}`,
-      `Conversa: ${conversationId.slice(0, 8)}...`,
-      pageUrl ? `Página: ${pageUrl}` : undefined,
+      `🔔 New chat on ${config.companyName}`,
+      `Conversation: ${conversationId.slice(0, 8)}...`,
+      pageUrl ? `Page: ${pageUrl}` : undefined,
     ]
       .filter(Boolean)
       .join("\n");
@@ -134,9 +134,9 @@ export async function sendLowPerformanceAlert(
 
     const { config } = validation;
     const message = [
-      `⚠️ ${config.companyName}: alerta de tempo de resposta`,
-      `Média: ${formatted}`,
-      `Amostras: ${samples}`,
+      `⚠️ ${config.companyName}: response-time alert`,
+      `Average: ${formatted}`,
+      `Samples: ${samples}`,
     ].join("\n");
 
     return await sendSms(config, message);
@@ -156,10 +156,10 @@ export async function sendHotLeadNotification(
     if (!validation.success) return validation;
 
     const { config } = validation;
-    const cleanName = lead.nome?.trim() || "Sem nome";
-    const cleanPhone = lead.telefone?.trim() || "Sem telefone";
+    const cleanName = lead.nome?.trim() || "No name";
+    const cleanPhone = lead.telefone?.trim() || "No phone";
     const companyLabel = companyName?.trim() || config.companyName || "My Company";
-    const message = `🧲 NEW LEAD | ${companyLabel} | Consultoria | ${cleanName} | ${cleanPhone}`;
+    const message = `🧲 NEW LEAD | ${companyLabel} | ${cleanName} | ${cleanPhone}`;
 
     return await sendSms(config, message);
   } catch (error: any) {

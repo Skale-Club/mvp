@@ -167,12 +167,12 @@ export function LeadsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/form-leads'] });
-      toast({ title: 'Lead deletado' });
+      toast({ title: 'Lead deleted' });
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro ao deletar lead',
-        description: error?.message || 'Tente novamente',
+        title: 'Failed to delete lead',
+        description: error?.message || 'Please try again',
         variant: 'destructive'
       });
     }
@@ -185,12 +185,12 @@ export function LeadsSection() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/form-leads'] });
-      toast({ title: 'Lead atualizado' });
+      toast({ title: 'Lead updated' });
     },
     onError: (error: any) => {
       toast({
-        title: 'Erro ao atualizar lead',
-        description: error?.message || 'Tente novamente',
+        title: 'Failed to update lead',
+        description: error?.message || 'Please try again',
         variant: 'destructive'
       });
     }
@@ -1375,5 +1375,4 @@ function QuestionForm({
 // ============================================
 // BOOKINGS SECTION
 // ============================================
-
 

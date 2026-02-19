@@ -985,7 +985,7 @@ export async function registerRoutes(
   app.get('/api/form-leads/:sessionId', async (req, res) => {
     const lead = await storage.getFormLeadBySession(req.params.sessionId);
     if (!lead) {
-      return res.status(404).json({ message: 'Lead não encontrado' });
+      return res.status(404).json({ message: 'Lead not found' });
     }
     res.json(lead);
   });
@@ -1097,7 +1097,7 @@ export async function registerRoutes(
       res.json(lead);
     } catch (err: any) {
       if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: err.errors?.[0]?.message || 'Erro de validação' });
+        return res.status(400).json({ message: err.errors?.[0]?.message || 'Validation error' });
       }
       if (err?.code === '23505') {
         const sessionId = typeof req.body?.sessionId === 'string' ? req.body.sessionId : null;
@@ -1936,7 +1936,7 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
       if (!settings?.isEnabled || !settings.apiKey || !settings.locationId) {
         return res.status(400).json({
           success: false,
-          message: 'GHL não está configurado. Configure a API Key e Location ID primeiro.'
+          message: 'GHL is not configured. Set API Key and Location ID first.'
         });
       }
 
@@ -1945,7 +1945,7 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
     } catch (err: any) {
       res.status(500).json({
         success: false,
-        message: err.message || 'Erro ao buscar custom fields'
+        message: err.message || 'Failed to fetch custom fields'
       });
     }
   });

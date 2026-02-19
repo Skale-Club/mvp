@@ -35,16 +35,16 @@ type CountryConfig = {
 };
 
 const COUNTRIES: CountryConfig[] = [
-  { code: "US", name: "Estados Unidos", dialCode: "+1", flag: "🇺🇸", format: "(###) ###-####", maxDigits: 10 },
-  { code: "BR", name: "Brasil", dialCode: "+55", flag: "🇧🇷", format: "(##) #####-####", maxDigits: 11 },
-  { code: "MX", name: "México", dialCode: "+52", flag: "🇲🇽", format: "(##) ####-####", maxDigits: 10 },
-  { code: "CA", name: "Canadá", dialCode: "+1", flag: "🇨🇦", format: "(###) ###-####", maxDigits: 10 },
+  { code: "US", name: "United States", dialCode: "+1", flag: "🇺🇸", format: "(###) ###-####", maxDigits: 10 },
+  { code: "BR", name: "Brazil", dialCode: "+55", flag: "🇧🇷", format: "(##) #####-####", maxDigits: 11 },
+  { code: "MX", name: "Mexico", dialCode: "+52", flag: "🇲🇽", format: "(##) ####-####", maxDigits: 10 },
+  { code: "CA", name: "Canada", dialCode: "+1", flag: "🇨🇦", format: "(###) ###-####", maxDigits: 10 },
   { code: "PT", name: "Portugal", dialCode: "+351", flag: "🇵🇹", format: "### ### ###", maxDigits: 9 },
-  { code: "ES", name: "Espanha", dialCode: "+34", flag: "🇪🇸", format: "### ### ###", maxDigits: 9 },
-  { code: "UK", name: "Reino Unido", dialCode: "+44", flag: "🇬🇧", format: "#### ######", maxDigits: 10 },
-  { code: "DE", name: "Alemanha", dialCode: "+49", flag: "🇩🇪", format: "### #######", maxDigits: 10 },
-  { code: "FR", name: "França", dialCode: "+33", flag: "🇫🇷", format: "# ## ## ## ##", maxDigits: 9 },
-  { code: "IT", name: "Itália", dialCode: "+39", flag: "🇮🇹", format: "### ### ####", maxDigits: 10 },
+  { code: "ES", name: "Spain", dialCode: "+34", flag: "🇪🇸", format: "### ### ###", maxDigits: 9 },
+  { code: "UK", name: "United Kingdom", dialCode: "+44", flag: "🇬🇧", format: "#### ######", maxDigits: 10 },
+  { code: "DE", name: "Germany", dialCode: "+49", flag: "🇩🇪", format: "### #######", maxDigits: 10 },
+  { code: "FR", name: "France", dialCode: "+33", flag: "🇫🇷", format: "# ## ## ## ##", maxDigits: 9 },
+  { code: "IT", name: "Italy", dialCode: "+39", flag: "🇮🇹", format: "### ### ####", maxDigits: 10 },
 ];
 
 const DEFAULT_COUNTRY = "US";
@@ -148,6 +148,10 @@ function getFieldError(question: FormQuestion | undefined, answers: Answers, sel
   if (!question) return null;
 
   const value = (answers[question.id] || "").trim();
+
+  if (question.id === "nome" && !value) {
+    return "Full name is required to start the form";
+  }
 
   // Check if required and empty
   if (question.required && !value) {
@@ -665,7 +669,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
         <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-[#406EF1]" />
-          <p className="text-slate-600">Carregando formulário...</p>
+          <p className="text-slate-600">Loading form...</p>
         </div>
       </div>,
       document.body
@@ -687,7 +691,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
           <div className="relative bg-white text-slate-900 h-full sm:h-auto rounded-none sm:rounded-3xl shadow-2xl overflow-hidden" ref={containerRef}>
             <button
               className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-              aria-label="Fechar formulário"
+              aria-label="Close form"
               onClick={handleClose}
             >
               <X className="h-5 w-5" />
@@ -706,8 +710,8 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                   <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 mt-0.5" />
                     <div>
-                      <p className="font-semibold">Importante</p>
-                      <p>Não feche esta janela até completar o formulário. Seu navegador não permite salvar localmente.</p>
+                      <p className="font-semibold">Important</p>
+                      <p>Do not close this window until you complete the form. Your browser cannot save progress locally.</p>
                     </div>
                   </div>
                 )}
@@ -916,7 +920,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                         onClick={handleBack}
                         disabled={currentStep === 1}
                         className="inline-flex items-center justify-center rounded-xl border border-slate-300 p-3 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Voltar"
+                        aria-label="Go back"
                       >
                         <ArrowLeft className="h-5 w-5" />
                       </button>
@@ -928,7 +932,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                           !canProceed && "opacity-60 cursor-not-allowed"
                         )}
                       >
-                        {isLastStep ? "Finalizar" : "Próximo"}
+                        {isLastStep ? "Finish" : "Next"}
                         <ArrowRight className="h-4 w-4 flex-shrink-0" />
                       </button>
                     </div>
@@ -939,8 +943,8 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                   <div className="py-12 flex flex-col items-center justify-center gap-4">
                     <div className="h-14 w-14 rounded-full border-4 border-slate-200 border-t-[#406EF1] animate-spin" />
                     <div className="text-center space-y-2">
-                      <p className="text-xl font-semibold text-slate-900">Analisando seu perfil...</p>
-                      <p className="text-slate-500">Isso leva apenas alguns instantes.</p>
+                      <p className="text-xl font-semibold text-slate-900">Preparing your estimate...</p>
+                      <p className="text-slate-500">We are reviewing your answers now.</p>
                     </div>
                   </div>
                 )}
