@@ -2489,40 +2489,6 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
     }
   });
 
-
-  // Vercel Cron keep-alive
-  app.get('/api/cron', async (req, res) => {
-    try {
-      // Execute the keepalive query
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS supabase_keepalive (
-          id smallint PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-          last_heartbeat_at timestamptz NOT NULL DEFAULT now(),
-          last_heartbeat_hour_utc smallint NOT NULL DEFAULT EXTRACT(HOUR FROM now()),
-          heartbeat_count integer NOT NULL DEFAULT 0,
-          updated_at timestamptz NOT NULL DEFAULT now()
-        );
-      `);
-
-      const result = await db.execute(sql`
-        INSERT INTO supabase_keepalive (id, last_heartbeat_at, last_heartbeat_hour_utc, heartbeat_count, updated_at)
-        VALUES (1, now(), EXTRACT(HOUR FROM now())::smallint, 1, now())
-        ON CONFLICT (id)
-        DO UPDATE
-          SET last_heartbeat_at = now(),
-              last_heartbeat_hour_utc = EXTRACT(HOUR FROM now())::smallint,
-              heartbeat_count = supabase_keepalive.heartbeat_count + 1,
-              updated_at = now()
-        RETURNING id, last_heartbeat_at, last_heartbeat_hour_utc, heartbeat_count;
-      `);
-
-      res.json({ success: true, keepalive: result.rows[0] });
-    } catch (err) {
-      console.error("Cron keepalive error:", err);
-      res.status(500).json({ error: (err as Error).message });
-    }
-  });
-
   return httpServer;
 }
 
