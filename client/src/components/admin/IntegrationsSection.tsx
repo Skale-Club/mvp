@@ -215,8 +215,8 @@ export function IntegrationsSection() {
       queryClient.invalidateQueries({ queryKey: ['/api/company-settings'] });
       setLastSavedAnalytics(new Date());
     } catch (error: any) {
-      toast({ 
-        title: 'Error saving analytics settings', 
+      toast({
+        title: 'Error saving analytics settings',
         description: error.message,
         variant: 'destructive'
       });
@@ -227,11 +227,11 @@ export function IntegrationsSection() {
 
   const updateAnalyticsField = useCallback(<K extends keyof AnalyticsSettings>(field: K, value: AnalyticsSettings[K]) => {
     setAnalyticsSettings(prev => ({ ...prev, [field]: value }));
-    
+
     if (saveAnalyticsTimeoutRef.current) {
       clearTimeout(saveAnalyticsTimeoutRef.current);
     }
-    
+
     saveAnalyticsTimeoutRef.current = setTimeout(() => {
       saveAnalyticsSettings({ [field]: value });
     }, 800);
@@ -343,15 +343,15 @@ export function IntegrationsSection() {
     ghlTestResult === 'success'
       ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200'
       : ghlTestResult === 'error'
-      ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200'
-      : '';
+        ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200'
+        : '';
 
   const openAITestButtonClass =
     openAITestResult === 'success'
       ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200'
       : openAITestResult === 'error'
-      ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200'
-      : '';
+        ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200'
+        : '';
 
   const hasGtmId = analyticsSettings.gtmContainerId.trim().length > 0;
   const hasGa4Id = analyticsSettings.ga4MeasurementId.trim().length > 0;
@@ -364,10 +364,10 @@ export function IntegrationsSection() {
       queryClient.invalidateQueries({ queryKey: ['/api/integrations/ghl'] });
       toast({ title: 'Settings saved successfully' });
     } catch (error: any) {
-      toast({ 
-        title: 'Failed to save settings', 
-        description: error.message, 
-        variant: 'destructive' 
+      toast({
+        title: 'Failed to save settings',
+        description: error.message,
+        variant: 'destructive'
       });
     } finally {
       setIsSaving(false);
@@ -402,25 +402,25 @@ export function IntegrationsSection() {
         credentials: 'include'
       });
       const result = await response.json();
-      
+
       if (result.success) {
         setGhlTestResult('success');
         await saveSettings(settings);
         toast({ title: 'Connection successful', description: 'Settings saved. You can now enable the integration.' });
       } else {
         setGhlTestResult('error');
-        toast({ 
-          title: 'Connection failed', 
+        toast({
+          title: 'Connection failed',
           description: result.message || 'Could not connect to GoHighLevel',
           variant: 'destructive'
         });
       }
     } catch (error: any) {
       setGhlTestResult('error');
-      toast({ 
-        title: 'Connection failed', 
-        description: error.message, 
-        variant: 'destructive' 
+      toast({
+        title: 'Connection failed',
+        description: error.message,
+        variant: 'destructive'
       });
     } finally {
       setIsTesting(false);
@@ -635,20 +635,21 @@ export function IntegrationsSection() {
       <TwilioSection />
 
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <Card className="border-0 bg-muted">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
                     <SiGoogletagmanager className="w-4 h-4 text-[#1A73E8] dark:text-[#8AB4F8]" />
                   </div>
-                  <CardTitle className="text-base">Google Tag Manager</CardTitle>
+                  <CardTitle className="text-base leading-tight">Google Tag Manager</CardTitle>
                 </div>
                 <Switch
                   checked={analyticsSettings.gtmEnabled}
                   onCheckedChange={(checked) => updateAnalyticsField('gtmEnabled', checked)}
                   data-testid="switch-gtm-enabled"
+                  className="shrink-0"
                 />
               </div>
             </CardHeader>
@@ -680,15 +681,16 @@ export function IntegrationsSection() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
                     <SiGoogleanalytics className="w-4 h-4 text-[#E37400] dark:text-[#FFB74D]" />
                   </div>
-                  <CardTitle className="text-base">Google Analytics 4</CardTitle>
+                  <CardTitle className="text-base leading-tight">Google Analytics 4</CardTitle>
                 </div>
                 <Switch
                   checked={analyticsSettings.ga4Enabled}
                   onCheckedChange={(checked) => updateAnalyticsField('ga4Enabled', checked)}
                   data-testid="switch-ga4-enabled"
+                  className="shrink-0"
                 />
               </div>
             </CardHeader>
@@ -720,15 +722,16 @@ export function IntegrationsSection() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
                     <SiFacebook className="w-4 h-4 text-[#1877F2] dark:text-[#5AA2FF]" />
                   </div>
-                  <CardTitle className="text-base">Facebook Pixel</CardTitle>
+                  <CardTitle className="text-base leading-tight">Facebook Pixel</CardTitle>
                 </div>
                 <Switch
                   checked={analyticsSettings.facebookPixelEnabled}
                   onCheckedChange={(checked) => updateAnalyticsField('facebookPixelEnabled', checked)}
                   data-testid="switch-fb-pixel-enabled"
+                  className="shrink-0"
                 />
               </div>
             </CardHeader>

@@ -17,7 +17,7 @@ import { sendHotLeadNotification, sendLowPerformanceAlert, sendNewChatNotificati
 import { registerStorageRoutes } from "./storage/storageAdapter.js";
 import { db } from "./db.js";
 import { users } from "#shared/schema.js";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 // Admin authentication middleware - Supabase Auth
 async function requireAdmin(req: Request, res: Response, next: NextFunction) {
@@ -1163,7 +1163,7 @@ export async function registerRoutes(
       const canonicalUrl =
         settings?.seoCanonicalUrl ||
         `${req.protocol}://${hostname}`;
-      
+
       const robotsTxt = `User-agent: *
 Allow: /
 
@@ -1840,7 +1840,7 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
     try {
       const settings = await storage.getIntegrationSettings('gohighlevel');
       if (!settings) {
-        return res.json({ 
+        return res.json({
           provider: 'gohighlevel',
           apiKey: '',
           locationId: '',
@@ -1861,22 +1861,22 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
   app.put('/api/integrations/ghl', requireAdmin, async (req, res) => {
     try {
       const { apiKey, locationId, calendarId, isEnabled } = req.body;
-      
+
       const existingSettings = await storage.getIntegrationSettings('gohighlevel');
-      
+
       const settingsToSave: any = {
         provider: 'gohighlevel',
         locationId,
         calendarId: calendarId || '2irhr47AR6K0AQkFqEQl',
         isEnabled: isEnabled ?? false
       };
-      
+
       if (apiKey && apiKey !== '********') {
         settingsToSave.apiKey = apiKey;
       } else if (existingSettings?.apiKey) {
         settingsToSave.apiKey = existingSettings.apiKey;
       }
-      
+
       const settings = await storage.upsertIntegrationSettings(settingsToSave);
       res.json({
         ...settings,
@@ -1891,26 +1891,26 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
   app.post('/api/integrations/ghl/test', requireAdmin, async (req, res) => {
     try {
       const { apiKey, locationId } = req.body;
-      
+
       let keyToTest = apiKey;
       if (apiKey === '********' || !apiKey) {
         const existingSettings = await storage.getIntegrationSettings('gohighlevel');
         keyToTest = existingSettings?.apiKey;
       }
-      
+
       if (!keyToTest || !locationId) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'API key and Location ID are required' 
+        return res.status(400).json({
+          success: false,
+          message: 'API key and Location ID are required'
         });
       }
-      
+
       const result = await testGHLConnection(keyToTest, locationId);
       res.json(result);
     } catch (err) {
-      res.status(500).json({ 
-        success: false, 
-        message: (err as Error).message 
+      res.status(500).json({
+        success: false,
+        message: (err as Error).message
       });
     }
   });
@@ -2124,7 +2124,7 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
       const status = req.query.status as string | undefined;
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
       const offset = req.query.offset ? Number(req.query.offset) : 0;
-      
+
       if (status === 'published' && limit) {
         const posts = await storage.getPublishedBlogPosts(limit, offset);
         res.json(posts);
@@ -2231,13 +2231,13 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
     try {
       const param = req.params.idOrSlug;
       let post;
-      
+
       if (/^\d+$/.test(param)) {
         post = await storage.getBlogPost(Number(param));
       } else {
         post = await storage.getBlogPostBySlug(param);
       }
-      
+
       if (!post) {
         return res.status(404).json({ message: 'Blog post not found' });
       }
@@ -2346,10 +2346,10 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
     try {
       const { getSupabaseAdmin } = await import('./lib/supabase.js');
       const supabaseAdmin = getSupabaseAdmin();
-      
+
       // Fetch users from Supabase Auth
       const { data: authUsers, error } = await supabaseAdmin.auth.admin.listUsers();
-      
+
       if (error) {
         console.error('Error fetching users from Supabase:', error);
         return res.status(500).json({ message: 'Failed to fetch users from Supabase' });
@@ -2489,6 +2489,39 @@ You: "Excelente, João! Um especialista entrará em contato em até 24 horas par
     }
   });
 
+
+  // Vercel Cron keep-alive
+  app.get('/api/cron', async (req, res) => {
+    try {
+      // Execute the keepalive query
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS supabase_keepalive (
+          id smallint PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+          last_heartbeat_at timestamptz NOT NULL DEFAULT now(),
+          last_heartbeat_hour_utc smallint NOT NULL DEFAULT EXTRACT(HOUR FROM now()),
+          heartbeat_count integer NOT NULL DEFAULT 0,
+          updated_at timestamptz NOT NULL DEFAULT now()
+        );
+      `);
+
+      const result = await db.execute(sql`
+        INSERT INTO supabase_keepalive (id, last_heartbeat_at, last_heartbeat_hour_utc, heartbeat_count, updated_at)
+        VALUES (1, now(), EXTRACT(HOUR FROM now())::smallint, 1, now())
+        ON CONFLICT (id)
+        DO UPDATE
+          SET last_heartbeat_at = now(),
+              last_heartbeat_hour_utc = EXTRACT(HOUR FROM now())::smallint,
+              heartbeat_count = supabase_keepalive.heartbeat_count + 1,
+              updated_at = now()
+        RETURNING id, last_heartbeat_at, last_heartbeat_hour_utc, heartbeat_count;
+      `);
+
+      res.json({ success: true, keepalive: result.rows[0] });
+    } catch (err) {
+      console.error("Cron keepalive error:", err);
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
 
   return httpServer;
 }

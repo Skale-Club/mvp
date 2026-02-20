@@ -89,11 +89,11 @@ export const Footer = forwardRef<HTMLElement>((_, ref) => {
     () =>
       Array.isArray(servicePostsRaw)
         ? [...servicePostsRaw].sort((a, b) => {
-            const orderA = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
-            const orderB = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
-            if (orderA !== orderB) return orderA - orderB;
-            return a.title.localeCompare(b.title);
-          })
+          const orderA = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+          const orderB = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+          if (orderA !== orderB) return orderA - orderB;
+          return a.title.localeCompare(b.title);
+        })
         : [],
     [servicePostsRaw]
   );
@@ -221,7 +221,7 @@ export const Footer = forwardRef<HTMLElement>((_, ref) => {
         <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-4 text-center md:text-left">
           <p className="text-gray-400 text-xs md:text-sm">© {new Date().getFullYear()} {companyName}. All rights reserved.</p>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 text-xs md:text-sm md:justify-end">
-            <Link href="/contact" className="text-gray-400 hover:text-gray-200 transition-colors">Contact</Link>
+            <Link href="/contact" className="text-gray-400 hover:text-gray-200 transition-colors" onClick={() => import("@/lib/analytics").then(m => m.trackCTAClick('footer', 'Contact'))}>Contact</Link>
             <Link href="/privacy-policy" className="text-gray-400 hover:text-gray-200 transition-colors">Privacy Policy</Link>
             <Link href="/terms-of-service" className="text-gray-400 hover:text-gray-200 transition-colors">Terms of Service</Link>
           </div>

@@ -51,16 +51,15 @@ function isFbqAvailable(): boolean {
 function injectGTM(containerId: string) {
   if (!containerId || document.getElementById('gtm-script')) return;
 
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
-    'gtm.start': new Date().getTime(),
-    event: 'gtm.js'
-  });
-
   const script = document.createElement('script');
   script.id = 'gtm-script';
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtm.js?id=${containerId}`;
+  script.innerHTML = `
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','${containerId}');
+  `;
   document.head.appendChild(script);
 
   const noscript = document.createElement('noscript');
@@ -71,18 +70,21 @@ function injectGTM(containerId: string) {
 function injectGA4(measurementId: string) {
   if (!measurementId || document.getElementById('ga4-script')) return;
 
-  const script = document.createElement('script');
-  script.id = 'ga4-script';
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-  document.head.appendChild(script);
+  const script1 = document.createElement('script');
+  script1.id = 'ga4-script';
+  script1.async = true;
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+  document.head.appendChild(script1);
 
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function() {
-    window.dataLayer.push(arguments);
-  };
-  window.gtag('js', new Date());
-  window.gtag('config', measurementId);
+  const script2 = document.createElement('script');
+  script2.id = 'ga4-init-script';
+  script2.innerHTML = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${measurementId}');
+  `;
+  document.head.appendChild(script2);
 }
 
 function injectFacebookPixel(pixelId: string) {
@@ -189,9 +191,9 @@ export function trackEvent(eventName: AnalyticsEventName, payload: AnalyticsEven
 }
 
 export function trackPageView(path: string, title?: string) {
-  trackEvent('page_view', { 
-    page_path: path, 
-    page_title: title || document.title 
+  trackEvent('page_view', {
+    page_path: path,
+    page_title: title || document.title
   });
 }
 
