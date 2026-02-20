@@ -60,7 +60,8 @@ function injectGTM(containerId: string) {
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','${containerId}');
   `;
-  document.head.appendChild(script);
+  // Insert at the very beginning of <head> as Google recommends
+  document.head.insertBefore(script, document.head.firstChild);
 
   const noscript = document.createElement('noscript');
   noscript.innerHTML = `<iframe src="https://www.googletagmanager.com/ns.html?id=${containerId}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`;
@@ -70,21 +71,24 @@ function injectGTM(containerId: string) {
 function injectGA4(measurementId: string) {
   if (!measurementId || document.getElementById('ga4-script')) return;
 
-  const script1 = document.createElement('script');
-  script1.id = 'ga4-script';
-  script1.async = true;
-  script1.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-  document.head.appendChild(script1);
-
+  // Per Google's official docs, the init script must come before the async gtag.js loader.
+  // Both are inserted at the top of <head> so they appear as early as possible.
   const script2 = document.createElement('script');
   script2.id = 'ga4-init-script';
   script2.innerHTML = `
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag(){window.dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', '${measurementId}');
   `;
-  document.head.appendChild(script2);
+  document.head.insertBefore(script2, document.head.firstChild);
+
+  const script1 = document.createElement('script');
+  script1.id = 'ga4-script';
+  script1.async = true;
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+  // Insert before the init script so the loader appears first (just above script2)
+  document.head.insertBefore(script1, script2);
 }
 
 function injectFacebookPixel(pixelId: string) {
