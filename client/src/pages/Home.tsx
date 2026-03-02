@@ -49,10 +49,6 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
     queryFn: () => fetch('/api/blog?status=published&limit=3&offset=0').then(r => r.json()),
   });
 
-  if (isLoading || !posts || posts.length === 0) {
-    return null;
-  }
-
   const getExcerpt = (post: BlogPost) => {
     if (post.excerpt) return post.excerpt;
     const text = post.content.replace(/<[^>]*>/g, '');
@@ -75,6 +71,10 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
       api.off("reInit", updateSelection);
     };
   }, [api]);
+
+  if (isLoading || !posts || posts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-20 bg-white">
