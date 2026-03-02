@@ -9,6 +9,7 @@ import { registerIntegrationRoutes } from "./routes/integrations.js";
 import { registerContentRoutes } from "./routes/content.js";
 import { registerUserRoutes } from "./routes/users.js";
 import { registerLeadRoutes } from "./routes/leads.js";
+import { registerReviewsRoutes } from "./routes/reviews.js";
 import { registerServiceRoutes } from "./routes/services.js";
 
 /**
@@ -46,6 +47,7 @@ export async function registerRoutes(
   // Register all route modules
   registerServiceRoutes(app, requireAdmin);
   registerLeadRoutes(app, requireAdmin);
+  registerReviewsRoutes(app, requireAdmin);
   registerContentRoutes(app, requireAdmin);
   registerChatRoutes(app, requireAdmin);
   registerIntegrationRoutes(app, requireAdmin);
