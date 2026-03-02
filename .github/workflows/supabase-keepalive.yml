@@ -44,7 +44,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Write heartbeat timestamp in Supabase
         run: npx tsx scripts/supabase-keepalive.ts
