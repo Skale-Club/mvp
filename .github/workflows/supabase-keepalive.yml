@@ -9,12 +9,33 @@ on:
 jobs:
   keepalive:
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL || secrets.POSTGRES_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_PRISMA_URL || secrets.SUPABASE_DB_URL }}
-      SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL || secrets.POSTGRES_URL || secrets.POSTGRES_URL_NON_POOLING || secrets.POSTGRES_PRISMA_URL || secrets.SUPABASE_DB_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve database URL secret
+        shell: bash
+        run: |
+          DB_URL="${{ secrets.SUPABASE_DATABASE_URL }}"
+          if [ -z "${DB_URL}" ]; then DB_URL="${{ secrets.DATABASE_URL }}"; fi
+          if [ -z "${DB_URL}" ]; then DB_URL="${{ secrets.POSTGRES_URL }}"; fi
+          if [ -z "${DB_URL}" ]; then DB_URL="${{ secrets.POSTGRES_URL_NON_POOLING }}"; fi
+          if [ -z "${DB_URL}" ]; then DB_URL="${{ secrets.POSTGRES_PRISMA_URL }}"; fi
+          if [ -z "${DB_URL}" ]; then DB_URL="${{ secrets.SUPABASE_DB_URL }}"; fi
+
+          if [ -z "${DB_URL}" ]; then
+            echo "::error title=Missing DB URL secret::Set one of these GitHub Actions secrets: SUPABASE_DATABASE_URL, DATABASE_URL, POSTGRES_URL, POSTGRES_URL_NON_POOLING, POSTGRES_PRISMA_URL, SUPABASE_DB_URL."
+            exit 1
+          fi
+
+          {
+            echo "DATABASE_URL<<EOF"
+            echo "${DB_URL}"
+            echo "EOF"
+            echo "SUPABASE_DATABASE_URL<<EOF"
+            echo "${DB_URL}"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -24,14 +45,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Validate database URL secret
-        shell: bash
-        run: |
-          if [ -z "${DATABASE_URL}" ]; then
-            echo "::error title=Missing DB URL secret::Set one of these GitHub Actions secrets: SUPABASE_DATABASE_URL, DATABASE_URL, POSTGRES_URL, POSTGRES_URL_NON_POOLING, POSTGRES_PRISMA_URL, SUPABASE_DB_URL."
-            exit 1
-          fi
 
       - name: Write heartbeat timestamp in Supabase
         run: npx tsx scripts/supabase-keepalive.ts
