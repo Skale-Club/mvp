@@ -1,14 +1,24 @@
 import { Link } from "wouter";
+import { useEffect } from "react";
 import { ChevronDown, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CompanySettings } from "@shared/schema";
 import Lottie from "lottie-react";
 import successAnimation from "../assets/success-animation.json";
+import { trackEvent } from "@/lib/analytics";
 
 export default function LeadThankYou() {
   const { data: companySettings } = useQuery<CompanySettings>({
     queryKey: ["/api/company-settings"],
   });
+
+  useEffect(() => {
+    trackEvent("generate_lead", {
+      location: "/thankyou",
+      label: "thank_you_page",
+      category: "lead_generation",
+    });
+  }, []);
 
   const companyName = companySettings?.companyName?.trim() || "";
   const headline = `Thanks for contacting ${companyName}.`;

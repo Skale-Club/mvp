@@ -118,6 +118,7 @@ export type AnalyticsEventName =
   | 'begin_checkout'
   | 'add_payment_info'
   | 'purchase'
+  | 'generate_lead'
   | 'contact_click'
   | 'page_view'
   | 'chat_open'
@@ -170,6 +171,7 @@ export function trackEvent(eventName: AnalyticsEventName, payload: AnalyticsEven
     const fbEventMap: Record<string, string> = {
       'begin_checkout': 'InitiateCheckout',
       'purchase': 'Purchase',
+      'generate_lead': 'Lead',
       'view_item': 'ViewContent',
       'view_item_list': 'ViewContent',
       'contact_click': 'Contact',

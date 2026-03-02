@@ -1,0 +1,23 @@
+import type { Express, Request, Response } from "express";
+import { storage } from "./storage.js";
+import { api } from "#shared/routes.js";
+import { generateSitemap } from "./sitemap.js";
+
+// Função para registrar as rotas
+export async function registerRoutes(app: Express) {
+  // Rota de health check
+  app.get(api.health, async (req: Request, res: Response) => {
+    res.json({ status: "ok" });
+  });
+
+  // Rota para configurações da empresa
+  app.get(api.settings, async (req: Request, res: Response) => {
+    const settings = await storage.getCompanySettings();
+    res.json(settings);
+  });
+
+  // Rota para o sitemap dinâmico
+  app.get('/sitemap.xml', generateSitemap);
+
+  // Adicione outras rotas existentes aqui, se necessário
+}

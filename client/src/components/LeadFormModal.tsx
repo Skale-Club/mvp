@@ -613,13 +613,6 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
       setLastAnsweredStep(totalQuestions);
       if (lead) {
         clearStoredState();
-        const leadClassification = lead.classificacao || classification;
-        const leadScore = lead.scoreTotal ?? score.total;
-        trackEvent("form_completed", {
-          classification: leadClassification,
-          score: leadScore,
-          synced: true,
-        });
         onClose();
         window.location.href = "/thankyou";
         return;
