@@ -171,7 +171,6 @@ export function HeroSettingsSection() {
 
   useEffect(() => {
     if (settings) {
-      console.log('Loading settings, heroImageUrl from DB:', settings.heroImageUrl);
       setHeroTitle(settings.heroTitle || HERO_DEFAULTS.title);
       setHeroSubtitle(settings.heroSubtitle || HERO_DEFAULTS.subtitle);
       setHeroImageUrl(settings.heroImageUrl || HERO_DEFAULTS.image);
@@ -289,19 +288,17 @@ export function HeroSettingsSection() {
 
   const saveHeroSettings = useCallback(async (updates: Partial<CompanySettingsData>, fieldKeys?: string[]) => {
     setIsSaving(true);
-    console.log('saveHeroSettings called with:', updates);
     try {
       const response = await apiRequest('PUT', '/api/company-settings', updates);
-      const savedData = await response.json();
-      console.log('Saved data from server:', savedData);
+      await response.json();
       queryClient.invalidateQueries({ queryKey: ['/api/company-settings'] });
       const keysToMark = fieldKeys && fieldKeys.length > 0 ? fieldKeys : Object.keys(updates);
       if (keysToMark.length > 0) {
         markFieldsSaved(keysToMark);
       }
     } catch (error: any) {
-      toast({ 
-        title: 'Error saving hero settings', 
+      toast({
+        title: 'Error saving hero settings',
         description: error.message,
         variant: 'destructive'
       });
@@ -333,7 +330,6 @@ export function HeroSettingsSection() {
 
     try {
       const imagePath = await uploadFileToServer(file);
-      console.log('Saving hero image URL:', imagePath);
       setHeroImageUrl(imagePath);
       await saveHeroSettings({ heroImageUrl: imagePath }, ['heroImageUrl']);
       toast({ title: 'Hero image uploaded and saved' });
@@ -385,9 +381,9 @@ export function HeroSettingsSection() {
             <div className="space-y-2">
               <Label htmlFor="heroTitle">Hero Title</Label>
               <div className="relative">
-                <Input 
-                  id="heroTitle" 
-                  value={heroTitle} 
+                <Input
+                  id="heroTitle"
+                  value={heroTitle}
                   onChange={(e) => {
                     setHeroTitle(e.target.value);
                     triggerAutoSave({ heroTitle: e.target.value }, ['heroTitle']);
@@ -402,9 +398,9 @@ export function HeroSettingsSection() {
             <div className="space-y-2">
               <Label htmlFor="heroSubtitle">Hero Subtitle</Label>
               <div className="relative">
-                <Textarea 
-                  id="heroSubtitle" 
-                  value={heroSubtitle} 
+                <Textarea
+                  id="heroSubtitle"
+                  value={heroSubtitle}
                   onChange={(e) => {
                     setHeroSubtitle(e.target.value);
                     triggerAutoSave({ heroSubtitle: e.target.value }, ['heroSubtitle']);
@@ -420,9 +416,9 @@ export function HeroSettingsSection() {
             <div className="space-y-2">
               <Label htmlFor="ctaText">Call to Action Button Text</Label>
               <div className="relative">
-                <Input 
-                  id="ctaText" 
-                  value={ctaText} 
+                <Input
+                  id="ctaText"
+                  value={ctaText}
                   onChange={(e) => {
                     setCtaText(e.target.value);
                     triggerAutoSave({ ctaText: e.target.value }, ['ctaText']);
@@ -1186,9 +1182,9 @@ export function HeroSettingsSection() {
                   </div>
                 )}
                 <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                  <input 
-                    type="file" 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    className="hidden"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -1204,12 +1200,12 @@ export function HeroSettingsSection() {
                           variant: 'destructive'
                         });
                       }
-                    }} 
-                    accept="image/*" 
+                    }}
+                    accept="image/*"
                   />
                   <Plus className="w-8 h-8 text-white" />
                 </label>
-               </div>
+              </div>
             </div>
           </div>
         </div>

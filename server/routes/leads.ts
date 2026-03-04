@@ -12,7 +12,7 @@ import { getOrCreateGHLContact } from "../integrations/ghl.js";
  * Register form configuration and lead management routes
  */
 export function registerLeadRoutes(app: Express, requireAdmin: any) {
-  
+
   // ===============================
   // Form Configuration Routes
   // ===============================
@@ -279,14 +279,13 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
   app.get('/api/form-leads', requireAdmin, async (req, res) => {
     try {
       const parsed = api.formLeads.list.input ? api.formLeads.list.input.parse(req.query) : {};
-      const filters = (parsed || {}) as { 
-        status?: LeadStatus; 
-        classificacao?: LeadClassification; 
-        formCompleto?: boolean; 
-        completionStatus?: 'completo' | 'em_progresso' | 'abandonado'; 
-        search?: string 
+      const filters = (parsed || {}) as {
+        status?: LeadStatus;
+        classificacao?: LeadClassification;
+        formCompleto?: boolean;
+        completionStatus?: 'completo' | 'em_progresso' | 'abandonado';
+        search?: string
       };
-      console.log('[form-leads] query:', req.query, 'parsed filters:', filters);
       const leads = await storage.listFormLeads(filters);
       res.json(leads);
     } catch (err) {
@@ -303,10 +302,10 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
       if (Number.isNaN(id)) {
         return res.status(400).json({ message: 'Invalid lead id' });
       }
-      const updates = api.formLeads.update.input.parse(req.body) as { 
-        status?: LeadStatus; 
-        observacoes?: string; 
-        notificacaoEnviada?: boolean 
+      const updates = api.formLeads.update.input.parse(req.body) as {
+        status?: LeadStatus;
+        observacoes?: string;
+        notificacaoEnviada?: boolean
       };
       const updated = await storage.updateFormLead(id, updates);
       if (!updated) {
