@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -356,6 +357,92 @@ export function IntegrationsSection() {
   const hasGtmId = analyticsSettings.gtmContainerId.trim().length > 0;
   const hasGa4Id = analyticsSettings.ga4MeasurementId.trim().length > 0;
   const hasFacebookPixelId = analyticsSettings.facebookPixelId.trim().length > 0;
+  const channelStatus = {
+    ga4: analyticsSettings.ga4Enabled && hasGa4Id,
+    facebook: analyticsSettings.facebookPixelEnabled && hasFacebookPixelId,
+    ghl: settings.isEnabled,
+    telegram: false
+  } as const;
+  type ChannelKey = keyof typeof channelStatus;
+  type EventChannelMap = Record<ChannelKey, boolean>;
+  const websiteEvents: Array<{ event: string; trigger: string; channels: EventChannelMap }> = [
+    {
+      event: 'generate_lead',
+      trigger: 'When the thank you page is viewed',
+      channels: { ga4: true, facebook: true, ghl: true, telegram: false }
+    },
+    {
+      event: 'contact_click',
+      trigger: 'When a phone CTA is clicked',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    },
+    {
+      event: 'form_completed',
+      trigger: 'When the lead form is submitted',
+      channels: { ga4: true, facebook: true, ghl: true, telegram: false }
+    },
+    {
+      event: 'page_view',
+      trigger: 'When users navigate between pages',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    },
+    {
+      event: 'view_item_list',
+      trigger: 'When the services page is viewed',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    },
+    {
+      event: 'form_open',
+      trigger: 'When the lead form is opened',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    },
+    {
+      event: 'form_step_completed',
+      trigger: 'When a lead form step is completed',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    },
+    {
+      event: 'form_abandoned',
+      trigger: 'When users abandon the lead form',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    },
+    {
+      event: 'chat_open',
+      trigger: 'When the chat widget is opened',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    },
+    {
+      event: 'chat_lead_captured',
+      trigger: 'When chat captures a lead',
+      channels: { ga4: true, facebook: true, ghl: true, telegram: false }
+    },
+    {
+      event: 'chat_message_sent',
+      trigger: 'When a visitor sends a chat message',
+      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    }
+  ];
+  const renderChannelStatus = (isSupported: boolean, isActive: boolean) => {
+    if (!isSupported) {
+      return <span className="text-muted-foreground">-</span>;
+    }
+
+    return (
+      <Badge
+        variant="outline"
+        className={clsx(
+          'min-w-[70px] justify-center border-transparent text-[11px] font-semibold',
+          isActive
+            ? 'bg-sky-500/20 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300'
+            : 'bg-muted text-muted-foreground'
+        )}
+      >
+        {isActive ? 'Active' : 'Inactive'}
+      </Badge>
+    );
+  };
+  const isEventActive = (channels: EventChannelMap) =>
+    (Object.keys(channelStatus) as ChannelKey[]).some((channel) => channels[channel] && channelStatus[channel]);
 
   const saveSettings = async (settingsToSave?: GHLSettings) => {
     setIsSaving(true);
@@ -762,60 +849,57 @@ export function IntegrationsSection() {
       </div>
 
       <div className="bg-muted p-6 rounded-lg space-y-4 transition-all">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <LayoutGrid className="w-5 h-5 text-primary" />
-          Tracked Events
-        </h2>
-        <div className="p-4 bg-card/60 rounded-lg">
-          <p className="text-xs text-muted-foreground mb-3">
-            When enabled, the following events are automatically tracked:
-          </p>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Conversion Events - Most Important */}
-            <div className="text-xs bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-2 rounded">
-              <code className="text-green-700 dark:text-green-400 font-mono flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                generate_lead
-              </code>
-              <p className="text-green-600 dark:text-green-500 mt-0.5 font-medium">🔥 CONVERSION - Thank You Page</p>
-            </div>
-            <div className="text-xs bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-2 rounded">
-              <code className="text-green-700 dark:text-green-400 font-mono flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                contact_click
-              </code>
-              <p className="text-green-600 dark:text-green-500 mt-0.5 font-medium">🔥 CONVERSION - Phone Click</p>
-            </div>
-            <div className="text-xs bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-2 rounded">
-              <code className="text-green-700 dark:text-green-400 font-mono flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                form_completed
-              </code>
-              <p className="text-green-600 dark:text-green-500 mt-0.5 font-medium">🔥 CONVERSION - Lead Form</p>
-            </div>
-            {/* Engagement Events */}
-            {[
-              { event: 'cta_click', desc: 'CTA button clicks (hero, footer)' },
-              { event: 'page_view', desc: 'Page navigation' },
-              { event: 'view_item_list', desc: 'Services page viewed' },
-              { event: 'form_open', desc: 'Lead form opened' },
-              { event: 'form_step_completed', desc: 'Form step completed' },
-              { event: 'form_abandoned', desc: 'Form abandoned midway' },
-              { event: 'chat_open', desc: 'Chat widget opened' },
-              { event: 'chat_lead_captured', desc: 'Lead captured via chat' },
-              { event: 'chat_message_sent', desc: 'Chat message sent' },
-            ].map(({ event, desc }) => (
-              <div key={event} className="text-xs bg-muted/40 p-2 rounded">
-                <code className="text-primary font-mono">{event}</code>
-                <p className="text-muted-foreground mt-0.5">{desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <p className="text-xs text-amber-700 dark:text-amber-400">
-              <strong>💡 Tip:</strong> Mark <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">generate_lead</code>, <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">contact_click</code>, and <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">form_completed</code> as conversions in GA4 and Facebook Ads for proper tracking.
+        <div className="rounded-xl border border-border/60 bg-card/70 overflow-hidden">
+          <div className="px-5 py-4 border-b border-border/60">
+            <h2 className="text-xl font-semibold">Website Events</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Events configured in the platform and whether they are currently active.
             </p>
           </div>
+
+          <Table className="min-w-[900px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="h-10 text-xs uppercase tracking-wide">Event</TableHead>
+                <TableHead className="h-10 text-xs uppercase tracking-wide">Trigger</TableHead>
+                <TableHead className="h-10 text-xs uppercase tracking-wide">GA4</TableHead>
+                <TableHead className="h-10 text-xs uppercase tracking-wide">Facebook</TableHead>
+                <TableHead className="h-10 text-xs uppercase tracking-wide">GHL</TableHead>
+                <TableHead className="h-10 text-xs uppercase tracking-wide">Telegram</TableHead>
+                <TableHead className="h-10 text-xs uppercase tracking-wide">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {websiteEvents.map(({ event, trigger, channels }) => {
+                const active = isEventActive(channels);
+                return (
+                  <TableRow key={event}>
+                    <TableCell className="py-3">
+                      <code className="font-mono text-sm font-semibold text-foreground">{event}</code>
+                    </TableCell>
+                    <TableCell className="py-3 text-sm text-muted-foreground">{trigger}</TableCell>
+                    <TableCell className="py-3">{renderChannelStatus(channels.ga4, channelStatus.ga4)}</TableCell>
+                    <TableCell className="py-3">{renderChannelStatus(channels.facebook, channelStatus.facebook)}</TableCell>
+                    <TableCell className="py-3">{renderChannelStatus(channels.ghl, channelStatus.ghl)}</TableCell>
+                    <TableCell className="py-3">{renderChannelStatus(channels.telegram, channelStatus.telegram)}</TableCell>
+                    <TableCell className="py-3">
+                      <Badge
+                        variant="outline"
+                        className={clsx(
+                          'min-w-[70px] justify-center border-transparent text-[11px] font-semibold',
+                          active
+                            ? 'bg-sky-500/20 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300'
+                            : 'bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>
