@@ -771,18 +771,50 @@ export function IntegrationsSection() {
             When enabled, the following events are automatically tracked:
           </p>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Conversion Events - Most Important */}
+            <div className="text-xs bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-2 rounded">
+              <code className="text-green-700 dark:text-green-400 font-mono flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                generate_lead
+              </code>
+              <p className="text-green-600 dark:text-green-500 mt-0.5 font-medium">🔥 CONVERSION - Thank You Page</p>
+            </div>
+            <div className="text-xs bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-2 rounded">
+              <code className="text-green-700 dark:text-green-400 font-mono flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                contact_click
+              </code>
+              <p className="text-green-600 dark:text-green-500 mt-0.5 font-medium">🔥 CONVERSION - Phone Click</p>
+            </div>
+            <div className="text-xs bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-2 rounded">
+              <code className="text-green-700 dark:text-green-400 font-mono flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                form_completed
+              </code>
+              <p className="text-green-600 dark:text-green-500 mt-0.5 font-medium">🔥 CONVERSION - Lead Form</p>
+            </div>
+            {/* Engagement Events */}
             {[
-              { event: 'cta_click', desc: 'Button clicks (contact/lead actions)' },
+              { event: 'cta_click', desc: 'CTA button clicks (hero, footer)' },
+              { event: 'page_view', desc: 'Page navigation' },
               { event: 'view_item_list', desc: 'Services page viewed' },
               { event: 'form_open', desc: 'Lead form opened' },
-              { event: 'form_completed', desc: 'Lead form submitted' },
+              { event: 'form_step_completed', desc: 'Form step completed' },
+              { event: 'form_abandoned', desc: 'Form abandoned midway' },
+              { event: 'chat_open', desc: 'Chat widget opened' },
               { event: 'chat_lead_captured', desc: 'Lead captured via chat' },
+              { event: 'chat_message_sent', desc: 'Chat message sent' },
             ].map(({ event, desc }) => (
               <div key={event} className="text-xs bg-muted/40 p-2 rounded">
                 <code className="text-primary font-mono">{event}</code>
                 <p className="text-muted-foreground mt-0.5">{desc}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              <strong>💡 Tip:</strong> Mark <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">generate_lead</code>, <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">contact_click</code>, and <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">form_completed</code> as conversions in GA4 and Facebook Ads for proper tracking.
+            </p>
           </div>
         </div>
       </div>
