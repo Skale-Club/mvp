@@ -369,9 +369,9 @@ CONVERSATION FLOW:
 
 FINALIZATION (after complete_lead):
 Based on the classification returned:
-- QUENTE (Hot): "Excelente! Um especialista entrará em contato em até 24 horas para discutir como podemos ajudar seu negócio a crescer!"
-- MORNO (Warm): "Obrigado pelas informações! Vamos analisar seu perfil e entrar em contato em breve."
-- FRIO (Cold): "Obrigado pelo interesse! Vamos enviar alguns conteúdos úteis para você."
+- QUENTE (Hot): "Excellent! A specialist will contact you within 24 hours to discuss how we can help your business grow."
+- MORNO (Warm): "Thanks for the information! We'll review your profile and get in touch soon."
+- FRIO (Cold): "Thanks for your interest! We'll send you some useful content."
 
 SOURCES:
 ${allowFaqs ? '- FAQs are enabled. Use search_faqs for common questions about our services.' : ''}
@@ -393,16 +393,16 @@ RULES:
 
 EXAMPLE CONVERSATION:
 
-You: "Olá! Sou o assistente virtual. Estamos aqui para ajudar seu negócio a crescer! Para começar, qual é o seu nome completo?"
-User: "João Silva"
-[Call save_lead_answer with question_id="nome", answer="João Silva"]
-You: "Prazer, João! Qual é o seu email?"
-User: "joao@email.com"
-[Call save_lead_answer with question_id="email", answer="joao@email.com"]
-You: "Ótimo! E qual é o seu número de WhatsApp?"
+You: "Hello! I'm the virtual assistant. We're here to help your business grow. To get started, what is your full name?"
+User: "John Smith"
+[Call save_lead_answer with question_id="nome", answer="John Smith"]
+You: "Nice to meet you, John! What is your email?"
+User: "john@email.com"
+[Call save_lead_answer with question_id="email", answer="john@email.com"]
+You: "Great! What is your phone number?"
 [Continue through all questions...]
 [When complete, call complete_lead]
-You: "Excelente, João! Um especialista entrará em contato em até 24 horas para discutir como podemos ajudar seu negócio a crescer!"`;
+You: "Excellent, John! A specialist will contact you within 24 hours to discuss how we can help your business grow."`;
       
       const systemPrompt = settings.systemPrompt || defaultSystemPrompt;
 

@@ -84,16 +84,16 @@ export async function getGHLCustomFields(
 ): Promise<{ success: boolean; customFields?: GHLCustomField[]; standardFields?: GHLCustomField[]; message?: string }> {
   // Standard GHL contact fields that can be mapped
   const standardFields: GHLCustomField[] = [
-    { id: 'firstName', name: 'Nome (First Name)', fieldKey: 'firstName', dataType: 'TEXT' },
-    { id: 'lastName', name: 'Sobrenome (Last Name)', fieldKey: 'lastName', dataType: 'TEXT' },
-    { id: 'name', name: 'Nome Completo (Full Name)', fieldKey: 'name', dataType: 'TEXT' },
+    { id: 'firstName', name: 'First Name', fieldKey: 'firstName', dataType: 'TEXT' },
+    { id: 'lastName', name: 'Last Name', fieldKey: 'lastName', dataType: 'TEXT' },
+    { id: 'name', name: 'Full Name', fieldKey: 'name', dataType: 'TEXT' },
     { id: 'email', name: 'Email', fieldKey: 'email', dataType: 'TEXT' },
-    { id: 'phone', name: 'Telefone (Phone)', fieldKey: 'phone', dataType: 'PHONE' },
-    { id: 'address1', name: 'Endereço (Address)', fieldKey: 'address1', dataType: 'TEXT' },
-    { id: 'city', name: 'Cidade (City)', fieldKey: 'city', dataType: 'TEXT' },
-    { id: 'state', name: 'Estado (State)', fieldKey: 'state', dataType: 'TEXT' },
-    { id: 'postalCode', name: 'CEP/Zip Code', fieldKey: 'postalCode', dataType: 'TEXT' },
-    { id: 'companyName', name: 'Nome da Empresa (Company)', fieldKey: 'companyName', dataType: 'TEXT' },
+    { id: 'phone', name: 'Phone', fieldKey: 'phone', dataType: 'PHONE' },
+    { id: 'address1', name: 'Address', fieldKey: 'address1', dataType: 'TEXT' },
+    { id: 'city', name: 'City', fieldKey: 'city', dataType: 'TEXT' },
+    { id: 'state', name: 'State', fieldKey: 'state', dataType: 'TEXT' },
+    { id: 'postalCode', name: 'ZIP Code', fieldKey: 'postalCode', dataType: 'TEXT' },
+    { id: 'companyName', name: 'Company Name', fieldKey: 'companyName', dataType: 'TEXT' },
     { id: 'website', name: 'Website', fieldKey: 'website', dataType: 'TEXT' },
   ];
 

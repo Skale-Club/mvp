@@ -191,9 +191,9 @@ CONVERSATION FLOW:
 
 FINALIZATION (after complete_lead):
 Based on the classification returned:
-- QUENTE (Hot): "Excellent! A specialist will contact you within 24 hours to discuss how we can help your business grow!"
-- MORNO (Warm): "Thank you for the information! We'll review your profile and get in touch soon."
-- FRIO (Cold): "Thank you for your interest! We'll send you some useful content."
+- HOT: "Excellent! A specialist will contact you within 24 hours to discuss how we can help your business grow!"
+- WARM: "Thank you for the information! We'll review your profile and get in touch soon."
+- COLD: "Thank you for your interest! We'll send you some useful content."
 
 TOOLS:
 - get_form_config: Get the qualification questions (call at start)

@@ -17,14 +17,14 @@ export function AboutSection({ content, aboutImageUrl }: AboutSectionProps) {
         <div className="order-2 lg:order-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-medium mb-6">
             <User className="w-4 h-4" />
-            {sectionContent?.label || 'Sobre Nós'}
+            {sectionContent?.label || 'About Us'}
           </div>
           <h2 className="text-3xl md:text-5xl font-bold mb-6 text-[#1D1D1D]">
             {sectionContent?.heading || ""}
           </h2>
 
           <p className="text-slate-600 text-lg mb-6 leading-relaxed">
-            {sectionContent?.description || 'Somos especialistas em nossa área, dedicados a proporcionar os melhores resultados para nossos clientes. Com anos de experiência, oferecemos serviços de alta qualidade com comprometimento e excelência.'}
+            {sectionContent?.description || 'We are specialists in our field, dedicated to delivering the best results for our clients. With years of experience, we provide high-quality services with commitment and excellence.'}
           </p>
 
           {highlights.length > 0 && (

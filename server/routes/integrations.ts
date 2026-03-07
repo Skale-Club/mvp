@@ -226,7 +226,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
       if (!settings?.isEnabled || !settings.apiKey || !settings.locationId) {
         return res.status(400).json({
           success: false,
-          message: 'GHL não está configurado. Configure a API Key e Location ID primeiro.'
+          message: 'GHL is not configured. Set the API key and Location ID first.'
         });
       }
 
@@ -235,7 +235,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
     } catch (err: any) {
       res.status(500).json({
         success: false,
-        message: err.message || 'Erro ao buscar custom fields'
+        message: err.message || 'Error fetching custom fields'
       });
     }
   });

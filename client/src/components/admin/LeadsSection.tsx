@@ -119,6 +119,63 @@ import {
 import { ensureArray, uploadFileToServer } from '@/components/admin/shared/utils';
 
 const menuItems = SIDEBAR_MENU_ITEMS;
+
+const STATUS_LABELS: Record<LeadStatus, string> = {
+  novo: 'New',
+  contatado: 'Contacted',
+  qualificado: 'Qualified',
+  convertido: 'Converted',
+  descartado: 'Discarded',
+};
+
+const CLASSIFICATION_LABELS: Record<LeadClassification, string> = {
+  QUENTE: 'Hot Lead',
+  MORNO: 'Warm Lead',
+  FRIO: 'Cold Lead',
+  DESQUALIFICADO: 'Disqualified',
+};
+
+const LEGACY_FIELD_LABELS: Record<string, string> = {
+  nome: 'Full Name',
+  email: 'Email',
+  telefone: 'Phone',
+  cidadeestado: 'ZIP Code',
+  cep: 'ZIP Code',
+  zip: 'ZIP Code',
+  tiponegocio: 'Project Type',
+  tiponegociooutro: 'Project Details',
+  temponegocio: 'Time in Business',
+  experienciamarketing: 'Marketing Experience',
+  orcamentoanuncios: 'Ad Budget',
+  principaldesafio: 'Main Challenge',
+  disponibilidade: 'Availability',
+  expectativaresultado: 'Start Timeline',
+  scoretotal: 'Total Score',
+  classificacao: 'Classification',
+  formcompleto: 'Form Complete',
+  ultimaperguntarespondida: 'Last Answered Question',
+  observacoes: 'Notes',
+};
+
+function normalizeFieldKey(value: string): string {
+  return value.replace(/[^a-z0-9]/gi, '').toLowerCase();
+}
+
+function formatFieldLabel(fieldId: string): string {
+  const legacy = LEGACY_FIELD_LABELS[normalizeFieldKey(fieldId)];
+  if (legacy) return legacy;
+
+  const base = /^[A-Z0-9]+$/.test(fieldId) ? fieldId.toLowerCase() : fieldId;
+  const withSpaces = base
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!withSpaces) return fieldId;
+  return withSpaces.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function LeadsSection() {
   const { toast } = useToast();
   const [isFormEditorOpen, setIsFormEditorOpen] = useState(false);
@@ -218,19 +275,19 @@ export function LeadsSection() {
 
   const statusOptions: { value: LeadStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'All statuses' },
-    { value: 'novo', label: 'New' },
-    { value: 'contatado', label: 'Contacted' },
-    { value: 'qualificado', label: 'Qualified' },
-    { value: 'convertido', label: 'Converted' },
-    { value: 'descartado', label: 'Discarded' },
+    { value: 'novo', label: STATUS_LABELS.novo },
+    { value: 'contatado', label: STATUS_LABELS.contatado },
+    { value: 'qualificado', label: STATUS_LABELS.qualificado },
+    { value: 'convertido', label: STATUS_LABELS.convertido },
+    { value: 'descartado', label: STATUS_LABELS.descartado },
   ];
 
   const classificationOptions: { value: LeadClassification | 'all'; label: string }[] = [
     { value: 'all', label: 'All classifications' },
-    { value: 'QUENTE', label: 'Hot Lead' },
-    { value: 'MORNO', label: 'Warm Lead' },
-    { value: 'FRIO', label: 'Cold Lead' },
-    { value: 'DESQUALIFICADO', label: 'Disqualified' },
+    { value: 'QUENTE', label: CLASSIFICATION_LABELS.QUENTE },
+    { value: 'MORNO', label: CLASSIFICATION_LABELS.MORNO },
+    { value: 'FRIO', label: CLASSIFICATION_LABELS.FRIO },
+    { value: 'DESQUALIFICADO', label: CLASSIFICATION_LABELS.DESQUALIFICADO },
   ];
 
   const completionOptions: { value: 'all' | 'completo' | 'em_progresso' | 'abandonado'; label: string }[] = [
@@ -258,6 +315,16 @@ export function LeadsSection() {
       default:
         return 'bg-slate-100 text-slate-600 border-slate-200';
     }
+  };
+
+  const classificationLabel = (classificacao?: LeadClassification | null) => {
+    if (!classificacao) return '—';
+    return CLASSIFICATION_LABELS[classificacao] || classificacao;
+  };
+
+  const statusLabel = (status?: LeadStatus | null) => {
+    if (!status) return '—';
+    return STATUS_LABELS[status] || status;
   };
 
   const questionLabel = (lead: FormLead) => {
@@ -483,7 +550,7 @@ export function LeadsSection() {
                   </td>
                   <td className="px-4 py-3">
                     <Badge className={clsx("border", classificationBadge(lead.classificacao))}>
-                      {lead.classificacao || '—'}
+                      {classificationLabel(lead.classificacao)}
                     </Badge>
                   </td>
                   <td className="px-4 py-3">
@@ -571,9 +638,9 @@ export function LeadsSection() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Badge className={clsx("border", classificationBadge(selectedLead.classificacao))}>
-                    {selectedLead.classificacao || '—'}
+                    {classificationLabel(selectedLead.classificacao)}
                   </Badge>
-                  <Badge variant="outline">{selectedLead.status || 'novo'}</Badge>
+                  <Badge variant="outline">{statusLabel(selectedLead.status || 'novo')}</Badge>
                   <Badge variant="secondary">{questionLabel(selectedLead)}</Badge>
                   {selectedLead.ghlSyncStatus && (
                     <Badge className={clsx("border", ghlBadgeClass(selectedLead.ghlSyncStatus))}>
@@ -594,7 +661,7 @@ export function LeadsSection() {
                 <DetailItem label="Availability" value={selectedLead.disponibilidade || '—'} />
                 <DetailItem label="Expected results" value={selectedLead.expectativaResultado || '—'} />
                 <DetailItem label="Total score" value={selectedLead.scoreTotal ?? '—'} />
-                <DetailItem label="Classification" value={selectedLead.classificacao || '—'} />
+                <DetailItem label="Classification" value={classificationLabel(selectedLead.classificacao)} />
                 <DetailItem label="Last updated" value={formatDate((selectedLead.updatedAt as any) || (selectedLead.createdAt as any))} />
               </div>
 
@@ -619,7 +686,7 @@ export function LeadsSection() {
                       const conditionalAnswer = getConditionalAnswer(selectedLead, question);
                       return (
                         <div key={question.id} className="p-3">
-                          <p className="text-xs uppercase text-muted-foreground mb-1">{question.id}</p>
+                          <p className="text-xs uppercase text-muted-foreground mb-1">{formatFieldLabel(question.id)}</p>
                           <p className="font-semibold text-sm text-foreground">{question.title}</p>
                           <p className="text-sm text-muted-foreground mt-1">{answer || '—'}</p>
                           {conditionalAnswer && (
@@ -632,7 +699,7 @@ export function LeadsSection() {
                     })}
                     {extraCustomAnswers.map(([fieldId, value]) => (
                       <div key={fieldId} className="p-3">
-                        <p className="text-xs uppercase text-muted-foreground mb-1">{fieldId}</p>
+                        <p className="text-xs uppercase text-muted-foreground mb-1">{formatFieldLabel(fieldId)}</p>
                         <p className="text-sm text-muted-foreground">{value}</p>
                       </div>
                     ))}
@@ -829,19 +896,19 @@ function FormEditorContent() {
       {/* Thresholds info */}
       <div className="grid grid-cols-2 gap-2">
         <div className="p-3 rounded-xl border bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
-          <p className="text-xs text-green-600 dark:text-green-400 font-semibold">QUENTE</p>
+          <p className="text-xs text-green-600 dark:text-green-400 font-semibold">HOT</p>
           <p className="text-lg font-bold text-green-700 dark:text-green-300">≥ {config.thresholds.hot} pts</p>
         </div>
         <div className="p-3 rounded-xl border bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
-          <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">MORNO</p>
+          <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">WARM</p>
           <p className="text-lg font-bold text-amber-700 dark:text-amber-300">≥ {config.thresholds.warm} pts</p>
         </div>
         <div className="p-3 rounded-xl border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">FRIO</p>
+          <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">COLD</p>
           <p className="text-lg font-bold text-blue-700 dark:text-blue-300">≥ {config.thresholds.cold} pts</p>
         </div>
         <div className="p-3 rounded-xl border bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">DESQUALIFICADO</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">DISQUALIFIED</p>
           <p className="text-lg font-bold text-slate-600 dark:text-slate-300">&lt; {config.thresholds.cold} pts</p>
         </div>
       </div>
@@ -989,17 +1056,17 @@ function ThresholdsForm({
         </p>
         <div className="space-y-3">
           <div className="flex items-center gap-4">
-            <Label className="w-32 text-green-600">QUENTE (≥)</Label>
+            <Label className="w-32 text-green-600">HOT (≥)</Label>
             <Input type="number" value={hot} onChange={(e) => setHot(Number(e.target.value))} min={0} className="w-24" />
             <span className="text-sm text-muted-foreground">points</span>
           </div>
           <div className="flex items-center gap-4">
-            <Label className="w-32 text-amber-600">MORNO (≥)</Label>
+            <Label className="w-32 text-amber-600">WARM (≥)</Label>
             <Input type="number" value={warm} onChange={(e) => setWarm(Number(e.target.value))} min={0} className="w-24" />
             <span className="text-sm text-muted-foreground">points</span>
           </div>
           <div className="flex items-center gap-4">
-            <Label className="w-32 text-blue-600">FRIO (≥)</Label>
+            <Label className="w-32 text-blue-600">COLD (≥)</Label>
             <Input type="number" value={cold} onChange={(e) => setCold(Number(e.target.value))} min={0} className="w-24" />
             <span className="text-sm text-muted-foreground">points</span>
           </div>
@@ -1375,4 +1442,3 @@ function QuestionForm({
 // ============================================
 // BOOKINGS SECTION
 // ============================================
-
