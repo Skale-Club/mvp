@@ -232,17 +232,37 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
     }
   });
 
-  // Public conversation history
   app.get('/api/chat/conversations/:id/messages', async (req, res) => {
     try {
-      const conversation = await storage.getConversation(req.params.id);
+      const conversationId = req.params.id;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(conversationId)) {
+        return res.status(400).json({ message: 'Invalid conversation ID' });
+      }
+
+      const conversation = await storage.getConversation(conversationId);
       if (!conversation) {
         return res.status(404).json({ message: 'Conversation not found' });
       }
-      const messages = await storage.getConversationMessages(req.params.id);
+
+      const messages = await storage.getConversationMessages(conversationId);
+
+      const sess = req.session as any;
+      const isAdmin = sess?.isAdmin === true;
+      if (!isAdmin) {
+        const sanitizedMessages = messages.map(m => ({
+          id: m.id,
+          conversationId: m.conversationId,
+          role: m.role,
+          content: m.content,
+          createdAt: m.createdAt,
+        }));
+        return res.json({ messages: sanitizedMessages });
+      }
+
       res.json({ conversation, messages });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: 'Failed to load conversation' });
     }
   });
 

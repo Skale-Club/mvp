@@ -13,26 +13,22 @@ function resolveSessionSecret(): { secret: string; source: string } {
     return { secret: explicitSecret, source: "SESSION_SECRET" };
   }
 
-  const fallbackCandidates = [
-    { value: process.env.SUPABASE_SERVICE_ROLE_KEY, source: "SUPABASE_SERVICE_ROLE_KEY" },
-    { value: process.env.SUPABASE_DATABASE_URL, source: "SUPABASE_DATABASE_URL" },
-    { value: process.env.DATABASE_URL, source: "DATABASE_URL" },
-    { value: process.env.POSTGRES_URL, source: "POSTGRES_URL" },
-    { value: process.env.VERCEL_GIT_COMMIT_SHA, source: "VERCEL_GIT_COMMIT_SHA" },
-  ];
-
-  const fallback = fallbackCandidates.find(
-    (item) => typeof item.value === "string" && item.value.trim().length > 0
-  );
-
-  if (fallback) {
-    return { secret: fallback.value!.trim(), source: fallback.source };
+  if (process.env.NODE_ENV === "production") {
+    const generated = crypto.randomBytes(32).toString("hex");
+    console.error(
+      "[auth] CRITICAL: SESSION_SECRET is not set in production. " +
+      "A random secret has been generated, but sessions will not persist across restarts. " +
+      "Set SESSION_SECRET in your environment variables."
+    );
+    return { secret: generated, source: "random-generated (production warning)" };
   }
 
-  return {
-    secret: crypto.randomBytes(32).toString("hex"),
-    source: "random-generated",
-  };
+  const generated = crypto.randomBytes(32).toString("hex");
+  console.warn(
+    "[auth] SESSION_SECRET is not set. Using a random secret for development. " +
+    "Sessions will not persist across restarts."
+  );
+  return { secret: generated, source: "random-generated" };
 }
 
 export async function setupSupabaseAuth(app: Express) {
