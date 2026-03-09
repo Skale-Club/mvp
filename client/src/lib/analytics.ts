@@ -1,3 +1,5 @@
+import type { AnalyticsEventName } from '@shared/analytics-events';
+
 declare global {
   interface Window {
     dataLayer: any[];
@@ -111,27 +113,28 @@ function injectFacebookPixel(pixelId: string) {
   document.head.appendChild(script);
 }
 
-export type AnalyticsEventName =
-  | 'cta_click'
-  | 'view_item_list'
-  | 'view_item'
-  | 'begin_checkout'
-  | 'add_payment_info'
-  | 'purchase'
-  | 'generate_lead'
-  | 'contact_click'
-  | 'page_view'
-  | 'chat_open'
-  | 'chat_close'
-  | 'chat_message_sent'
-  | 'chat_message_received'
-  | 'chat_new_conversation'
-  | 'chat_lead_captured'
-  | 'form_open'
-  | 'form_step_completed'
-  | 'form_completed'
-  | 'form_abandoned'
-  | 'form_result_action';
+function reportEventHit(eventName: AnalyticsEventName): void {
+  if (typeof window === 'undefined') return;
+
+  const body = JSON.stringify({
+    eventName,
+    pagePath: `${window.location.pathname}${window.location.search || ''}`,
+  });
+
+  // sendBeacon avoids blocking page transitions and background unloads.
+  if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+    const blob = new Blob([body], { type: 'application/json' });
+    navigator.sendBeacon('/api/analytics/hit', blob);
+    return;
+  }
+
+  fetch('/api/analytics/hit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    keepalive: true,
+  }).catch(() => undefined);
+}
 
 export interface AnalyticsEventPayload {
   location?: string;
@@ -194,6 +197,8 @@ export function trackEvent(eventName: AnalyticsEventName, payload: AnalyticsEven
       window.fbq('trackCustom', eventName, payload);
     }
   }
+
+  reportEventHit(eventName);
 }
 
 export function trackPageView(path: string, title?: string) {

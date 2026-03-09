@@ -8,6 +8,7 @@ import {
   conversations,
   conversationMessages,
   companySettings,
+  analyticsEventHits,
   faqs,
   integrationSettings,
   blogPosts,
@@ -27,6 +28,7 @@ import {
   type LeadClassification,
   type Faq,
   type IntegrationSettings,
+  type AnalyticsEventHit,
   type BlogPost,
   type ServicePost,
   type GalleryImage,
@@ -38,6 +40,7 @@ import {
   type FormLeadProgressInput,
   type InsertFaq,
   type InsertIntegrationSettings,
+  type InsertAnalyticsEventHit,
   type InsertBlogPost,
   type InsertServicePost,
   type InsertGalleryImage,
@@ -191,6 +194,9 @@ async function ensureCompanySettingsSchema() {
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_background_color text DEFAULT '#406EF1';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_hover_color text DEFAULT '#355CD0';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS facebook_app_id text DEFAULT '';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS gtm_enabled_at timestamp;
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS ga4_enabled_at timestamp;
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS facebook_pixel_enabled_at timestamp;
     `)
     .then(() => undefined)
     .catch((err) => {
@@ -198,6 +204,49 @@ async function ensureCompanySettingsSchema() {
       throw err;
     });
   return ensureCompanySettingsSchemaPromise;
+}
+
+let ensureIntegrationSettingsSchemaPromise: Promise<void> | null = null;
+async function ensureIntegrationSettingsSchema() {
+  if (ensureIntegrationSettingsSchemaPromise) return ensureIntegrationSettingsSchemaPromise;
+  ensureIntegrationSettingsSchemaPromise = pool
+    .query(`
+      ALTER TABLE integration_settings ADD COLUMN IF NOT EXISTS enabled_at timestamp;
+    `)
+    .then(() => undefined)
+    .catch((err) => {
+      ensureIntegrationSettingsSchemaPromise = null;
+      throw err;
+    });
+  return ensureIntegrationSettingsSchemaPromise;
+}
+
+let ensureAnalyticsEventsSchemaPromise: Promise<void> | null = null;
+async function ensureAnalyticsEventsSchema() {
+  if (ensureAnalyticsEventsSchemaPromise) return ensureAnalyticsEventsSchemaPromise;
+  ensureAnalyticsEventsSchemaPromise = pool
+    .query(`
+      CREATE TABLE IF NOT EXISTS analytics_event_hits (
+        id serial PRIMARY KEY,
+        event_name text NOT NULL,
+        channels jsonb DEFAULT '{}'::jsonb,
+        page_path text,
+        session_id text,
+        created_at timestamp DEFAULT now()
+      );
+      ALTER TABLE analytics_event_hits ADD COLUMN IF NOT EXISTS channels jsonb DEFAULT '{}'::jsonb;
+      ALTER TABLE analytics_event_hits ADD COLUMN IF NOT EXISTS page_path text;
+      ALTER TABLE analytics_event_hits ADD COLUMN IF NOT EXISTS session_id text;
+      ALTER TABLE analytics_event_hits ADD COLUMN IF NOT EXISTS created_at timestamp DEFAULT now();
+      CREATE INDEX IF NOT EXISTS analytics_event_hits_event_name_idx ON analytics_event_hits (event_name);
+      CREATE INDEX IF NOT EXISTS analytics_event_hits_created_at_idx ON analytics_event_hits (created_at DESC);
+    `)
+    .then(() => undefined)
+    .catch((err) => {
+      ensureAnalyticsEventsSchemaPromise = null;
+      throw err;
+    });
+  return ensureAnalyticsEventsSchemaPromise;
 }
 
 // Ensure reviews module tables exist for environments without full migrations
@@ -295,6 +344,8 @@ export interface IStorage {
   // Integration Settings
   getIntegrationSettings(provider: string): Promise<IntegrationSettings | undefined>;
   upsertIntegrationSettings(settings: InsertIntegrationSettings): Promise<IntegrationSettings>;
+  recordAnalyticsEventHit(hit: InsertAnalyticsEventHit): Promise<void>;
+  getAnalyticsEventHitsSince(since: Date): Promise<Array<Pick<AnalyticsEventHit, "eventName" | "channels" | "createdAt">>>;
   
   // Chat
   getChatSettings(): Promise<ChatSettings>;
@@ -396,7 +447,31 @@ export class DatabaseStorage implements IStorage {
   async getCompanySettings(): Promise<CompanySettings> {
     await ensureCompanySettingsSchema();
     const [settings] = await db.select().from(companySettings);
-    if (settings) return settings;
+    if (settings) {
+      const backfill: Partial<CompanySettings> = {};
+      const now = new Date();
+
+      if (settings.gtmEnabled && !settings.gtmEnabledAt) {
+        backfill.gtmEnabledAt = now;
+      }
+      if (settings.ga4Enabled && !settings.ga4EnabledAt) {
+        backfill.ga4EnabledAt = now;
+      }
+      if (settings.facebookPixelEnabled && !settings.facebookPixelEnabledAt) {
+        backfill.facebookPixelEnabledAt = now;
+      }
+
+      if (Object.keys(backfill).length > 0) {
+        const [updated] = await db
+          .update(companySettings)
+          .set(backfill)
+          .where(eq(companySettings.id, settings.id))
+          .returning();
+        return updated;
+      }
+
+      return settings;
+    }
     
     // Create default settings if none exist
     const [newSettings] = await db.insert(companySettings).values({}).returning();
@@ -406,7 +481,38 @@ export class DatabaseStorage implements IStorage {
   async updateCompanySettings(settings: Partial<CompanySettings>): Promise<CompanySettings> {
     await ensureCompanySettingsSchema();
     const existing = await this.getCompanySettings();
-    const [updated] = await db.update(companySettings).set(settings).where(eq(companySettings.id, existing.id)).returning();
+    const now = new Date();
+    const nextSettings: Partial<CompanySettings> = { ...settings };
+
+    if (
+      typeof settings.gtmEnabled === "boolean" &&
+      settings.gtmEnabled &&
+      (!existing.gtmEnabled || !existing.gtmEnabledAt)
+    ) {
+      nextSettings.gtmEnabledAt = now;
+    }
+
+    if (
+      typeof settings.ga4Enabled === "boolean" &&
+      settings.ga4Enabled &&
+      (!existing.ga4Enabled || !existing.ga4EnabledAt)
+    ) {
+      nextSettings.ga4EnabledAt = now;
+    }
+
+    if (
+      typeof settings.facebookPixelEnabled === "boolean" &&
+      settings.facebookPixelEnabled &&
+      (!existing.facebookPixelEnabled || !existing.facebookPixelEnabledAt)
+    ) {
+      nextSettings.facebookPixelEnabledAt = now;
+    }
+
+    const [updated] = await db
+      .update(companySettings)
+      .set(nextSettings)
+      .where(eq(companySettings.id, existing.id))
+      .returning();
     return updated;
   }
 
@@ -429,24 +535,66 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getIntegrationSettings(provider: string): Promise<IntegrationSettings | undefined> {
+    await ensureIntegrationSettingsSchema();
     const [settings] = await db.select().from(integrationSettings).where(eq(integrationSettings.provider, provider));
+    if (settings?.isEnabled && !settings.enabledAt) {
+      const [updated] = await db
+        .update(integrationSettings)
+        .set({ enabledAt: new Date(), updatedAt: new Date() })
+        .where(eq(integrationSettings.id, settings.id))
+        .returning();
+      return updated;
+    }
     return settings;
   }
 
   async upsertIntegrationSettings(settings: InsertIntegrationSettings): Promise<IntegrationSettings> {
+    await ensureIntegrationSettingsSchema();
     const existing = await this.getIntegrationSettings(settings.provider || "gohighlevel");
+    const now = new Date();
+    const nextSettings: InsertIntegrationSettings = { ...settings };
+
+    if (
+      typeof settings.isEnabled === "boolean" &&
+      settings.isEnabled &&
+      (!existing?.isEnabled || !existing.enabledAt)
+    ) {
+      nextSettings.enabledAt = now;
+    }
     
     if (existing) {
       const [updated] = await db
         .update(integrationSettings)
-        .set({ ...settings, updatedAt: new Date() })
+        .set({ ...nextSettings, updatedAt: now })
         .where(eq(integrationSettings.id, existing.id))
         .returning();
       return updated;
     } else {
-      const [created] = await db.insert(integrationSettings).values(settings).returning();
+      const [created] = await db.insert(integrationSettings).values(nextSettings).returning();
       return created;
     }
+  }
+
+  async recordAnalyticsEventHit(hit: InsertAnalyticsEventHit): Promise<void> {
+    await ensureAnalyticsEventsSchema();
+    await db.insert(analyticsEventHits).values({
+      eventName: hit.eventName as AnalyticsEventHit["eventName"],
+      channels: (hit.channels ?? {}) as AnalyticsEventHit["channels"],
+      pagePath: hit.pagePath ?? undefined,
+      sessionId: hit.sessionId ?? undefined,
+    });
+  }
+
+  async getAnalyticsEventHitsSince(since: Date): Promise<Array<Pick<AnalyticsEventHit, "eventName" | "channels" | "createdAt">>> {
+    await ensureAnalyticsEventsSchema();
+    return db
+      .select({
+        eventName: analyticsEventHits.eventName,
+        channels: analyticsEventHits.channels,
+        createdAt: analyticsEventHits.createdAt,
+      })
+      .from(analyticsEventHits)
+      .where(gte(analyticsEventHits.createdAt, since));
   }
 
   async getChatSettings(): Promise<ChatSettings> {

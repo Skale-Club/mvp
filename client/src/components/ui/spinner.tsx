@@ -1,38 +1,44 @@
 import { cn } from "@/lib/utils";
 
-interface DotsLoaderProps {
-  size?: "sm" | "md" | "lg";
+interface SiteLoaderProps {
+  fullScreen?: boolean;
   className?: string;
+  size?: "sm" | "md" | "lg";
 }
 
-export function DotsLoader({ size = "md", className }: DotsLoaderProps) {
-  const sizeClasses = {
-    sm: { dot: "w-2 h-2", gap: "gap-1" },
-    md: { dot: "w-3 h-3", gap: "gap-2" },
-    lg: { dot: "w-4 h-4", gap: "gap-3" },
+export function SiteLoader({ fullScreen = false, className = "", size = "md" }: SiteLoaderProps) {
+  const sizeMap = {
+    sm: "scale-50",
+    md: "scale-100",
+    lg: "scale-150",
   };
 
-  const { dot, gap } = sizeClasses[size];
+  const containerClasses = fullScreen 
+    ? "fixed inset-0 z-[9999] flex items-center justify-center bg-[#0f1014]" 
+    : `flex items-center justify-center ${className}`;
 
   return (
-    <div
-      className={cn("flex items-center", gap, className)}
-      role="status"
-      aria-label="Loading"
-    >
-      <div className={cn(dot, "rounded-full bg-[#406EF1] animate-dot-pulse [animation-delay:0ms]")} />
-      <div className={cn(dot, "rounded-full bg-[#406EF1] animate-dot-pulse [animation-delay:150ms]")} />
-      <div className={cn(dot, "rounded-full bg-[#406EF1] animate-dot-pulse [animation-delay:300ms]")} />
+    <div className={containerClasses}>
+      <div className={cn("loader", sizeMap[size])}>
+        <div className="bar1"></div>
+        <div className="bar2"></div>
+        <div className="bar3"></div>
+        <div className="bar4"></div>
+        <div className="bar5"></div>
+        <div className="bar6"></div>
+        <div className="bar7"></div>
+        <div className="bar8"></div>
+        <div className="bar9"></div>
+        <div className="bar10"></div>
+        <div className="bar11"></div>
+        <div className="bar12"></div>
+      </div>
     </div>
   );
 }
 
 export function PageLoader() {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f1014]">
-      <DotsLoader size="lg" />
-    </div>
-  );
+  return <SiteLoader fullScreen />;
 }
 
 // Keep Spinner for other use cases

@@ -3,6 +3,16 @@ import { storage } from "../storage.js";
 import { z } from "zod";
 import { insertChatIntegrationsSchema } from "#shared/schema.js";
 import { safeErrorMessage } from "./errorUtils.js";
+import {
+  ANALYTICS_CHANNELS,
+  DEFAULT_EVENT_ACTIVITY_WINDOW_DAYS,
+  WEBSITE_EVENT_DEFINITIONS,
+  getEventChannelSupport,
+  isAnalyticsEventName,
+  type AnalyticsChannel,
+  type WebsiteEventName,
+  type WebsiteEventsHealthResponse,
+} from "#shared/analytics-events.js";
 import { DEFAULT_CHAT_MODEL, DEFAULT_GHL_CALENDAR_ID } from "./constants.js";
 import { cleanPhone, parseRecipients } from "./helpers.js";
 import { testGHLConnection, getGHLCustomFields } from "../integrations/ghl.js";
@@ -12,6 +22,27 @@ import { getOpenAIClient, runtimeOpenAiKey } from "./chat.js";
  * Register integration-related routes (OpenAI, GoHighLevel, Twilio)
  */
 export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
+  const eventHitSchema = z.object({
+    eventName: z.string().trim().min(1),
+    pagePath: z.string().trim().max(600).optional(),
+    sessionId: z.string().trim().max(120).optional(),
+  });
+
+  const analyticsHealthQuerySchema = z.object({
+    days: z.coerce.number().int().min(1).max(365).optional(),
+  });
+
+  const websiteEventNameSet = new Set<WebsiteEventName>(
+    WEBSITE_EVENT_DEFINITIONS.map((definition) => definition.event as WebsiteEventName),
+  );
+
+  const toIso = (value: Date | null | undefined) => (value ? value.toISOString() : null);
+  const toDayCount = (activatedAt: Date | null | undefined, now: Date, enabled: boolean) => {
+    if (!enabled || !activatedAt) return null;
+    const diffMs = now.getTime() - activatedAt.getTime();
+    if (diffMs <= 0) return 0;
+    return Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  };
   
   // ===============================
   // OpenAI Integration Routes
@@ -384,6 +415,187 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         success: false,
         message: err?.message || 'Failed to send test SMS'
       });
+    }
+  });
+
+  // ===============================
+  // Analytics Event Health Routes
+  // ===============================
+
+  app.post('/api/analytics/hit', async (req, res) => {
+    try {
+      const payload = eventHitSchema.parse(req.body);
+      if (!isAnalyticsEventName(payload.eventName)) {
+        return res.status(202).json({ accepted: false });
+      }
+
+      const [company, ghlSettings] = await Promise.all([
+        storage.getCompanySettings(),
+        storage.getIntegrationSettings('gohighlevel'),
+      ]);
+      const support = getEventChannelSupport(payload.eventName);
+      const channels = {
+        ga4: support.ga4 && !!(company.ga4Enabled && company.ga4MeasurementId?.trim()),
+        facebook: support.facebook && !!(company.facebookPixelEnabled && company.facebookPixelId?.trim()),
+        ghl: support.ghl && !!ghlSettings?.isEnabled,
+        telegram: false,
+      } satisfies Record<AnalyticsChannel, boolean>;
+
+      await storage.recordAnalyticsEventHit({
+        eventName: payload.eventName,
+        channels,
+        pagePath: payload.pagePath,
+        sessionId: payload.sessionId,
+      });
+
+      return res.status(204).end();
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid analytics hit payload', errors: err.errors });
+      }
+      return res.status(500).json({ message: (err as Error).message });
+    }
+  });
+
+  app.get('/api/integrations/events-health', requireAdmin, async (req, res) => {
+    try {
+      const { days } = analyticsHealthQuerySchema.parse(req.query);
+      const lookbackDays = days ?? DEFAULT_EVENT_ACTIVITY_WINDOW_DAYS;
+      const now = new Date();
+      const lookbackStart = new Date(now.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
+
+      const [company, ghlSettings, hits] = await Promise.all([
+        storage.getCompanySettings(),
+        storage.getIntegrationSettings('gohighlevel'),
+        storage.getAnalyticsEventHitsSince(lookbackStart),
+      ]);
+
+      const integrations: WebsiteEventsHealthResponse['integrations'] = {
+        ga4: {
+          enabled: !!(company.ga4Enabled && company.ga4MeasurementId?.trim()),
+          activatedAt: toIso(company.ga4EnabledAt),
+          activeForDays: toDayCount(company.ga4EnabledAt, now, !!(company.ga4Enabled && company.ga4MeasurementId?.trim())),
+        },
+        facebook: {
+          enabled: !!(company.facebookPixelEnabled && company.facebookPixelId?.trim()),
+          activatedAt: toIso(company.facebookPixelEnabledAt),
+          activeForDays: toDayCount(
+            company.facebookPixelEnabledAt,
+            now,
+            !!(company.facebookPixelEnabled && company.facebookPixelId?.trim()),
+          ),
+        },
+        ghl: {
+          enabled: !!ghlSettings?.isEnabled,
+          activatedAt: toIso(ghlSettings?.enabledAt),
+          activeForDays: toDayCount(ghlSettings?.enabledAt, now, !!ghlSettings?.isEnabled),
+        },
+        telegram: {
+          enabled: false,
+          activatedAt: null,
+          activeForDays: null,
+        },
+      };
+
+      const aggregateByEvent = new Map<
+        WebsiteEventName,
+        {
+          hitsInWindow: number;
+          lastHitAt: Date | null;
+          channelLastHitAt: Record<AnalyticsChannel, Date | null>;
+        }
+      >();
+
+      for (const definition of WEBSITE_EVENT_DEFINITIONS) {
+        aggregateByEvent.set(definition.event as WebsiteEventName, {
+          hitsInWindow: 0,
+          lastHitAt: null,
+          channelLastHitAt: {
+            ga4: null,
+            facebook: null,
+            ghl: null,
+            telegram: null,
+          },
+        });
+      }
+
+      for (const hit of hits) {
+        if (!websiteEventNameSet.has(hit.eventName as WebsiteEventName)) continue;
+        const eventKey = hit.eventName as WebsiteEventName;
+        const aggregate = aggregateByEvent.get(eventKey);
+        if (!aggregate) continue;
+        if (!hit.createdAt) continue;
+
+        const hitDate = new Date(hit.createdAt);
+        if (Number.isNaN(hitDate.getTime())) continue;
+
+        aggregate.hitsInWindow += 1;
+        if (!aggregate.lastHitAt || hitDate > aggregate.lastHitAt) {
+          aggregate.lastHitAt = hitDate;
+        }
+
+        const hitChannels = (hit.channels || {}) as Partial<Record<AnalyticsChannel, boolean>>;
+        for (const channel of ANALYTICS_CHANNELS) {
+          if (!hitChannels[channel]) continue;
+          const previous = aggregate.channelLastHitAt[channel];
+          if (!previous || hitDate > previous) {
+            aggregate.channelLastHitAt[channel] = hitDate;
+          }
+        }
+      }
+
+      const events: WebsiteEventsHealthResponse['events'] = WEBSITE_EVENT_DEFINITIONS.map((definition) => {
+        const eventKey = definition.event as WebsiteEventName;
+        const aggregate = aggregateByEvent.get(eventKey);
+        const channels = {
+          ga4: {
+            supported: definition.channels.ga4,
+            activeInWindow: definition.channels.ga4 && integrations.ga4.enabled && !!aggregate?.channelLastHitAt.ga4,
+            lastHitAt: definition.channels.ga4 ? toIso(aggregate?.channelLastHitAt.ga4) : null,
+          },
+          facebook: {
+            supported: definition.channels.facebook,
+            activeInWindow:
+              definition.channels.facebook && integrations.facebook.enabled && !!aggregate?.channelLastHitAt.facebook,
+            lastHitAt: definition.channels.facebook ? toIso(aggregate?.channelLastHitAt.facebook) : null,
+          },
+          ghl: {
+            supported: definition.channels.ghl,
+            activeInWindow: definition.channels.ghl && integrations.ghl.enabled && !!aggregate?.channelLastHitAt.ghl,
+            lastHitAt: definition.channels.ghl ? toIso(aggregate?.channelLastHitAt.ghl) : null,
+          },
+          telegram: {
+            supported: definition.channels.telegram,
+            activeInWindow: false,
+            lastHitAt: null,
+          },
+        };
+
+        const activeInWindow = ANALYTICS_CHANNELS.some((channel) => channels[channel].activeInWindow);
+
+        return {
+          event: eventKey,
+          trigger: definition.trigger,
+          hitsInWindow: aggregate?.hitsInWindow ?? 0,
+          activeInWindow,
+          lastHitAt: toIso(aggregate?.lastHitAt),
+          channels,
+        };
+      });
+
+      const response: WebsiteEventsHealthResponse = {
+        lookbackDays,
+        generatedAt: now.toISOString(),
+        integrations,
+        events,
+      };
+
+      return res.json(response);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid events health query', errors: err.errors });
+      }
+      return res.status(500).json({ message: (err as Error).message });
     }
   });
 }

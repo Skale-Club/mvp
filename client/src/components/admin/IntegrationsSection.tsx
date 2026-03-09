@@ -21,6 +21,14 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { renderMarkdown } from '@/lib/markdown';
 import { DEFAULT_HOMEPAGE_CONTENT } from '@/lib/homepageDefaults';
+import {
+  ANALYTICS_CHANNELS,
+  DEFAULT_EVENT_ACTIVITY_WINDOW_DAYS,
+  WEBSITE_EVENT_DEFINITIONS,
+  type AnalyticsChannel,
+  type ChannelWindowStatus,
+  type WebsiteEventsHealthResponse,
+} from '@shared/analytics-events';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,7 +72,6 @@ import {
   Globe,
   Search,
   ChevronDown,
-  LayoutGrid,
   List,
   MessageSquare,
   Archive,
@@ -85,7 +92,7 @@ import {
   AlertCircle,
   ExternalLink,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import { clsx } from 'clsx';
 import type {
   BlogPost,
@@ -214,6 +221,7 @@ export function IntegrationsSection() {
     try {
       await apiRequest('PUT', '/api/company-settings', newSettings);
       queryClient.invalidateQueries({ queryKey: ['/api/company-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/integrations/events-health'] });
       setLastSavedAnalytics(new Date());
     } catch (error: any) {
       toast({
@@ -357,74 +365,94 @@ export function IntegrationsSection() {
   const hasGtmId = analyticsSettings.gtmContainerId.trim().length > 0;
   const hasGa4Id = analyticsSettings.ga4MeasurementId.trim().length > 0;
   const hasFacebookPixelId = analyticsSettings.facebookPixelId.trim().length > 0;
-  const channelStatus = {
-    ga4: analyticsSettings.ga4Enabled && hasGa4Id,
-    facebook: analyticsSettings.facebookPixelEnabled && hasFacebookPixelId,
-    ghl: settings.isEnabled,
-    telegram: false
-  } as const;
-  type ChannelKey = keyof typeof channelStatus;
-  type EventChannelMap = Record<ChannelKey, boolean>;
-  const websiteEvents: Array<{ event: string; trigger: string; channels: EventChannelMap }> = [
-    {
-      event: 'generate_lead',
-      trigger: 'When the thank you page is viewed',
-      channels: { ga4: true, facebook: true, ghl: true, telegram: false }
+  const recentActivityWindowDays = DEFAULT_EVENT_ACTIVITY_WINDOW_DAYS;
+  const { data: eventsHealth, isLoading: isLoadingEventsHealth } = useQuery<WebsiteEventsHealthResponse>({
+    queryKey: ['/api/integrations/events-health', recentActivityWindowDays],
+    queryFn: async () => {
+      const response = await fetch(`/api/integrations/events-health?days=${recentActivityWindowDays}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return response.json();
     },
-    {
-      event: 'contact_click',
-      trigger: 'When a phone CTA is clicked',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+
+  const integrationHealth = eventsHealth?.integrations ?? {
+    ga4: {
+      enabled: analyticsSettings.ga4Enabled && hasGa4Id,
+      activatedAt: null,
+      activeForDays: null,
     },
-    {
-      event: 'form_completed',
-      trigger: 'When the lead form is submitted',
-      channels: { ga4: true, facebook: true, ghl: true, telegram: false }
+    facebook: {
+      enabled: analyticsSettings.facebookPixelEnabled && hasFacebookPixelId,
+      activatedAt: null,
+      activeForDays: null,
     },
-    {
-      event: 'page_view',
-      trigger: 'When users navigate between pages',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    ghl: {
+      enabled: settings.isEnabled,
+      activatedAt: null,
+      activeForDays: null,
     },
-    {
-      event: 'view_item_list',
-      trigger: 'When the services page is viewed',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
+    telegram: {
+      enabled: false,
+      activatedAt: null,
+      activeForDays: null,
     },
-    {
-      event: 'form_open',
-      trigger: 'When the lead form is opened',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
-    },
-    {
-      event: 'form_step_completed',
-      trigger: 'When a lead form step is completed',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
-    },
-    {
-      event: 'form_abandoned',
-      trigger: 'When users abandon the lead form',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
-    },
-    {
-      event: 'chat_open',
-      trigger: 'When the chat widget is opened',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
-    },
-    {
-      event: 'chat_lead_captured',
-      trigger: 'When chat captures a lead',
-      channels: { ga4: true, facebook: true, ghl: true, telegram: false }
-    },
-    {
-      event: 'chat_message_sent',
-      trigger: 'When a visitor sends a chat message',
-      channels: { ga4: true, facebook: true, ghl: false, telegram: false }
-    }
-  ];
-  const renderChannelStatus = (isSupported: boolean, isActive: boolean) => {
-    if (!isSupported) {
+  };
+
+  const fallbackEventRows = useMemo<WebsiteEventsHealthResponse['events']>(
+    () =>
+      WEBSITE_EVENT_DEFINITIONS.map((definition) => ({
+        event: definition.event,
+        trigger: definition.trigger,
+        hitsInWindow: 0,
+        activeInWindow: false,
+        lastHitAt: null,
+        channels: {
+          ga4: { supported: definition.channels.ga4, activeInWindow: false, lastHitAt: null },
+          facebook: { supported: definition.channels.facebook, activeInWindow: false, lastHitAt: null },
+          ghl: { supported: definition.channels.ghl, activeInWindow: false, lastHitAt: null },
+          telegram: { supported: definition.channels.telegram, activeInWindow: false, lastHitAt: null },
+        },
+      })),
+    [],
+  );
+
+  const eventRows = eventsHealth?.events ?? fallbackEventRows;
+  const lookbackDays = eventsHealth?.lookbackDays ?? recentActivityWindowDays;
+
+  const formatRelativeTime = (isoDate: string | null) => {
+    if (!isoDate) return null;
+    const parsed = new Date(isoDate);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return formatDistanceToNowStrict(parsed, { addSuffix: true });
+  };
+
+  const integrationLabels: Record<AnalyticsChannel, string> = {
+    ga4: 'GA4',
+    facebook: 'Facebook',
+    ghl: 'GHL',
+    telegram: 'Telegram',
+  };
+
+  const renderChannelStatus = (status: ChannelWindowStatus, isEnabled: boolean) => {
+    if (!status.supported) {
       return <span className="text-muted-foreground">-</span>;
+    }
+
+    if (!isEnabled) {
+      return (
+        <Badge
+          variant="outline"
+          className="min-w-[74px] justify-center border-transparent bg-muted text-[11px] font-semibold text-muted-foreground"
+        >
+          Disabled
+        </Badge>
+      );
     }
 
     return (
@@ -432,23 +460,22 @@ export function IntegrationsSection() {
         variant="outline"
         className={clsx(
           'min-w-[70px] justify-center border-transparent text-[11px] font-semibold',
-          isActive
+          status.activeInWindow
             ? 'bg-sky-500/20 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300'
-            : 'bg-muted text-muted-foreground'
+            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
         )}
       >
-        {isActive ? 'Active' : 'Inactive'}
+        {status.activeInWindow ? 'Active' : 'No hits'}
       </Badge>
     );
   };
-  const isEventActive = (channels: EventChannelMap) =>
-    (Object.keys(channelStatus) as ChannelKey[]).some((channel) => channels[channel] && channelStatus[channel]);
 
   const saveSettings = async (settingsToSave?: GHLSettings) => {
     setIsSaving(true);
     try {
       await apiRequest('PUT', '/api/integrations/ghl', settingsToSave || settings);
       queryClient.invalidateQueries({ queryKey: ['/api/integrations/ghl'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/integrations/events-health'] });
       toast({ title: 'Settings saved successfully' });
     } catch (error: any) {
       toast({
@@ -853,8 +880,38 @@ export function IntegrationsSection() {
           <div className="px-5 py-4 border-b border-border/60">
             <h2 className="text-xl font-semibold">Website Events</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Events configured in the platform and whether they are currently active.
+              Events configured in the platform and whether each integration received hits in the last {lookbackDays} days.
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 border-b border-border/60 bg-muted/30 px-5 py-4 sm:grid-cols-2 xl:grid-cols-4">
+            {ANALYTICS_CHANNELS.map((channel) => {
+              const health = integrationHealth[channel];
+              const activatedAtDate = health.activatedAt ? new Date(health.activatedAt) : null;
+              const activatedAtLabel =
+                activatedAtDate && !Number.isNaN(activatedAtDate.getTime())
+                  ? format(activatedAtDate, 'MMM d, yyyy')
+                  : null;
+              return (
+                <div key={channel} className="rounded-lg border border-border/60 bg-card/70 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {integrationLabels[channel]}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {health.enabled ? 'Enabled' : 'Disabled'}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {health.enabled
+                      ? health.activeForDays !== null
+                        ? `Active for ${health.activeForDays} day${health.activeForDays === 1 ? '' : 's'}`
+                        : activatedAtLabel
+                          ? `Active since ${activatedAtLabel}`
+                          : 'Activation date unavailable'
+                      : 'Turn on integration to receive hits'}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           <Table className="min-w-[900px]">
@@ -870,34 +927,57 @@ export function IntegrationsSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {websiteEvents.map(({ event, trigger, channels }) => {
-                const active = isEventActive(channels);
-                return (
-                  <TableRow key={event}>
-                    <TableCell className="py-3">
-                      <code className="font-mono text-sm font-semibold text-foreground">{event}</code>
-                    </TableCell>
-                    <TableCell className="py-3 text-sm text-muted-foreground">{trigger}</TableCell>
-                    <TableCell className="py-3">{renderChannelStatus(channels.ga4, channelStatus.ga4)}</TableCell>
-                    <TableCell className="py-3">{renderChannelStatus(channels.facebook, channelStatus.facebook)}</TableCell>
-                    <TableCell className="py-3">{renderChannelStatus(channels.ghl, channelStatus.ghl)}</TableCell>
-                    <TableCell className="py-3">{renderChannelStatus(channels.telegram, channelStatus.telegram)}</TableCell>
-                    <TableCell className="py-3">
-                      <Badge
-                        variant="outline"
-                        className={clsx(
-                          'min-w-[70px] justify-center border-transparent text-[11px] font-semibold',
-                          active
-                            ? 'bg-sky-500/20 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300'
-                            : 'bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {isLoadingEventsHealth && !eventsHealth ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
+                    Loading event health...
+                  </TableCell>
+                </TableRow>
+              ) : (
+                eventRows.map(({ event, trigger, channels, activeInWindow, hitsInWindow, lastHitAt }) => {
+                  const hasEnabledSupportedChannel = ANALYTICS_CHANNELS.some(
+                    (channel) => channels[channel].supported && integrationHealth[channel].enabled,
+                  );
+                  const statusLabel = !hasEnabledSupportedChannel ? 'Disabled' : activeInWindow ? 'Active' : 'No hits';
+                  const statusTone = !hasEnabledSupportedChannel
+                    ? 'bg-muted text-muted-foreground'
+                    : activeInWindow
+                      ? 'bg-sky-500/20 text-sky-700 dark:bg-sky-500/25 dark:text-sky-300'
+                      : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+                  const lastHitLabel = formatRelativeTime(lastHitAt);
+
+                  return (
+                    <TableRow key={event}>
+                      <TableCell className="py-3">
+                        <code className="font-mono text-sm font-semibold text-foreground">{event}</code>
+                      </TableCell>
+                      <TableCell className="py-3 text-sm text-muted-foreground">
+                        <p>{trigger}</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground/80">
+                          {hitsInWindow} hit{hitsInWindow === 1 ? '' : 's'} in {lookbackDays} days
+                        </p>
+                      </TableCell>
+                      <TableCell className="py-3">{renderChannelStatus(channels.ga4, integrationHealth.ga4.enabled)}</TableCell>
+                      <TableCell className="py-3">{renderChannelStatus(channels.facebook, integrationHealth.facebook.enabled)}</TableCell>
+                      <TableCell className="py-3">{renderChannelStatus(channels.ghl, integrationHealth.ghl.enabled)}</TableCell>
+                      <TableCell className="py-3">{renderChannelStatus(channels.telegram, integrationHealth.telegram.enabled)}</TableCell>
+                      <TableCell className="py-3">
+                        <div className="space-y-1">
+                          <Badge
+                            variant="outline"
+                            className={clsx('min-w-[74px] justify-center border-transparent text-[11px] font-semibold', statusTone)}
+                          >
+                            {statusLabel}
+                          </Badge>
+                          <p className="text-[11px] text-muted-foreground">
+                            {lastHitLabel ? `Last hit ${lastHitLabel}` : `No hits in ${lookbackDays} days`}
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>

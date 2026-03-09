@@ -2,6 +2,7 @@ import { pgTable, text, serial, integer, numeric, timestamp, boolean, jsonb, uui
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import type { AnalyticsChannel, AnalyticsEventName } from "./analytics-events.js";
 
 // Auth models (inlined for drizzle-kit compatibility)
 export const sessions = pgTable(
@@ -38,9 +39,22 @@ export const integrationSettings = pgTable("integration_settings", {
   locationId: text("location_id"),
   calendarId: text("calendar_id").default("2irhr47AR6K0AQkFqEQl"),
   isEnabled: boolean("is_enabled").default(false),
+  enabledAt: timestamp("enabled_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const analyticsEventHits = pgTable("analytics_event_hits", {
+  id: serial("id").primaryKey(),
+  eventName: text("event_name").$type<AnalyticsEventName>().notNull(),
+  channels: jsonb("channels").$type<Partial<Record<AnalyticsChannel, boolean>>>().default({}),
+  pagePath: text("page_path"),
+  sessionId: text("session_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  eventNameIdx: index("analytics_event_hits_event_name_idx").on(table.eventName),
+  createdAtIdx: index("analytics_event_hits_created_at_idx").on(table.createdAt),
+}));
 
 // Chat Settings (singleton table - only one row)
 export const chatSettings = pgTable("chat_settings", {
@@ -192,6 +206,10 @@ export const insertIntegrationSettingsSchema = createInsertSchema(integrationSet
   createdAt: true, 
   updatedAt: true 
 });
+export const insertAnalyticsEventHitSchema = createInsertSchema(analyticsEventHits).omit({
+  id: true,
+  createdAt: true,
+});
 export const insertChatSettingsSchema = createInsertSchema(chatSettings).omit({
   id: true,
   updatedAt: true,
@@ -270,6 +288,7 @@ export const formLeadProgressSchema = z.object({
 // === TYPES ===
 
 export type IntegrationSettings = typeof integrationSettings.$inferSelect;
+export type AnalyticsEventHit = typeof analyticsEventHits.$inferSelect;
 export type ChatSettings = typeof chatSettings.$inferSelect;
 export type ChatIntegrations = typeof chatIntegrations.$inferSelect;
 export type TwilioSettings = typeof twilioSettings.$inferSelect;
@@ -280,6 +299,7 @@ export type LeadClassification = typeof leadClassificationEnum.enumValues[number
 export type LeadStatus = typeof leadStatusEnum.enumValues[number];
 
 export type InsertIntegrationSettings = z.infer<typeof insertIntegrationSettingsSchema>;
+export type InsertAnalyticsEventHit = z.infer<typeof insertAnalyticsEventHitSchema>;
 export type InsertChatSettings = z.infer<typeof insertChatSettingsSchema>;
 export type InsertChatIntegrations = z.infer<typeof insertChatIntegrationsSchema>;
 export type InsertTwilioSettings = z.infer<typeof insertTwilioSettingsSchema>;
@@ -458,6 +478,9 @@ export const companySettings = pgTable("company_settings", {
   gtmEnabled: boolean("gtm_enabled").default(false),
   ga4Enabled: boolean("ga4_enabled").default(false),
   facebookPixelEnabled: boolean("facebook_pixel_enabled").default(false),
+  gtmEnabledAt: timestamp("gtm_enabled_at"),
+  ga4EnabledAt: timestamp("ga4_enabled_at"),
+  facebookPixelEnabledAt: timestamp("facebook_pixel_enabled_at"),
   homepageContent: jsonb("homepage_content").$type<HomepageContent>().default({}),
   formConfig: jsonb("form_config").$type<FormConfig>(),
 });
