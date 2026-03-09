@@ -1,9 +1,11 @@
 import { Shield, Eye, Lock, Users, Cookie, FileText, Mail, Bell } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CompanySettings } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 
 export default function PrivacyPolicy() {
-  const { data: settings } = useQuery<CompanySettings>({
+  const { data: settings, isLoading, isError, refetch } = useQuery<CompanySettings>({
     queryKey: ['/api/company-settings'],
   });
 
@@ -11,6 +13,42 @@ export default function PrivacyPolicy() {
   const companyEmail = settings?.companyEmail || "";
   const companyPhone = settings?.companyPhone || "";
   const companyAddress = settings?.companyAddress || "";
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="bg-primary text-white pt-28 pb-16">
+          <div className="container-custom">
+            <Skeleton className="h-10 w-64 bg-white/20 mb-4" />
+            <Skeleton className="h-6 w-96 bg-white/20" />
+          </div>
+        </div>
+        <div className="container-custom py-12 space-y-8">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28">
+        <div className="container-custom py-12">
+          <ErrorState
+            title="Failed to load Privacy Policy"
+            message="We couldn't load the page content. Please try again."
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

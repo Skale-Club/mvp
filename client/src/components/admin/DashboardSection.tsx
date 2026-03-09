@@ -37,6 +37,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { ErrorState } from '@/components/ui/error-state';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Loader2,
   Plus,
@@ -121,12 +123,12 @@ import { ensureArray, uploadFileToServer } from '@/components/admin/shared/utils
 const menuItems = SIDEBAR_MENU_ITEMS;
 export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSection) => void }) {
   const dashboardMenuTitle = menuItems.find((item) => item.id === 'dashboard')?.title ?? 'Dashboard';
-  const { data: companySettings } = useQuery<CompanySettingsData>({ queryKey: ['/api/company-settings'] });
-  const { data: leads } = useQuery<FormLead[]>({ queryKey: ['/api/form-leads'] });
-  const { data: conversations } = useQuery<Array<{ id: string; status: string; messageCount?: number; updatedAt?: string | Date | null }>>({
+  const { data: companySettings, isLoading: settingsLoading, isError: settingsError, refetch: refetchSettings } = useQuery<CompanySettingsData>({ queryKey: ['/api/company-settings'] });
+  const { data: leads, isLoading: leadsLoading, isError: leadsError, refetch: refetchLeads } = useQuery<FormLead[]>({ queryKey: ['/api/form-leads'] });
+  const { data: conversations, isLoading: convsLoading } = useQuery<Array<{ id: string; status: string; messageCount?: number; updatedAt?: string | Date | null }>>({
     queryKey: ['/api/chat/conversations'],
   });
-  const { data: publishedPosts } = useQuery<BlogPost[]>({
+  const { data: publishedPosts, isLoading: postsLoading } = useQuery<BlogPost[]>({
     queryKey: ['/api/blog', 'published', 'dashboard'],
     queryFn: async () => {
       const res = await fetch('/api/blog?status=published&limit=50&offset=0', { credentials: 'include' });
@@ -138,6 +140,9 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
   const { data: openaiSettings } = useQuery<{ enabled: boolean; hasKey: boolean }>({ queryKey: ['/api/integrations/openai'] });
   const { data: ghlSettings } = useQuery<{ isEnabled?: boolean; locationId?: string; calendarId?: string }>({ queryKey: ['/api/integrations/ghl'] });
   const { data: twilioSettings } = useQuery<TwilioSettings>({ queryKey: ['/api/integrations/twilio'] });
+
+  const coreLoading = settingsLoading || leadsLoading;
+  const hasError = settingsError || leadsError;
 
   const leadList = leads || [];
   const today = new Date();
@@ -241,6 +246,33 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
     { label: 'Open Chats', value: String(openConversations), helper: `${conversations?.length || 0} total threads`, icon: MessageSquare, color: 'text-amber-500' },
     { label: 'Published Posts', value: String(publishedPosts?.length || 0), helper: 'Public blog content', icon: FileText, color: 'text-fuchsia-500' },
   ];
+
+  if (hasError) {
+    return (
+      <ErrorState
+        title="Failed to load dashboard"
+        message="Could not load dashboard data. Please try again."
+        onRetry={() => { refetchSettings(); refetchLeads(); }}
+      />
+    );
+  }
+
+  if (coreLoading) {
+    return (
+      <div className="space-y-6" data-testid="dashboard-loading">
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-4 xl:grid-cols-12">
+          <Skeleton className="xl:col-span-7 h-64 rounded-xl" />
+          <Skeleton className="xl:col-span-5 h-64 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" data-testid="dashboard-overview">

@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { trackCTAClick } from "@/lib/analytics";
 import { LeadFormModal } from "@/components/LeadFormModal";
 import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/homepageDefaults";
+import { ErrorState } from "@/components/ui/error-state";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { getServicePostPath } from "@/lib/service-path";
 
@@ -235,7 +236,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
 }
 
 export default function Home() {
-  const { data: companySettings } = useQuery<CompanySettings>({
+  const { data: companySettings, isError: isSettingsError, refetch: refetchSettings } = useQuery<CompanySettings>({
     queryKey: ['/api/company-settings'],
   });
   const { data: galleryPreview } = useQuery<GalleryImage[]>({
@@ -310,6 +311,18 @@ export default function Home() {
     document.addEventListener('click', clickHandler);
     return () => document.removeEventListener('click', clickHandler);
   }, []);
+
+  if (isSettingsError) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center pt-24">
+        <ErrorState
+          title="Failed to load page"
+          message="We couldn't load the homepage content. Please try again."
+          onRetry={() => refetchSettings()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="pb-0">

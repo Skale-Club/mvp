@@ -156,6 +156,19 @@ The platform includes a comprehensive SEO management system accessible via Admin
 - Hero image preview: 4:3 aspect ratio
 - OG image preview: 1.91:1 aspect ratio (matches social media standards)
 
+### Error Handling & Security
+- **Error message safety**: All API routes use `safeErrorMessage()` from `server/routes/errorUtils.ts` to prevent leaking internal error details to clients
+- **Schema initialization**: All `ensure*Schema` lazy migrations run once at startup via `initializeSchemas()` in `server/app.ts` rather than on every request
+- **Non-blocking integrations**: GHL sync and Twilio SMS notifications use fire-and-forget patterns so lead submissions and chat responses return instantly
+- **Frontend error states**: All public pages and layout components use the shared `ErrorState` component (`client/src/components/ui/error-state.tsx`) for consistent error UI with retry buttons
+- **Frontend loading states**: All pages show skeleton/loading UI while data fetches are in progress
+
+### Admin Dashboard Structure
+- Main entry: `client/src/pages/Admin.tsx` (168 lines) - layout and section routing
+- 13 section components in `client/src/components/admin/` (largest: LeadsSection 1444 lines, HeroSettingsSection 1300 lines)
+- Each section is a standalone component file
+- Future improvement: largest sections could be split into sub-components
+
 ### Blog System
 
 The platform includes a comprehensive blog system for content marketing and SEO.

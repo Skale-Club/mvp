@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
+import { initializeSchemas } from "./storage.js";
 import path from "path";
 import { createServer, type Server } from "http";
 
@@ -62,6 +63,9 @@ export async function createApp(): Promise<{ app: express.Express; httpServer: S
 
     next();
   });
+
+  // Run all ensure*Schema migrations once at startup
+  await initializeSchemas();
 
   // Setup Supabase auth
   const { setupSupabaseAuth } = await import("./auth/supabaseAuth.js");

@@ -177,87 +177,82 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
 
       const hasPhone = !!lead.telefone?.trim();
       if (hasPhone && !lead.notificacaoEnviada) {
-        try {
-          const twilioSettings = await storage.getTwilioSettings();
-          if (twilioSettings) {
-            const notifyResult = await sendHotLeadNotification(twilioSettings, lead, companyName);
-            if (notifyResult.success) {
-              const updated = await storage.updateFormLead(lead.id, { notificacaoEnviada: true });
-              lead = updated || { ...lead, notificacaoEnviada: true };
+        (async () => {
+          try {
+            const twilioSettings = await storage.getTwilioSettings();
+            if (twilioSettings) {
+              const notifyResult = await sendHotLeadNotification(twilioSettings, lead, companyName);
+              if (notifyResult.success) {
+                await storage.updateFormLead(lead.id, { notificacaoEnviada: true });
+              }
             }
+          } catch (notificationError) {
+            console.error('Lead notification error:', notificationError);
           }
-        } catch (notificationError) {
-          console.error('Lead notification error:', notificationError);
-        }
+        })();
       }
 
       if (lead.formCompleto) {
-        try {
-          const ghlSettings = await storage.getIntegrationSettings('gohighlevel');
-          // GHL sync requires at least phone number
-          if (ghlSettings?.isEnabled && ghlSettings.apiKey && ghlSettings.locationId && lead.telefone) {
-            const nameParts = (lead.nome || '').trim().split(' ').filter(Boolean);
-            const firstName = nameParts.shift() || lead.nome || 'Lead';
-            const lastName = nameParts.join(' ');
-
-            // Build custom fields from form config mappings
-            const customFields: Array<{ id: string; field_value: string }> = [];
-            const allAnswers: Record<string, string | undefined> = {
-              nome: lead.nome || undefined,
-              email: lead.email || undefined,
-              telefone: lead.telefone || undefined,
-              cidadeEstado: lead.cidadeEstado || undefined,
-              tipoNegocio: lead.tipoNegocio || undefined,
-              tipoNegocioOutro: lead.tipoNegocioOutro || undefined,
-              tempoNegocio: lead.tempoNegocio || undefined,
-              experienciaMarketing: lead.experienciaMarketing || undefined,
-              orcamentoAnuncios: lead.orcamentoAnuncios || undefined,
-              principalDesafio: lead.principalDesafio || undefined,
-              disponibilidade: lead.disponibilidade || undefined,
-              expectativaResultado: lead.expectativaResultado || undefined,
-              ...(lead.customAnswers || {}),
-            };
-
-            // Map form questions with ghlFieldId to custom fields
-            for (const question of formConfig.questions) {
-              if (question.ghlFieldId && allAnswers[question.id]) {
-                customFields.push({
-                  id: question.ghlFieldId,
-                  field_value: allAnswers[question.id]!,
-                });
-              }
-            }
-
-            const contactResult = await getOrCreateGHLContact(
-              ghlSettings.apiKey,
-              ghlSettings.locationId,
-              {
-                email: lead.email || '',
-                firstName,
-                lastName,
-                phone: lead.telefone || '',
-                address: lead.cidadeEstado || undefined,
-                customFields: customFields.length > 0 ? customFields : undefined,
-              }
-            );
-
-            if (contactResult.success && contactResult.contactId) {
-              const synced = await storage.updateFormLead(lead.id, { ghlContactId: contactResult.contactId, ghlSyncStatus: 'synced' });
-              if (synced) {
-                lead = synced;
-              }
-            } else if (lead.ghlSyncStatus !== 'synced') {
-              await storage.updateFormLead(lead.id, { ghlSyncStatus: 'failed' });
-            }
-          }
-        } catch (ghlError) {
-          console.log('GHL lead sync error (non-blocking):', ghlError);
+        (async () => {
           try {
-            await storage.updateFormLead(lead.id, { ghlSyncStatus: 'failed' });
-          } catch {
-            // ignore best-effort update
+            const ghlSettings = await storage.getIntegrationSettings('gohighlevel');
+            if (ghlSettings?.isEnabled && ghlSettings.apiKey && ghlSettings.locationId && lead.telefone) {
+              const nameParts = (lead.nome || '').trim().split(' ').filter(Boolean);
+              const firstName = nameParts.shift() || lead.nome || 'Lead';
+              const lastName = nameParts.join(' ');
+
+              const customFields: Array<{ id: string; field_value: string }> = [];
+              const allAnswers: Record<string, string | undefined> = {
+                nome: lead.nome || undefined,
+                email: lead.email || undefined,
+                telefone: lead.telefone || undefined,
+                cidadeEstado: lead.cidadeEstado || undefined,
+                tipoNegocio: lead.tipoNegocio || undefined,
+                tipoNegocioOutro: lead.tipoNegocioOutro || undefined,
+                tempoNegocio: lead.tempoNegocio || undefined,
+                experienciaMarketing: lead.experienciaMarketing || undefined,
+                orcamentoAnuncios: lead.orcamentoAnuncios || undefined,
+                principalDesafio: lead.principalDesafio || undefined,
+                disponibilidade: lead.disponibilidade || undefined,
+                expectativaResultado: lead.expectativaResultado || undefined,
+                ...(lead.customAnswers || {}),
+              };
+
+              for (const question of formConfig.questions) {
+                if (question.ghlFieldId && allAnswers[question.id]) {
+                  customFields.push({
+                    id: question.ghlFieldId,
+                    field_value: allAnswers[question.id]!,
+                  });
+                }
+              }
+
+              const contactResult = await getOrCreateGHLContact(
+                ghlSettings.apiKey,
+                ghlSettings.locationId,
+                {
+                  email: lead.email || '',
+                  firstName,
+                  lastName,
+                  phone: lead.telefone || '',
+                  address: lead.cidadeEstado || undefined,
+                  customFields: customFields.length > 0 ? customFields : undefined,
+                }
+              );
+
+              if (contactResult.success && contactResult.contactId) {
+                await storage.updateFormLead(lead.id, { ghlContactId: contactResult.contactId, ghlSyncStatus: 'synced' });
+              } else {
+                await storage.updateFormLead(lead.id, { ghlSyncStatus: 'failed' });
+              }
+            }
+          } catch (ghlError) {
+            console.error('GHL lead sync error (non-blocking):', ghlError);
+            try {
+              await storage.updateFormLead(lead.id, { ghlSyncStatus: 'failed' });
+            } catch { /* ignore */ }
           }
-        }
+        })();
       }
       res.json(lead);
     } catch (err: any) {

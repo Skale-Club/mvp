@@ -6,9 +6,11 @@ import type { CompanySettings } from "@shared/schema";
 import Lottie from "lottie-react";
 import successAnimation from "../assets/success-animation.json";
 import { trackEvent } from "@/lib/analytics";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 
 export default function LeadThankYou() {
-  const { data: companySettings } = useQuery<CompanySettings>({
+  const { data: companySettings, isLoading, isError, refetch } = useQuery<CompanySettings>({
     queryKey: ["/api/company-settings"],
   });
 
@@ -40,6 +42,41 @@ export default function LeadThankYou() {
       #2c2637
     )
   `;
+
+  if (isLoading) {
+    return (
+      <div
+        className="w-full text-white overflow-hidden flex items-center pt-16"
+        style={{ background: heroGradient, minHeight: 'calc(100vh - 120px)' }}
+      >
+        <div className="max-w-5xl mx-auto px-4 py-8 w-full">
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10 space-y-4">
+            <Skeleton className="h-16 w-16 rounded-full bg-white/10" />
+            <Skeleton className="h-10 w-3/4 bg-white/10" />
+            <Skeleton className="h-6 w-full bg-white/10" />
+            <Skeleton className="h-12 w-48 bg-white/10 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        className="w-full text-white overflow-hidden flex items-center pt-16"
+        style={{ background: heroGradient, minHeight: 'calc(100vh - 120px)' }}
+      >
+        <div className="max-w-5xl mx-auto px-4 py-8 w-full">
+          <ErrorState
+            title="Failed to load page"
+            message="We couldn't load the page content. Please try again."
+            onRetry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

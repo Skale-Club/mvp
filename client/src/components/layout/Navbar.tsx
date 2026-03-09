@@ -18,7 +18,7 @@ export function Navbar() {
   const [location] = useLocation();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { data: companySettings } = useQuery<CompanySettings>({
+  const { data: companySettings, isLoading: settingsLoading } = useQuery<CompanySettings>({
     queryKey: ['/api/company-settings'],
   });
 
@@ -60,7 +60,9 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 min-h-[40px] min-w-[40px]">
-            {companySettings?.logoMain ? (
+            {settingsLoading ? (
+              <div className="h-14 w-24 bg-white/10 rounded-md animate-pulse" />
+            ) : companySettings?.logoMain ? (
               <img
                 src={companySettings.logoMain}
                 alt={companySettings.companyName || ''}

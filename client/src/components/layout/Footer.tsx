@@ -72,10 +72,10 @@ function toAnchorId(value: string): string {
 }
 
 export const Footer = forwardRef<HTMLElement>((_, ref) => {
-  const { data: companySettings } = useQuery<CompanySettings>({
+  const { data: companySettings, isLoading: settingsLoading } = useQuery<CompanySettings>({
     queryKey: ['/api/company-settings'],
   });
-  const { data: servicePostsRaw } = useQuery<ServicePost[]>({
+  const { data: servicePostsRaw, isLoading: postsLoading } = useQuery<ServicePost[]>({
     queryKey: ['/api/service-posts', 'published', 'footer'],
     queryFn: () => fetch('/api/service-posts?status=published').then((res) => res.json()),
   });
@@ -151,9 +151,27 @@ export const Footer = forwardRef<HTMLElement>((_, ref) => {
     );
   };
 
+  const isLoading = settingsLoading || postsLoading;
+
   return (
     <footer ref={ref} className="relative z-10 text-slate-300 py-8 md:py-10" style={{ backgroundColor: "var(--website-footer-bg)" }}>
       <div className="container-custom mx-auto">
+        {isLoading ? (
+          <div className="grid gap-10 md:grid-cols-12 animate-pulse">
+            <div className="md:col-span-4 flex flex-col items-center md:items-start space-y-4">
+              <div className="h-16 w-32 bg-white/10 rounded-md" />
+              <div className="h-4 w-48 bg-white/10 rounded" />
+              <div className="h-4 w-40 bg-white/10 rounded" />
+            </div>
+            <div className="md:col-span-8">
+              <div className="space-y-3">
+                <div className="h-4 w-32 bg-white/10 rounded" />
+                <div className="h-3 w-24 bg-white/10 rounded" />
+                <div className="h-3 w-28 bg-white/10 rounded" />
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="grid gap-10 md:grid-cols-12">
           <div className="md:col-span-4 flex flex-col items-center md:items-start text-center md:text-left space-y-6">
             <Link href="/" className="flex items-center gap-2">
@@ -216,6 +234,7 @@ export const Footer = forwardRef<HTMLElement>((_, ref) => {
             </div>
           ) : null}
         </div>
+        )}
       </div>
       <div className="container-custom mx-auto mt-8 pt-6 border-t border-white/10">
         <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-4 text-center md:text-left">

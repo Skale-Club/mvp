@@ -7,6 +7,7 @@ import { FileText, Calendar, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import type { BlogPost } from '@shared/schema';
+import { ErrorState } from "@/components/ui/error-state";
 
 const POSTS_PER_PAGE = 9;
 
@@ -17,6 +18,8 @@ export default function Blog() {
   const {
     data,
     isLoading,
+    isError,
+    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -105,6 +108,12 @@ export default function Blog() {
               </Card>
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Failed to load blog posts"
+            message="We couldn't load the blog posts. Please try again."
+            onRetry={() => refetch()}
+          />
         ) : filteredPosts && filteredPosts.length > 0 ? (
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

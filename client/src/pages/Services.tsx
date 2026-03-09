@@ -6,6 +6,7 @@ import { Search, X, ImageIcon } from "lucide-react";
 import type { ServicePost } from "@shared/schema";
 import { getServicePostPath } from "@/lib/service-path";
 import { trackViewServices } from "@/lib/analytics";
+import { ErrorState } from "@/components/ui/error-state";
 
 function ServicePostCard({ post }: { post: ServicePost }) {
   return (
@@ -47,7 +48,7 @@ export default function Services() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: servicePostsRaw, isLoading } = useQuery<ServicePost[]>({
+  const { data: servicePostsRaw, isLoading, isError, refetch } = useQuery<ServicePost[]>({
     queryKey: ['/api/service-posts', 'published'],
     queryFn: () => fetch('/api/service-posts?status=published').then(r => r.json()),
   });
@@ -145,6 +146,12 @@ export default function Services() {
               <div key={i} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)] h-64 bg-gray-100 rounded-lg animate-pulse"></div>
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Failed to load services"
+            message="We couldn't load the services. Please try again."
+            onRetry={() => refetch()}
+          />
         ) : (
           <div className="flex flex-wrap justify-center gap-4">
             {filteredPosts?.map((post) => (

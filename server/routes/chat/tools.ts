@@ -340,76 +340,76 @@ export async function runChatTool(
         return { error: 'No lead found for this conversation' };
       }
 
-      // Mark as complete
       await storage.updateFormLead(lead.id, { formCompleto: true } as any);
 
-      // Sync to GoHighLevel
-      let ghlContactId: string | undefined;
-      try {
-        const ghlSettings = await storage.getIntegrationSettings('gohighlevel');
-        const settings = await storage.getCompanySettings();
-        const formConfig = settings?.formConfig || DEFAULT_FORM_CONFIG;
+      (async () => {
+        try {
+          const ghlSettings = await storage.getIntegrationSettings('gohighlevel');
+          const settings = await storage.getCompanySettings();
+          const formConfig = settings?.formConfig || DEFAULT_FORM_CONFIG;
 
-        if (ghlSettings?.isEnabled && ghlSettings.apiKey && ghlSettings.locationId && lead.telefone) {
-          const nameParts = (lead.nome || '').trim().split(' ').filter(Boolean);
-          const firstName = nameParts.shift() || lead.nome || 'Lead';
-          const lastName = nameParts.join(' ');
+          if (ghlSettings?.isEnabled && ghlSettings.apiKey && ghlSettings.locationId && lead.telefone) {
+            const nameParts = (lead.nome || '').trim().split(' ').filter(Boolean);
+            const firstName = nameParts.shift() || lead.nome || 'Lead';
+            const lastName = nameParts.join(' ');
 
-          // Build custom fields from form config mappings
-          const customFields: Array<{ id: string; field_value: string }> = [];
-          const allAnswers: Record<string, string | undefined> = {
-            nome: lead.nome || undefined,
-            email: lead.email || undefined,
-            telefone: lead.telefone || undefined,
-            cidadeEstado: lead.cidadeEstado || undefined,
-            tipoNegocio: lead.tipoNegocio || undefined,
-            tipoNegocioOutro: lead.tipoNegocioOutro || undefined,
-            tempoNegocio: lead.tempoNegocio || undefined,
-            experienciaMarketing: lead.experienciaMarketing || undefined,
-            orcamentoAnuncios: lead.orcamentoAnuncios || undefined,
-            principalDesafio: lead.principalDesafio || undefined,
-            disponibilidade: lead.disponibilidade || undefined,
-            expectativaResultado: lead.expectativaResultado || undefined,
-            ...(lead.customAnswers || {}),
-          };
+            const customFields: Array<{ id: string; field_value: string }> = [];
+            const allAnswers: Record<string, string | undefined> = {
+              nome: lead.nome || undefined,
+              email: lead.email || undefined,
+              telefone: lead.telefone || undefined,
+              cidadeEstado: lead.cidadeEstado || undefined,
+              tipoNegocio: lead.tipoNegocio || undefined,
+              tipoNegocioOutro: lead.tipoNegocioOutro || undefined,
+              tempoNegocio: lead.tempoNegocio || undefined,
+              experienciaMarketing: lead.experienciaMarketing || undefined,
+              orcamentoAnuncios: lead.orcamentoAnuncios || undefined,
+              principalDesafio: lead.principalDesafio || undefined,
+              disponibilidade: lead.disponibilidade || undefined,
+              expectativaResultado: lead.expectativaResultado || undefined,
+              ...(lead.customAnswers || {}),
+            };
 
-          for (const question of formConfig.questions) {
-            if (question.ghlFieldId && allAnswers[question.id]) {
-              customFields.push({
-                id: question.ghlFieldId,
-                field_value: allAnswers[question.id]!,
-              });
+            for (const question of formConfig.questions) {
+              if (question.ghlFieldId && allAnswers[question.id]) {
+                customFields.push({
+                  id: question.ghlFieldId,
+                  field_value: allAnswers[question.id]!,
+                });
+              }
+            }
+
+            const contactResult = await getOrCreateGHLContact(
+              ghlSettings.apiKey,
+              ghlSettings.locationId,
+              {
+                email: lead.email || '',
+                firstName,
+                lastName,
+                phone: lead.telefone || '',
+                address: lead.cidadeEstado || undefined,
+                customFields: customFields.length > 0 ? customFields : undefined,
+              }
+            );
+
+            if (contactResult.success && contactResult.contactId) {
+              await storage.updateFormLead(lead.id, { ghlContactId: contactResult.contactId, ghlSyncStatus: 'synced' });
+            } else {
+              await storage.updateFormLead(lead.id, { ghlSyncStatus: 'failed' });
             }
           }
-
-          const contactResult = await getOrCreateGHLContact(
-            ghlSettings.apiKey,
-            ghlSettings.locationId,
-            {
-              email: lead.email || '',
-              firstName,
-              lastName,
-              phone: lead.telefone || '',
-              address: lead.cidadeEstado || undefined,
-              customFields: customFields.length > 0 ? customFields : undefined,
-            }
-          );
-
-          if (contactResult.success && contactResult.contactId) {
-            await storage.updateFormLead(lead.id, { ghlContactId: contactResult.contactId, ghlSyncStatus: 'synced' });
-            ghlContactId = contactResult.contactId;
-          }
+        } catch (err) {
+          console.error('GHL sync error (non-blocking):', err);
+          try {
+            await storage.updateFormLead(lead.id, { ghlSyncStatus: 'failed' });
+          } catch { /* ignore */ }
         }
-      } catch (err) {
-        console.error('GHL sync error:', err);
-        await storage.updateFormLead(lead.id, { ghlSyncStatus: 'failed' });
-      }
+      })();
 
       return {
         success: true,
         classification: lead.classificacao,
         score: lead.scoreTotal,
-        ghlContactId,
       };
     }
 

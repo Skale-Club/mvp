@@ -5,6 +5,7 @@ import type { GalleryImage, CompanySettings } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Camera, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ErrorState } from "@/components/ui/error-state";
 
 function setMetaTag(name: string, content: string, isProperty = false) {
   const selector = isProperty ? `meta[property="${name}"]` : `meta[name="${name}"]`;
@@ -28,7 +29,7 @@ function setCanonical(href: string) {
 }
 
 export default function GalleryPage() {
-  const { data: images, isLoading } = useQuery<GalleryImage[]>({
+  const { data: images, isLoading, isError, refetch } = useQuery<GalleryImage[]>({
     queryKey: ["/api/gallery"],
   });
   const { data: settings } = useQuery<CompanySettings>({
@@ -114,6 +115,12 @@ export default function GalleryPage() {
               <Skeleton key={i} className="aspect-[4/3] w-full rounded-xl" />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState
+            title="Failed to load gallery"
+            message="We couldn't load the gallery images. Please try again."
+            onRetry={() => refetch()}
+          />
         ) : galleryImages.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {galleryImages.map((image, index) => (

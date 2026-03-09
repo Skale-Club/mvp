@@ -268,6 +268,19 @@ async function ensureReviewsSchema() {
   return ensureReviewsSchemaPromise;
 }
 
+export async function initializeSchemas(): Promise<void> {
+  await Promise.all([
+    ensureFormLeadGhlColumns(),
+    ensureTwilioSchema(),
+    ensureGallerySchema(),
+    ensureServicePostsSchema(),
+    ensureCompanySettingsSchema(),
+    ensureReviewsSchema(),
+  ]);
+  const storageInstance = new DatabaseStorage();
+  await storageInstance.initChatSchema();
+}
+
 export interface IStorage {
   // Company Settings
   getCompanySettings(): Promise<CompanySettings>;
@@ -353,6 +366,10 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   private chatSchemaEnsured = false;
+
+  async initChatSchema(): Promise<void> {
+    return this.ensureChatSchema();
+  }
 
   private async ensureChatSchema(): Promise<void> {
     if (this.chatSchemaEnsured) return;

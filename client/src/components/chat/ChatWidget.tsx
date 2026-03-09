@@ -83,7 +83,7 @@ export function ChatWidget() {
   const [limitReached, setLimitReached] = useState(false);
   const [language, setLanguage] = useState("");
 
-  const { data: config } = useQuery<ChatConfig>({
+  const { data: config, isLoading: configLoading } = useQuery<ChatConfig>({
     queryKey: ["/api/chat/config"],
     queryFn: async () => {
       const res = await fetch("/api/chat/config", { credentials: "include" });
@@ -221,7 +221,7 @@ export function ChatWidget() {
     return config ? isUrlExcluded(url, config.excludedUrlRules || []) : false;
   }, [config, location]);
 
-  if (!config?.enabled || excluded) {
+  if (configLoading || !config?.enabled || excluded) {
     return null;
   }
 
