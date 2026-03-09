@@ -5,6 +5,7 @@ import {
   insertReviewsSettingsSchema,
 } from "#shared/schema.js";
 import { storage } from "../storage.js";
+import { safeErrorMessage } from "./errorUtils.js";
 
 function buildPublicReviewsPayload(settings: Awaited<ReturnType<typeof storage.getReviewsSettings>>, items: Awaited<ReturnType<typeof storage.getReviewItems>>) {
   const hasWidgetUrl = (settings.widgetEmbedUrl || "").trim().length > 0;
@@ -40,7 +41,7 @@ export function registerReviewsRoutes(app: Express, requireAdmin: any) {
       ]);
       res.json(buildPublicReviewsPayload(settings, items));
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -52,7 +53,7 @@ export function registerReviewsRoutes(app: Express, requireAdmin: any) {
       ]);
       res.json({ settings, items });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -65,7 +66,7 @@ export function registerReviewsRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -78,7 +79,7 @@ export function registerReviewsRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -91,7 +92,7 @@ export function registerReviewsRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -106,7 +107,7 @@ export function registerReviewsRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -115,7 +116,7 @@ export function registerReviewsRoutes(app: Express, requireAdmin: any) {
       await storage.deleteReviewItem(Number(req.params.id));
       res.json({ success: true });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 }

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { storage } from "../storage.js";
 import { z } from "zod";
 import { formLeadProgressSchema, type LeadStatus, type LeadClassification } from "#shared/schema.js";
+import { safeErrorMessage } from "./errorUtils.js";
 import { DEFAULT_FORM_CONFIG, calculateMaxScore, getSortedQuestions } from "#shared/form.js";
 import type { FormConfig } from "#shared/schema.js";
 import { api } from "#shared/routes.js";
@@ -120,7 +121,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
       };
       res.json(normalizedConfig);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -143,7 +144,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
       await storage.updateCompanySettings({ formConfig: updatedConfig });
       res.json(updatedConfig);
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -272,7 +273,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
           }
         }
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -292,7 +293,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Invalid filters', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -316,7 +317,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 

@@ -101,16 +101,21 @@ export const conversations = pgTable("conversations", {
   visitorName: text("visitor_name"),
   visitorPhone: text("visitor_phone"),
   visitorEmail: text("visitor_email"),
-});
+}, (table) => ({
+  statusIdx: index("conversations_status_idx").on(table.status),
+  createdAtIdx: index("conversations_created_at_idx").on(table.createdAt),
+}));
 
 export const conversationMessages = pgTable("conversation_messages", {
   id: uuid("id").primaryKey(),
-  conversationId: uuid("conversation_id").references(() => conversations.id).notNull(),
+  conversationId: uuid("conversation_id").references(() => conversations.id, { onDelete: "cascade" }).notNull(),
   role: text("role").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   metadata: jsonb("metadata"),
-});
+}, (table) => ({
+  conversationIdx: index("idx_conversation_messages_conversation_id").on(table.conversationId),
+}));
 
 export const leadClassificationEnum = pgEnum("lead_classificacao", [
   "QUENTE",
@@ -168,10 +173,8 @@ export const formLeads = pgTable("form_leads", {
   customAnswers: jsonb("custom_answers").$type<Record<string, string>>().default({}),
   ghlContactId: text("ghl_contact_id"),
   ghlSyncStatus: text("ghl_sync_status").default("pending"),
-  // Source tracking: 'form' or 'chat'
   source: text("source").default("form"),
-  // Link to conversation for chat-originated leads
-  conversationId: text("conversation_id"),
+  conversationId: uuid("conversation_id").references(() => conversations.id),
 }, (table) => ({
   emailIdx: index("form_leads_email_idx").on(table.email),
   classificacaoIdx: index("form_leads_classificacao_idx").on(table.classificacao),
@@ -472,7 +475,9 @@ export const faqs = pgTable("faqs", {
   question: text("question").notNull(),
   answer: text("answer").notNull(),
   order: integer("order").default(0),
-});
+}, (table) => ({
+  orderIdx: index("faqs_order_idx").on(table.order),
+}));
 
 export const insertFaqSchema = createInsertSchema(faqs).omit({ id: true });
 export type Faq = typeof faqs.$inferSelect;
@@ -494,7 +499,11 @@ export const blogPosts = pgTable("blog_posts", {
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  statusIdx: index("blog_posts_status_idx").on(table.status),
+  publishedAtIdx: index("blog_posts_published_at_idx").on(table.publishedAt),
+  slugIdx: index("blog_posts_slug_idx").on(table.slug),
+}));
 
 export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ 
   id: true, 
@@ -526,7 +535,10 @@ export const servicePosts = pgTable("service_posts", {
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  statusOrderIdx: index("service_posts_status_order_idx").on(table.status, table.order),
+  slugIdx: index("service_posts_slug_idx").on(table.slug),
+}));
 
 export const insertServicePostSchema = createInsertSchema(servicePosts).omit({
   id: true,

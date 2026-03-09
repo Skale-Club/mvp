@@ -3,6 +3,7 @@ import { db } from "../db.js";
 import { users } from "#shared/schema.js";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { safeErrorMessage } from "./errorUtils.js";
 
 /**
  * Register user management routes
@@ -46,7 +47,7 @@ export function registerUserRoutes(app: Express, requireAdmin: any) {
       res.json(mergedUsers);
     } catch (err) {
       console.error('Error in /api/users:', err);
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -129,7 +130,7 @@ export function registerUserRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -153,7 +154,7 @@ export function registerUserRoutes(app: Express, requireAdmin: any) {
 
       res.json({ success: true, message: 'User deleted successfully' });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 }

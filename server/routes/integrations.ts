@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { storage } from "../storage.js";
 import { z } from "zod";
 import { insertChatIntegrationsSchema } from "#shared/schema.js";
+import { safeErrorMessage } from "./errorUtils.js";
 import { DEFAULT_CHAT_MODEL, DEFAULT_GHL_CALENDAR_ID } from "./constants.js";
 import { cleanPhone, parseRecipients } from "./helpers.js";
 import { testGHLConnection, getGHLCustomFields } from "../integrations/ghl.js";
@@ -26,7 +27,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         hasKey: !!(runtimeOpenAiKey || process.env.OPENAI_API_KEY || integration?.apiKey),
       });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -69,7 +70,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -147,7 +148,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         apiKey: settings.apiKey ? '********' : ''
       });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -176,7 +177,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         apiKey: settings.apiKey ? '********' : ''
       });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -202,7 +203,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
     } catch (err) {
       res.status(500).json({ 
         success: false, 
-        message: (err as Error).message 
+        message: safeErrorMessage(err, 'Connection test failed') 
       });
     }
   });
@@ -276,7 +277,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         authToken: settings.authToken ? '********' : ''
       });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -326,7 +327,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Invalid Twilio settings payload', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 

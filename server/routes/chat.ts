@@ -18,6 +18,7 @@ import { getChatTools, runChatTool } from "./chat/tools.js";
 import { sendNewChatNotification, sendLowPerformanceAlert } from "../integrations/twilio.js";
 import { z } from "zod";
 import { urlRuleSchema } from "./helpers.js";
+import { safeErrorMessage } from "./errorUtils.js";
 
 let runtimeOpenAiKey = process.env.OPENAI_API_KEY || "";
 
@@ -59,7 +60,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
         intakeObjectives: effectiveObjectives,
       });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -71,7 +72,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
       const effectiveObjectives = intakeObjectives.length ? intakeObjectives : DEFAULT_INTAKE_OBJECTIVES;
       res.json({ ...settings, intakeObjectives: effectiveObjectives });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -128,7 +129,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
 
       res.json({ averageSeconds: avgSeconds, formatted, samples });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -168,7 +169,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -190,7 +191,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
       );
       res.json(withPreview);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -202,7 +203,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
       const messages = await storage.getConversationMessages(conversation.id);
       res.json({ conversation, messages });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -218,7 +219,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -228,7 +229,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
       await storage.deleteConversation(req.params.id);
       res.json({ success: true });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -509,7 +510,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours to discuss 
         leadCaptured
       });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 }

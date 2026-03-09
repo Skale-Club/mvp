@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { storage } from "../storage.js";
 import { z } from "zod";
 import { insertBlogPostSchema, insertFaqSchema } from "#shared/schema.js";
+import { safeErrorMessage } from "./errorUtils.js";
 
 /**
  * Register content-related routes (Blog, FAQs)
@@ -29,7 +30,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
         res.json(posts);
       }
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -38,7 +39,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       const count = await storage.countPublishedBlogPosts();
       res.json({ count });
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -65,7 +66,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       }
       res.json({ success: true, tag: rawTag, updatedCount });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -116,7 +117,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
 
       res.json({ success: true, tag: rawTag, renamedTo: nextTag, updatedCount });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -136,7 +137,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       }
       res.json(post);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -146,7 +147,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       const posts = await storage.getRelatedBlogPosts(Number(req.params.id), limit);
       res.json(posts);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -159,7 +160,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -172,7 +173,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -181,7 +182,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       await storage.deleteBlogPost(Number(req.params.id));
       res.json({ success: true });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -194,7 +195,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       const faqList = await storage.getFaqs();
       res.json(faqList);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -207,7 +208,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -220,7 +221,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -229,7 +230,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
       await storage.deleteFaq(Number(req.params.id));
       res.json({ success: true });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 }

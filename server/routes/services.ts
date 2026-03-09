@@ -7,6 +7,7 @@ import {
   insertGalleryImageSchema 
 } from "#shared/schema.js";
 import { slugify } from "./helpers.js";
+import { safeErrorMessage } from "./errorUtils.js";
 
 /**
  * Helper to get unique service post slug
@@ -51,7 +52,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       const posts = await storage.getServicePosts(status);
       res.json(posts);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -71,7 +72,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
       res.json(post);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -91,7 +92,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       if (err?.code === '23505') {
         return res.status(409).json({ message: 'Service post already exists for this service' });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -112,7 +113,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -125,7 +126,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       await storage.deleteServicePost(id);
       res.json({ success: true });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -140,7 +141,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       const images = await storage.getGalleryImages(parsedLimit);
       res.json(images);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -156,7 +157,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       }
       res.json(image);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -169,7 +170,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -185,7 +186,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -202,7 +203,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -215,7 +216,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       await storage.deleteGalleryImage(id);
       res.json({ success: true });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -224,7 +225,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       const deletedCount = await storage.deleteAllGalleryImages();
       res.json({ success: true, deletedCount });
     } catch (err) {
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
@@ -237,7 +238,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       const settings = await storage.getCompanySettings();
       res.json(settings);
     } catch (err) {
-      res.status(500).json({ message: (err as Error).message });
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
     }
   });
 
@@ -250,7 +251,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: err.errors });
       }
-      res.status(400).json({ message: (err as Error).message });
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
     }
   });
 
