@@ -57,8 +57,9 @@ export const pool = new Pool({
         checkServerIdentity: () => undefined,
       }
     : false,
-  max: isServerless ? 5 : 20,
-  idleTimeoutMillis: isServerless ? 30000 : undefined,
+  max: isServerless ? 1 : 20,
+  idleTimeoutMillis: isServerless ? 1000 : undefined,
   connectionTimeoutMillis: isServerless ? 10000 : undefined,
+  maxUses: isServerless ? 75 : undefined,
 });
 export const db = drizzle(pool, { schema });
