@@ -73,7 +73,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
     };
   }, [api]);
 
-  if (isLoading || !posts || posts.length === 0) {
+  if (isLoading || !Array.isArray(posts) || posts.length === 0) {
     return null;
   }
 
