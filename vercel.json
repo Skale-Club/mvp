@@ -48,6 +48,14 @@
       "destination": "/api/index"
     },
     {
+      "source": "/blog/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/services/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

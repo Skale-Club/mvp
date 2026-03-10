@@ -17,12 +17,26 @@ type SeoSettings = Pick<
   | "twitterCreator"
   | "companyName"
   | "facebookAppId"
+  | "logoIcon"
+  | "schemaLocalBusiness"
 >;
+
+export interface PageSeoData {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: "article" | "service" | "website";
+  publishedAt?: string;
+  updatedAt?: string;
+  author?: string;
+  canonical?: string;
+}
 
 interface SeoRenderContext {
   requestOrigin: string;
   requestPath: string;
   envFacebookAppId?: string;
+  pageData?: PageSeoData;
 }
 
 const SEO_BLOCK_START = "<!-- SEO_RUNTIME_START -->";
@@ -80,8 +94,14 @@ export function getRequestPath(req: Request): string {
 }
 
 function buildSeoBlock(settings: SeoSettings, context: SeoRenderContext): string {
+  const { pageData } = context;
   const requestPath = normalizeRequestPath(context.requestPath);
-  const canonicalFromSettings = trimValue(settings.seoCanonicalUrl);
+  
+  // Title & Description Priority: Page Data > Company Settings
+  const title = trimValue(pageData?.title) || trimValue(settings.seoTitle) || trimValue(settings.companyName) || "Website";
+  const description = trimValue(pageData?.description) || trimValue(settings.seoDescription);
+  
+  const canonicalFromSettings = trimValue(pageData?.canonical) || trimValue(settings.seoCanonicalUrl);
   const canonicalUrl = canonicalFromSettings
     ? toAbsoluteUrl(canonicalFromSettings, context.requestOrigin)
     : joinOriginAndPath(context.requestOrigin, requestPath);
@@ -95,19 +115,22 @@ function buildSeoBlock(settings: SeoSettings, context: SeoRenderContext): string
     canonicalOrigin = context.requestOrigin;
   }
 
-  const title = trimValue(settings.seoTitle) || trimValue(settings.companyName) || "Website";
-  const description = trimValue(settings.seoDescription);
   const keywords = trimValue(settings.seoKeywords);
-  const author = trimValue(settings.seoAuthor);
+  const author = trimValue(pageData?.author) || trimValue(settings.seoAuthor);
   const robotsTag = trimValue(settings.seoRobotsTag) || "index, follow";
-  const ogType = trimValue(settings.ogType) || "website";
+  const ogType = pageData?.type === "article" ? "article" : (trimValue(settings.ogType) || "website");
   const ogSiteName = trimValue(settings.ogSiteName) || trimValue(settings.companyName) || "Website";
   const twitterCard = trimValue(settings.twitterCard) || "summary_large_image";
   const twitterSite = trimValue(settings.twitterSite);
   const twitterCreator = trimValue(settings.twitterCreator);
   const facebookAppId = trimValue(settings.facebookAppId) || trimValue(context.envFacebookAppId);
-  const ogImageRaw = trimValue(settings.ogImage);
+  
+  // Image Priority: Page Image > Global OG Image
+  const ogImageRaw = trimValue(pageData?.image) || trimValue(settings.ogImage);
   const ogImage = ogImageRaw ? toAbsoluteUrl(ogImageRaw, canonicalOrigin || context.requestOrigin) : "";
+  
+  const faviconRaw = trimValue(settings.logoIcon);
+  const favicon = faviconRaw ? toAbsoluteUrl(faviconRaw, context.requestOrigin) : "";
 
   const lines: string[] = [];
   lines.push(`<title>${escapeHtml(title)}</title>`);
@@ -117,6 +140,15 @@ function buildSeoBlock(settings: SeoSettings, context: SeoRenderContext): string
   if (robotsTag) lines.push(`<meta name="robots" content="${escapeHtml(robotsTag)}" />`);
   if (canonicalUrl) lines.push(`<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`);
 
+  if (favicon) {
+    const type = favicon.endsWith(".svg") ? "image/svg+xml" : "image/png";
+    lines.push(`<link rel="icon" type="${type}" href="${escapeHtml(favicon)}" />`);
+  } else {
+    lines.push(`<link rel="icon" type="image/svg+xml" href="/favicon.svg" />`);
+    lines.push(`<link rel="icon" type="image/png" href="/favicon.png" />`);
+  }
+
+  // Open Graph
   lines.push(`<meta property="og:title" content="${escapeHtml(title)}" />`);
   lines.push(`<meta property="og:description" content="${escapeHtml(description)}" />`);
   lines.push(`<meta property="og:type" content="${escapeHtml(ogType)}" />`);
@@ -125,12 +157,67 @@ function buildSeoBlock(settings: SeoSettings, context: SeoRenderContext): string
   if (canonicalUrl) lines.push(`<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />`);
   if (facebookAppId) lines.push(`<meta property="fb:app_id" content="${escapeHtml(facebookAppId)}" />`);
 
+  // Twitter
   lines.push(`<meta name="twitter:card" content="${escapeHtml(twitterCard)}" />`);
   lines.push(`<meta name="twitter:title" content="${escapeHtml(title)}" />`);
   lines.push(`<meta name="twitter:description" content="${escapeHtml(description)}" />`);
   if (ogImage) lines.push(`<meta name="twitter:image" content="${escapeHtml(ogImage)}" />`);
   if (twitterSite) lines.push(`<meta name="twitter:site" content="${escapeHtml(twitterSite)}" />`);
   if (twitterCreator) lines.push(`<meta name="twitter:creator" content="${escapeHtml(twitterCreator)}" />`);
+
+  // JSON-LD (Schema.org)
+  const schemaList: any[] = [];
+
+  // 1. LocalBusiness from settings
+  if (settings.schemaLocalBusiness && typeof settings.schemaLocalBusiness === "object") {
+    schemaList.push({
+      "@context": "https://schema.org",
+      ...settings.schemaLocalBusiness,
+    });
+  }
+
+  // 2. Page Specific Schemas
+  if (pageData?.type === "article") {
+    schemaList.push({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": title,
+      "description": description,
+      "image": ogImage,
+      "author": {
+        "@type": "Person",
+        "name": author || settings.companyName,
+      },
+      "datePublished": pageData.publishedAt,
+      "dateModified": pageData.updatedAt || pageData.publishedAt,
+      "publisher": {
+        "@type": "Organization",
+        "name": settings.companyName,
+        "logo": {
+          "@type": "ImageObject",
+          "url": toAbsoluteUrl(trimValue(settings.logoIcon), context.requestOrigin),
+        }
+      }
+    });
+  } else if (pageData?.type === "service") {
+    schemaList.push({
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": title,
+      "description": description,
+      "provider": {
+        "@type": "LocalBusiness",
+        "name": settings.companyName,
+      },
+      "image": ogImage,
+    });
+  }
+
+  if (schemaList.length > 0) {
+    schemaList.forEach(schema => {
+      lines.push(`<script type="application/ld+json">${JSON.stringify(schema)}</script>`);
+    });
+  }
 
   return `${SEO_BLOCK_START}\n    ${lines.join("\n    ")}\n    ${SEO_BLOCK_END}`;
 }
@@ -156,6 +243,8 @@ function stripManagedSeoTags(html: string): string {
     /<meta\s+name="twitter:image"[\s\S]*?\/?>/gi,
     /<meta\s+name="twitter:site"[\s\S]*?\/?>/gi,
     /<meta\s+name="twitter:creator"[\s\S]*?\/?>/gi,
+    /<link\s+rel="icon"[\s\S]*?\/?>/gi,
+    /<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/gi,
   ];
 
   let sanitized = html;

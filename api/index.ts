@@ -9,12 +9,18 @@ async function getApp() {
   if (app) return app;
 
   if (!initPromise) {
-    initPromise = import("../server/app.js")
-      .then(({ createApp }) => createApp())
-      .then((result) => {
-        app = result.app;
-        return app;
-      })
+    initPromise = Promise.all([
+      import("../server/app.js"),
+      import("../server/static.js")
+    ])
+      .then(([{ createApp }, { serveStatic }]) => 
+        createApp().then((result) => {
+          app = result.app;
+          // Serve frontend with dynamic SEO for non-API routes
+          serveStatic(app);
+          return app;
+        })
+      )
       .catch((err) => {
         // Reset so next request retries initialization
         initPromise = null;

@@ -12,3 +12,5 @@ vite.config.ts.*
 .dev-live.log
 .dev-run.log
 *.log
+.vercel
+.env*.local
