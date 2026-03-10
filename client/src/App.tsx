@@ -31,11 +31,14 @@ function useHideInitialLoader() {
       hasRun.current = true;
       const loader = document.getElementById("initial-loader");
       if (loader) {
-        loader.classList.add("loader-fade-out");
+        // Enforce a minimum display time for the loader (e.g. 800ms) for aesthetic transition
         setTimeout(() => {
-          loader.remove();
-          markLoaded();
-        }, 150);
+          loader.classList.add("loader-fade-out");
+          setTimeout(() => {
+            loader.remove();
+            markLoaded();
+          }, 300); // Wait for the fade-out CSS animation
+        }, 800);
       } else {
         markLoaded();
       }

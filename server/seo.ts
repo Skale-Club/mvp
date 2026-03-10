@@ -143,9 +143,6 @@ function buildSeoBlock(settings: SeoSettings, context: SeoRenderContext): string
   if (favicon) {
     const type = favicon.endsWith(".svg") ? "image/svg+xml" : "image/png";
     lines.push(`<link rel="icon" type="${type}" href="${escapeHtml(favicon)}" />`);
-  } else {
-    lines.push(`<link rel="icon" type="image/svg+xml" href="/favicon.svg" />`);
-    lines.push(`<link rel="icon" type="image/png" href="/favicon.png" />`);
   }
 
   // Open Graph
