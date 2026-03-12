@@ -109,7 +109,11 @@ server/routes/
 
 **SEO:**
 - `GET /robots.txt` - Robots.txt file
-- `GET /sitemap.xml` - XML sitemap
+- `GET /sitemap.xml` - Sitemap index (submit this in Google Search Console)
+- `GET /sitemap-index.xml` - Sitemap index alias
+- `GET /sitemaps/static.xml` - Static pages sitemap
+- `GET /sitemaps/services.xml` - Services sitemap
+- `GET /sitemaps/blog.xml` - Blog sitemap
 
 ## Utilities
 

@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import { storage } from "../storage.js";
 import { z } from "zod";
 import { 
@@ -8,6 +8,14 @@ import {
 } from "#shared/schema.js";
 import { slugify } from "./helpers.js";
 import { safeErrorMessage } from "./errorUtils.js";
+import {
+  buildBlogSitemapXml,
+  buildRobotsTxt,
+  buildServicesSitemapXml,
+  buildSitemapData,
+  buildSitemapIndexXml,
+  buildStaticSitemapXml,
+} from "../sitemap.js";
 
 /**
  * Helper to get unique service post slug
@@ -262,88 +270,79 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
   app.get('/robots.txt', async (req, res) => {
     try {
       const settings = await storage.getCompanySettings();
-      const hostname = req.hostname || '';
-      const canonicalUrl =
-        settings?.seoCanonicalUrl ||
-        `${req.protocol}://${hostname}`;
-      
-      const robotsTxt = `User-agent: *
-Allow: /
-
-Sitemap: ${canonicalUrl}/sitemap.xml
-`;
-      res.type('text/plain').send(robotsTxt);
+      res.type('text/plain').send(buildRobotsTxt(req, settings));
     } catch (err) {
-      res.type('text/plain').send('User-agent: *\nAllow: /');
+      res.type('text/plain').send(buildRobotsTxt(req, null));
     }
   });
 
+  async function getSitemapData(req: Request) {
+    const [settings, servicePostsList, blogPostsList] = await Promise.all([
+      storage.getCompanySettings(),
+      storage.getPublishedServicePosts(5000, 0),
+      storage.getPublishedBlogPosts(5000, 0),
+    ]);
+
+    return buildSitemapData({
+      req,
+      settings,
+      servicePosts: servicePostsList,
+      blogPosts: blogPostsList,
+    });
+  }
+
+  function setSitemapHeaders(res: Response) {
+    res.set('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+    res.type('application/xml');
+  }
+
   app.get('/sitemap.xml', async (req, res) => {
     try {
-      const settings = await storage.getCompanySettings();
-      const servicePostsList = await storage.getPublishedServicePosts(500, 0);
-      const blogPostsList = await storage.getPublishedBlogPosts(100, 0);
-      const hostname = req.hostname || '';
-      const canonicalUrl =
-        settings?.seoCanonicalUrl ||
-        `${req.protocol}://${hostname}`;
-      const lastMod = new Date().toISOString().split('T')[0];
-
-      let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${canonicalUrl}/</loc>
-    <lastmod>${lastMod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${canonicalUrl}/services</loc>
-    <lastmod>${lastMod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${canonicalUrl}/blog</loc>
-    <lastmod>${lastMod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${canonicalUrl}/gallery</loc>
-    <lastmod>${lastMod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`;
-
-      for (const servicePost of servicePostsList) {
-        const postDate = servicePost.updatedAt ? new Date(servicePost.updatedAt).toISOString().split('T')[0] : lastMod;
-        sitemap += `
-  <url>
-    <loc>${canonicalUrl}/services/${servicePost.slug}</loc>
-    <lastmod>${postDate}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`;
-      }
-
-      for (const post of blogPostsList) {
-        const postDate = post.updatedAt ? new Date(post.updatedAt).toISOString().split('T')[0] : lastMod;
-        sitemap += `
-  <url>
-    <loc>${canonicalUrl}/blog/${post.slug}</loc>
-    <lastmod>${postDate}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`;
-      }
-
-      sitemap += `
-</urlset>`;
-
-      res.type('application/xml').send(sitemap);
+      const data = await getSitemapData(req);
+      setSitemapHeaders(res);
+      res.send(buildSitemapIndexXml(data));
     } catch (err) {
-      res.status(500).send('Error generating sitemap');
+      res.status(500).type('text/plain').send('Error generating sitemap');
+    }
+  });
+
+  app.get('/sitemap-index.xml', async (req, res) => {
+    try {
+      const data = await getSitemapData(req);
+      setSitemapHeaders(res);
+      res.send(buildSitemapIndexXml(data));
+    } catch (err) {
+      res.status(500).type('text/plain').send('Error generating sitemap index');
+    }
+  });
+
+  app.get('/sitemaps/static.xml', async (req, res) => {
+    try {
+      const data = await getSitemapData(req);
+      setSitemapHeaders(res);
+      res.send(buildStaticSitemapXml(data));
+    } catch (err) {
+      res.status(500).type('text/plain').send('Error generating static sitemap');
+    }
+  });
+
+  app.get('/sitemaps/services.xml', async (req, res) => {
+    try {
+      const data = await getSitemapData(req);
+      setSitemapHeaders(res);
+      res.send(buildServicesSitemapXml(data));
+    } catch (err) {
+      res.status(500).type('text/plain').send('Error generating service sitemap');
+    }
+  });
+
+  app.get('/sitemaps/blog.xml', async (req, res) => {
+    try {
+      const data = await getSitemapData(req);
+      setSitemapHeaders(res);
+      res.send(buildBlogSitemapXml(data));
+    } catch (err) {
+      res.status(500).type('text/plain').send('Error generating blog sitemap');
     }
   });
 }
