@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes.js";
 import { initializeSchemas } from "./storage.js";
 import path from "path";
@@ -23,6 +24,7 @@ export function log(message: string, source = "express") {
 
 export async function createApp(): Promise<{ app: express.Express; httpServer: Server }> {
   const app = express();
+  app.use(compression());
 
   // Serve attached_assets as static files
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));

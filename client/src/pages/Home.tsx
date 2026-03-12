@@ -114,6 +114,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                             alt={post.title}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             data-testid={`img-blog-home-${post.id}`}
+                            loading="lazy"
                           />
                         </div>
                       ) : (
@@ -192,6 +193,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                       alt={post.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       data-testid={`img-blog-home-${post.id}`}
+                      loading="lazy"
                     />
                   </div>
                 ) : (
@@ -500,7 +502,7 @@ function ServiceCard({ post }: { post: ServicePost }) {
       data-testid={`link-home-service-post-${post.id}`}
     >
       {post.featureImageUrl ? (
-        <img src={post.featureImageUrl} alt={post.title} className="aspect-[4/3] w-full object-cover" />
+        <img src={post.featureImageUrl} alt={post.title} className="aspect-[4/3] w-full object-cover" loading="lazy" />
       ) : (
         <div className="flex aspect-[4/3] items-center justify-center bg-slate-100">
           <ImageIcon className="h-10 w-10 text-slate-400" />
@@ -718,6 +720,7 @@ function GalleryShowcaseSection({ images }: { images: GalleryImage[] }) {
                 src={image.imageUrl}
                 alt={image.altText || image.title || "Gallery image"}
                 className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                loading="lazy"
               />
             </Link>
           ))}

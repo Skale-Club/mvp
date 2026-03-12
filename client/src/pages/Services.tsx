@@ -20,6 +20,7 @@ function ServicePostCard({ post }: { post: ServicePost }) {
             src={post.featureImageUrl}
             alt={post.title}
             className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
           />
         ) : (
           <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-slate-300">

@@ -236,6 +236,7 @@ export default function BlogPostPage() {
                                 alt={relatedPost.title}
                                 className="w-16 h-12 object-cover rounded flex-shrink-0"
                                 data-testid={`img-related-${relatedPost.id}`}
+                                loading="lazy"
                               />
                             ) : (
                               <div className="w-16 h-12 bg-muted rounded flex items-center justify-center flex-shrink-0">
