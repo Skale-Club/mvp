@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { storage } from "./storage.js";
 import { getRequestOrigin, getRequestPath, injectSeoIntoHtml, type PageSeoData } from "./seo.js";
+import { applyPublicCache } from "./routes/helpers.js";
 
 export function serveStatic(app: Express) {
   // Find the index.html path robustly across different environments (local, Replit, Vercel)
@@ -90,11 +91,13 @@ export function serveStatic(app: Express) {
         pageData,
       });
 
+      applyPublicCache(res, { edgeMaxAge: 300, staleWhileRevalidate: 86400 });
       res.status(200).type("text/html").send(html);
       return;
     } catch (e) {
       console.error("Error rendering index:", e);
       if (indexPath && fs.existsSync(indexPath)) {
+        applyPublicCache(res, { edgeMaxAge: 300, staleWhileRevalidate: 86400 });
         res.sendFile(indexPath);
       } else {
         res.status(500).send("Internal Server Error");

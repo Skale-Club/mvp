@@ -6,6 +6,7 @@ import {
 } from "#shared/schema.js";
 import { storage } from "../storage.js";
 import { safeErrorMessage } from "./errorUtils.js";
+import { applyPublicCache } from "./helpers.js";
 
 function buildPublicReviewsPayload(settings: Awaited<ReturnType<typeof storage.getReviewsSettings>>, items: Awaited<ReturnType<typeof storage.getReviewItems>>) {
   const hasWidgetUrl = (settings.widgetEmbedUrl || "").trim().length > 0;
@@ -35,6 +36,7 @@ function buildPublicReviewsPayload(settings: Awaited<ReturnType<typeof storage.g
 export function registerReviewsRoutes(app: Express, requireAdmin: any) {
   app.get("/api/reviews", async (_req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 900 });
       const [settings, items] = await Promise.all([
         storage.getReviewsSettings(),
         storage.getReviewItems(true),

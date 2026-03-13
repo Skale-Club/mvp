@@ -43,6 +43,32 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
     if (diffMs <= 0) return 0;
     return Math.floor(diffMs / (24 * 60 * 60 * 1000));
   };
+  let analyticsConfigCache:
+    | {
+        expiresAt: number;
+        company: Awaited<ReturnType<typeof storage.getCompanySettings>>;
+        ghlSettings: Awaited<ReturnType<typeof storage.getIntegrationSettings>>;
+      }
+    | null = null;
+
+  const getAnalyticsConfig = async () => {
+    const now = Date.now();
+    if (analyticsConfigCache && analyticsConfigCache.expiresAt > now) {
+      return analyticsConfigCache;
+    }
+
+    const [company, ghlSettings] = await Promise.all([
+      storage.getCompanySettings(),
+      storage.getIntegrationSettings('gohighlevel'),
+    ]);
+
+    analyticsConfigCache = {
+      company,
+      ghlSettings,
+      expiresAt: now + 5 * 60 * 1000,
+    };
+    return analyticsConfigCache;
+  };
   
   // ===============================
   // OpenAI Integration Routes
@@ -429,10 +455,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         return res.status(202).json({ accepted: false });
       }
 
-      const [company, ghlSettings] = await Promise.all([
-        storage.getCompanySettings(),
-        storage.getIntegrationSettings('gohighlevel'),
-      ]);
+      const { company, ghlSettings } = await getAnalyticsConfig();
       const support = getEventChannelSupport(payload.eventName);
       const channels = {
         ga4: support.ga4 && !!(company.ga4Enabled && company.ga4MeasurementId?.trim()),
@@ -440,6 +463,11 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         ghl: support.ghl && !!ghlSettings?.isEnabled,
         telegram: false,
       } satisfies Record<AnalyticsChannel, boolean>;
+
+      const hasActiveDestination = Object.values(channels).some(Boolean);
+      if (!hasActiveDestination && process.env.ENABLE_ANALYTICS_EVENT_STORAGE !== 'true') {
+        return res.status(202).json({ accepted: true, stored: false });
+      }
 
       await storage.recordAnalyticsEventHit({
         eventName: payload.eventName,

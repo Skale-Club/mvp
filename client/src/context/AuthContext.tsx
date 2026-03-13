@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { initSupabase } from '@/lib/supabase';
+import { useLocation } from 'wouter';
 
 interface AdminSession {
   isAdmin: boolean;
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const _isSupabaseAuth = true;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
@@ -33,6 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
 
   const checkSession = useCallback(async () => {
+    if (!location.startsWith('/admin')) {
+      setLoading(false);
+      return null;
+    }
+
     try {
       const response = await fetch('/api/admin/session', {
         credentials: 'include'
@@ -52,11 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     (async () => {
       setIsSupabaseAuth(true);
+      if (!location.startsWith('/admin')) {
+        setLoading(false);
+        return;
+      }
+
       let sess = await checkSession();
 
       // If Supabase has a browser session (e.g. after OAuth redirect) but the server session
@@ -85,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
     })();
-  }, [checkSession]);
+  }, [checkSession, location]);
 
   const signIn = async (emailArg?: string, passwordArg?: string) => {
     const supabase = await initSupabase();

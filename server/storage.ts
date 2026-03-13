@@ -51,9 +51,14 @@ import {
 } from "#shared/schema.js";
 import { eq, and, or, ilike, gte, lte, lt, inArray, desc, asc, sql, ne } from "drizzle-orm";
 
+const shouldRunRuntimeSchemaGuards =
+  process.env.ENABLE_RUNTIME_SCHEMA_INIT === "true" ||
+  !(process.env.NODE_ENV === "production" && process.env.VERCEL);
+
 // Ensure optional GHL columns exist even if migration hasn't been applied yet
 let ensureGhlColumnsPromise: Promise<void> | null = null;
 async function ensureFormLeadGhlColumns() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureGhlColumnsPromise) return ensureGhlColumnsPromise;
   ensureGhlColumnsPromise = pool
     .query(`
@@ -74,6 +79,7 @@ async function ensureFormLeadGhlColumns() {
 // Ensure Twilio multi-recipient column exists to avoid runtime errors
 let ensureTwilioColumnsPromise: Promise<void> | null = null;
 async function ensureTwilioSchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureTwilioColumnsPromise) return ensureTwilioColumnsPromise;
   ensureTwilioColumnsPromise = pool
     .query(`
@@ -96,6 +102,7 @@ async function ensureTwilioSchema() {
 // Ensure gallery table exists to avoid runtime failures in fresh environments
 let ensureGallerySchemaPromise: Promise<void> | null = null;
 async function ensureGallerySchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureGallerySchemaPromise) return ensureGallerySchemaPromise;
   ensureGallerySchemaPromise = pool
     .query(`
@@ -124,6 +131,7 @@ async function ensureGallerySchema() {
 // Ensure service posts table exists to avoid runtime failures in fresh environments
 let ensureServicePostsSchemaPromise: Promise<void> | null = null;
 async function ensureServicePostsSchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureServicePostsSchemaPromise) return ensureServicePostsSchemaPromise;
   ensureServicePostsSchemaPromise = pool
     .query(`
@@ -181,6 +189,7 @@ async function ensureServicePostsSchema() {
 // Ensure company settings color columns exist for older databases
 let ensureCompanySettingsSchemaPromise: Promise<void> | null = null;
 async function ensureCompanySettingsSchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureCompanySettingsSchemaPromise) return ensureCompanySettingsSchemaPromise;
   ensureCompanySettingsSchemaPromise = pool
     .query(`
@@ -208,6 +217,7 @@ async function ensureCompanySettingsSchema() {
 
 let ensureIntegrationSettingsSchemaPromise: Promise<void> | null = null;
 async function ensureIntegrationSettingsSchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureIntegrationSettingsSchemaPromise) return ensureIntegrationSettingsSchemaPromise;
   ensureIntegrationSettingsSchemaPromise = pool
     .query(`
@@ -223,6 +233,7 @@ async function ensureIntegrationSettingsSchema() {
 
 let ensureAnalyticsEventsSchemaPromise: Promise<void> | null = null;
 async function ensureAnalyticsEventsSchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureAnalyticsEventsSchemaPromise) return ensureAnalyticsEventsSchemaPromise;
   ensureAnalyticsEventsSchemaPromise = pool
     .query(`
@@ -252,6 +263,7 @@ async function ensureAnalyticsEventsSchema() {
 // Ensure reviews module tables exist for environments without full migrations
 let ensureReviewsSchemaPromise: Promise<void> | null = null;
 async function ensureReviewsSchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
   if (ensureReviewsSchemaPromise) return ensureReviewsSchemaPromise;
   ensureReviewsSchemaPromise = pool
     .query(`
@@ -423,6 +435,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async ensureChatSchema(): Promise<void> {
+    if (!shouldRunRuntimeSchemaGuards) {
+      this.chatSchemaEnsured = true;
+      return;
+    }
     if (this.chatSchemaEnsured) return;
     try {
       await db.execute(sql`ALTER TABLE "chat_settings" ADD COLUMN IF NOT EXISTS "agent_avatar_url" text DEFAULT ''`);

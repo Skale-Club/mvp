@@ -1,3 +1,4 @@
+import type { Response } from "express";
 import { z } from "zod";
 
 /**
@@ -39,6 +40,39 @@ export function parseRecipients(numbers?: string[] | null, fallback?: string | n
   push(fallback);
 
   return Array.from(new Set(recipients));
+}
+
+type PublicCacheOptions = {
+  browserMaxAge?: number;
+  edgeMaxAge?: number;
+  staleWhileRevalidate?: number;
+};
+
+/**
+ * Applies CDN/browser cache headers for public responses.
+ */
+export function applyPublicCache(
+  res: Response,
+  {
+    browserMaxAge = 0,
+    edgeMaxAge = 300,
+    staleWhileRevalidate = 86400,
+  }: PublicCacheOptions = {},
+) {
+  const directives = [
+    "public",
+    `max-age=${Math.max(0, browserMaxAge)}`,
+    `s-maxage=${Math.max(0, edgeMaxAge)}`,
+    `stale-while-revalidate=${Math.max(0, staleWhileRevalidate)}`,
+  ];
+  res.set("Cache-Control", directives.join(", "));
+}
+
+/**
+ * Disables response caching for per-user/session endpoints.
+ */
+export function disableCache(res: Response) {
+  res.set("Cache-Control", "private, no-store, max-age=0");
 }
 
 /**

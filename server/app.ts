@@ -5,6 +5,12 @@ import { initializeSchemas } from "./storage.js";
 import path from "path";
 import { createServer, type Server } from "http";
 
+const shouldCaptureApiResponses =
+  process.env.LOG_API_RESPONSES === "true" || process.env.NODE_ENV !== "production";
+const shouldInitializeRuntimeSchemas =
+  process.env.ENABLE_RUNTIME_SCHEMA_INIT === "true" ||
+  !(process.env.NODE_ENV === "production" && process.env.VERCEL);
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -46,11 +52,13 @@ export async function createApp(): Promise<{ app: express.Express; httpServer: S
     const reqPath = req.path;
     let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
-    const originalResJson = res.json;
-    res.json = function (bodyJson, ...args) {
-      capturedJsonResponse = bodyJson;
-      return originalResJson.apply(res, [bodyJson, ...args]);
-    };
+    if (shouldCaptureApiResponses) {
+      const originalResJson = res.json;
+      res.json = function (bodyJson, ...args) {
+        capturedJsonResponse = bodyJson;
+        return originalResJson.apply(res, [bodyJson, ...args]);
+      };
+    }
 
     res.on("finish", () => {
       const duration = Date.now() - start;
@@ -66,8 +74,10 @@ export async function createApp(): Promise<{ app: express.Express; httpServer: S
     next();
   });
 
-  // Run all ensure*Schema migrations once at startup
-  await initializeSchemas();
+  // Runtime schema init is useful in development, but expensive on serverless cold starts.
+  if (shouldInitializeRuntimeSchemas) {
+    await initializeSchemas();
+  }
 
   // Setup Supabase auth
   const { setupSupabaseAuth } = await import("./auth/supabaseAuth.js");

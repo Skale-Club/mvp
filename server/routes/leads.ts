@@ -8,6 +8,7 @@ import type { FormConfig } from "#shared/schema.js";
 import { api } from "#shared/routes.js";
 import { sendHotLeadNotification } from "../integrations/twilio.js";
 import { getOrCreateGHLContact } from "../integrations/ghl.js";
+import { applyPublicCache } from "./helpers.js";
 
 /**
  * Register form configuration and lead management routes
@@ -20,6 +21,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/form-config', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 300 });
       const settings = await storage.getCompanySettings();
       const existing = settings?.formConfig || DEFAULT_FORM_CONFIG;
       const spec = DEFAULT_FORM_CONFIG;

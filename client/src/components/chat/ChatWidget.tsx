@@ -108,7 +108,7 @@ export function ChatWidget() {
   }, []);
 
   useEffect(() => {
-    if (conversationId) {
+    if (conversationId && isOpen) {
       localStorage.setItem(STORAGE_KEY, conversationId);
       setLoadingHistory(true);
       fetch(`/api/chat/conversations/${conversationId}/messages`, { credentials: "include" })
@@ -139,7 +139,7 @@ export function ChatWidget() {
         })
         .finally(() => setLoadingHistory(false));
     }
-  }, [conversationId, config?.welcomeMessage]);
+  }, [conversationId, config?.welcomeMessage, isOpen]);
 
   useEffect(() => {
     if (messages.length > 0) {

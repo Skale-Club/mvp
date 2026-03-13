@@ -17,7 +17,7 @@ import { isRateLimited, updateLastLowPerformanceAlert, lastLowPerformanceAlertAt
 import { getChatTools, runChatTool } from "./chat/tools.js";
 import { sendNewChatNotification, sendLowPerformanceAlert } from "../integrations/twilio.js";
 import { z } from "zod";
-import { urlRuleSchema } from "./helpers.js";
+import { applyPublicCache, urlRuleSchema } from "./helpers.js";
 import { safeErrorMessage } from "./errorUtils.js";
 
 let runtimeOpenAiKey = process.env.OPENAI_API_KEY || "";
@@ -36,6 +36,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
   // Public chat configuration for widget
   app.get('/api/chat/config', async (_req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 300 });
       const settings = await storage.getChatSettings();
       const company = await storage.getCompanySettings();
       const defaultName = company?.companyName?.trim();

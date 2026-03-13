@@ -17,6 +17,20 @@ async function throwIfResNotOk(res: Response) {
 }
 
 let restoringSessionPromise: Promise<boolean> | null = null;
+const PUBLIC_API_PREFIXES = [
+  "/api/blog",
+  "/api/chat/config",
+  "/api/company-settings",
+  "/api/faqs",
+  "/api/form-config",
+  "/api/gallery",
+  "/api/reviews",
+  "/api/service-posts",
+] as const;
+
+function isPublicApiRequest(requestUrl: string): boolean {
+  return PUBLIC_API_PREFIXES.some((prefix) => requestUrl.startsWith(prefix));
+}
 
 async function tryRestoreServerSession(): Promise<boolean> {
   if (typeof window === "undefined") return false;
@@ -111,8 +125,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    let res = await fetchWithSessionRecovery(queryKey.join("/") as string, {
-      credentials: "include",
+    const requestUrl = queryKey.join("/") as string;
+    let res = await fetchWithSessionRecovery(requestUrl, {
+      credentials: isPublicApiRequest(requestUrl) ? "omit" : "include",
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

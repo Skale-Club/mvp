@@ -3,6 +3,7 @@ import { storage } from "../storage.js";
 import { z } from "zod";
 import { insertBlogPostSchema, insertFaqSchema } from "#shared/schema.js";
 import { safeErrorMessage } from "./errorUtils.js";
+import { applyPublicCache } from "./helpers.js";
 
 /**
  * Register content-related routes (Blog, FAQs)
@@ -15,6 +16,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/blog', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 600 });
       const status = req.query.status as string | undefined;
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
       const offset = req.query.offset ? Number(req.query.offset) : 0;
@@ -36,6 +38,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/blog/count', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 600 });
       const count = await storage.countPublishedBlogPosts();
       res.json({ count });
     } catch (err) {
@@ -123,6 +126,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/blog/:idOrSlug', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 600 });
       const param = req.params.idOrSlug;
       let post;
       
@@ -143,6 +147,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/blog/:id/related', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 600 });
       const limit = req.query.limit ? Number(req.query.limit) : 4;
       const posts = await storage.getRelatedBlogPosts(Number(req.params.id), limit);
       res.json(posts);
@@ -192,6 +197,7 @@ export function registerContentRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/faqs', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 900 });
       const faqList = await storage.getFaqs();
       res.json(faqList);
     } catch (err) {

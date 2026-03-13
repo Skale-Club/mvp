@@ -6,7 +6,7 @@ import {
   insertCompanySettingsSchema, 
   insertGalleryImageSchema 
 } from "#shared/schema.js";
-import { slugify } from "./helpers.js";
+import { applyPublicCache, slugify } from "./helpers.js";
 import { safeErrorMessage } from "./errorUtils.js";
 import {
   buildBlogSitemapXml,
@@ -45,6 +45,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/service-posts', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 600 });
       const status = typeof req.query.status === 'string' ? req.query.status : undefined;
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
       const offset = req.query.offset ? Number(req.query.offset) : 0;
@@ -66,6 +67,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/service-posts/:idOrSlug', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 600 });
       const param = req.params.idOrSlug;
       let post;
       if (/^\d+$/.test(param)) {
@@ -144,6 +146,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/gallery', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 900 });
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
       const parsedLimit = Number.isFinite(limit) && (limit as number) > 0 ? Math.min(Number(limit), 100) : undefined;
       const images = await storage.getGalleryImages(parsedLimit);
@@ -155,6 +158,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/gallery/:id', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 900 });
       const id = Number(req.params.id);
       if (Number.isNaN(id)) {
         return res.status(400).json({ message: 'Invalid gallery image id' });
@@ -243,6 +247,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/company-settings', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 300 });
       const settings = await storage.getCompanySettings();
       res.json(settings);
     } catch (err) {
@@ -269,6 +274,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
   app.get('/robots.txt', async (req, res) => {
     try {
+      applyPublicCache(res, { edgeMaxAge: 3600, staleWhileRevalidate: 86400 * 7 });
       const settings = await storage.getCompanySettings();
       res.type('text/plain').send(buildRobotsTxt(req, settings));
     } catch (err) {
@@ -292,7 +298,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
   }
 
   function setSitemapHeaders(res: Response) {
-    res.set('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+    applyPublicCache(res, { browserMaxAge: 3600, edgeMaxAge: 3600, staleWhileRevalidate: 86400 * 7 });
     res.type('application/xml');
   }
 

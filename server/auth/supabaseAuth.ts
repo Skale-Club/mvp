@@ -6,6 +6,11 @@ import { getSupabaseAdmin } from "../lib/supabase.js";
 import { db, pool } from "../db.js";
 import { users } from "#shared/models/auth.js";
 import { eq } from "drizzle-orm";
+import { disableCache } from "../routes/helpers.js";
+
+const shouldCreateSessionTableAtRuntime =
+  process.env.ENABLE_SESSION_TABLE_INIT === "true" ||
+  process.env.NODE_ENV !== "production";
 
 function resolveSessionSecret(): { secret: string; source: string } {
   const explicitSecret = process.env.SESSION_SECRET?.trim();
@@ -45,7 +50,7 @@ export async function setupSupabaseAuth(app: Express) {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     pool: pool,
-    createTableIfMissing: true,
+    createTableIfMissing: shouldCreateSessionTableAtRuntime,
     ttl: sessionTtl,
     tableName: "sessions",
   });
@@ -69,6 +74,7 @@ export async function setupSupabaseAuth(app: Express) {
   // Login endpoint - validates with Supabase Auth, creates server session
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
+      disableCache(res);
       const { accessToken } = req.body;
 
       if (!accessToken) {
@@ -133,6 +139,7 @@ export async function setupSupabaseAuth(app: Express) {
 
   // Logout endpoint
   app.post("/api/auth/logout", (req: Request, res: Response) => {
+    disableCache(res);
     req.session.destroy((err) => {
       if (err) {
         console.error("Session destroy error:", err);
@@ -145,6 +152,7 @@ export async function setupSupabaseAuth(app: Express) {
 
   // Session check endpoint (matches the same interface as Replit auth)
   app.get("/api/admin/session", async (req: Request, res: Response) => {
+    disableCache(res);
     const sess = req.session as any;
 
     if (!sess?.userId) {
@@ -166,6 +174,7 @@ export async function setupSupabaseAuth(app: Express) {
 
   // Get current authenticated user (mirrors Replit auth's /api/auth/user)
   app.get("/api/auth/user", async (req: Request, res: Response) => {
+    disableCache(res);
     const sess = req.session as any;
 
     if (!sess?.userId) {
@@ -185,6 +194,7 @@ export async function setupSupabaseAuth(app: Express) {
 
   // Supabase config endpoint for client
   app.get("/api/supabase-config", (_req: Request, res: Response) => {
+    disableCache(res);
     res.json({
       url: process.env.SUPABASE_URL || "",
       anonKey: process.env.SUPABASE_ANON_KEY || "",
@@ -193,11 +203,13 @@ export async function setupSupabaseAuth(app: Express) {
 
   // Login redirect - sends user to the Supabase login page
   app.get("/api/login", (_req: Request, res: Response) => {
+    disableCache(res);
     res.redirect("/admin/login");
   });
 
   // Logout via GET (mirrors Replit auth's /api/logout)
   app.get("/api/logout", (req: Request, res: Response) => {
+    disableCache(res);
     req.session.destroy((err) => {
       if (err) console.error("Session destroy error:", err);
       res.clearCookie("connect.sid");

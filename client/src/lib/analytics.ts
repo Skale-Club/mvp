@@ -20,6 +20,20 @@ export interface AnalyticsConfig {
 let isInitialized = false;
 let config: AnalyticsConfig = {};
 let initializedProviders = { gtm: false, ga4: false, fbq: false };
+const SERVER_REPORTED_EVENTS = new Set<AnalyticsEventName>([
+  'cta_click',
+  'begin_checkout',
+  'add_payment_info',
+  'purchase',
+  'generate_lead',
+  'contact_click',
+  'chat_message_sent',
+  'chat_new_conversation',
+  'chat_lead_captured',
+  'form_open',
+  'form_completed',
+  'form_result_action',
+]);
 
 export function initAnalytics(settings: AnalyticsConfig) {
   config = settings;
@@ -115,6 +129,7 @@ function injectFacebookPixel(pixelId: string) {
 
 function reportEventHit(eventName: AnalyticsEventName): void {
   if (typeof window === 'undefined') return;
+  if (!SERVER_REPORTED_EVENTS.has(eventName)) return;
 
   const body = JSON.stringify({
     eventName,
