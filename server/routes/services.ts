@@ -8,6 +8,7 @@ import {
 } from "#shared/schema.js";
 import { applyPublicCache, slugify } from "./helpers.js";
 import { safeErrorMessage } from "./errorUtils.js";
+import { queueAbandonedLeadNotificationSweep } from "../leads/abandonedNotifications.js";
 import {
   buildBlogSitemapXml,
   buildRobotsTxt,
@@ -247,6 +248,7 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/company-settings', async (req, res) => {
     try {
+      queueAbandonedLeadNotificationSweep();
       applyPublicCache(res, { edgeMaxAge: 300 });
       const settings = await storage.getCompanySettings();
       res.json(settings);

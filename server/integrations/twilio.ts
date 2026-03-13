@@ -167,3 +167,37 @@ export async function sendHotLeadNotification(
     return { success: false, message: error?.message || "Unknown error" };
   }
 }
+
+export async function sendAbandonedLeadNotification(
+  twilioSettings: TwilioSettings,
+  lead: Pick<FormLead, "nome" | "telefone" | "email" | "ultimaPerguntaRespondida" | "urlOrigem">,
+  companyName?: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const validation = validateConfig(twilioSettings, { companyName });
+    if (!validation.success) return validation;
+
+    const { config } = validation;
+    const cleanName = lead.nome?.trim() || "No name";
+    const cleanPhone = lead.telefone?.trim() || "No phone";
+    const cleanEmail = lead.email?.trim() || "No email";
+    const step = Math.max(1, Number(lead.ultimaPerguntaRespondida || 0));
+    const page = lead.urlOrigem?.trim();
+    const companyLabel = companyName?.trim() || config.companyName || "My Company";
+    const message = [
+      `Form abandoned | ${companyLabel}`,
+      `Name: ${cleanName}`,
+      `Phone: ${cleanPhone}`,
+      `Email: ${cleanEmail}`,
+      `Last step: ${step}`,
+      page ? `Page: ${page}` : undefined,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return await sendSms(config, message);
+  } catch (error: any) {
+    console.error("Failed to send abandoned lead notification:", error);
+    return { success: false, message: error?.message || "Unknown error" };
+  }
+}

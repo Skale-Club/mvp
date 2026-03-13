@@ -382,22 +382,31 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
   }, [open]);
 
   const updateStoredState = useCallback(
-    (stepToResume: number, answeredStep: number, pending = pendingSync) => {
-      const session = ensureSession();
+    (overrides?: {
+      answers?: Answers;
+      stepToResume?: number;
+      answeredStep?: number;
+      pending?: boolean;
+      selectedCountry?: string;
+      startedAt?: Date | null;
+      sessionId?: string | null;
+    }) => {
+      const session = overrides?.sessionId ?? sessionId ?? ensureSession();
       if (!storageAvailable || !session) return;
+
       const payload: StoredFormState = {
         sessionId: session,
-        answers,
-        currentStep: stepToResume,
-        lastAnsweredStep: answeredStep,
-        startedAt: (startedAt || new Date()).toISOString(),
+        answers: overrides?.answers ?? answersRef.current,
+        currentStep: overrides?.stepToResume ?? currentStep,
+        lastAnsweredStep: overrides?.answeredStep ?? lastAnsweredStep,
+        startedAt: (overrides?.startedAt ?? startedAt ?? new Date()).toISOString(),
         lastUpdatedAt: new Date().toISOString(),
-        pendingSync: pending,
-        selectedCountry: selectedCountryCode,
+        pendingSync: overrides?.pending ?? pendingSync,
+        selectedCountry: overrides?.selectedCountry ?? selectedCountryCode,
       };
       saveStoredState(payload);
     },
-    [answers, ensureSession, pendingSync, selectedCountryCode, startedAt, storageAvailable],
+    [currentStep, ensureSession, lastAnsweredStep, pendingSync, selectedCountryCode, sessionId, startedAt, storageAvailable],
   );
 
   useEffect(() => {
@@ -407,10 +416,10 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
   const persistProgress = useCallback(
     async (
       questionNumber: number,
-      opts?: { stepToResume?: number; markComplete?: boolean; tempoTotalSegundos?: number; overrideAnswers?: Partial<Answers> }
+      opts?: { stepToResume?: number; markComplete?: boolean; tempoTotalSegundos?: number; overrideAnswers?: Answers }
     ): Promise<FormLead | null> => {
       const session = ensureSession();
-      const effectiveAnswers = { ...answersRef.current, ...(opts?.overrideAnswers || {}) };
+      const effectiveAnswers: Answers = { ...answersRef.current, ...(opts?.overrideAnswers || {}) };
       const effectiveScore = calculateFormScoresWithConfig(effectiveAnswers, config);
       const customAnswers = Object.fromEntries(
         Object.entries(effectiveAnswers)
@@ -461,7 +470,12 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
       if (effectiveAnswers.disponibilidade) payload.disponibilidade = effectiveAnswers.disponibilidade;
       if (effectiveAnswers.expectativaResultado) payload.expectativaResultado = effectiveAnswers.expectativaResultado;
 
-      updateStoredState(opts?.stepToResume ?? currentStep, questionNumber, pendingSync);
+      updateStoredState({
+        answers: effectiveAnswers,
+        stepToResume: opts?.stepToResume ?? currentStep,
+        answeredStep: questionNumber,
+        pending: pendingSync,
+      });
       try {
         const res = await fetch("/api/form-leads/progress", {
           method: "POST",
@@ -481,13 +495,23 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
         }
         const lead = (await res.json()) as FormLead;
         setPendingSync(false);
-        updateStoredState(opts?.stepToResume ?? currentStep, questionNumber, false);
+        updateStoredState({
+          answers: effectiveAnswers,
+          stepToResume: opts?.stepToResume ?? currentStep,
+          answeredStep: questionNumber,
+          pending: false,
+        });
         setLastAnsweredStep(questionNumber);
         return lead;
       } catch (err) {
         console.error("Failed to sync lead progress", err);
         setPendingSync(true);
-        updateStoredState(opts?.stepToResume ?? currentStep, questionNumber, true);
+        updateStoredState({
+          answers: effectiveAnswers,
+          stepToResume: opts?.stepToResume ?? currentStep,
+          answeredStep: questionNumber,
+          pending: true,
+        });
         throw err;
       }
     },
@@ -514,18 +538,25 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
   }, [currentStep, lastAnsweredStep, open, persistProgress, sessionId]);
 
   const handleAnswerChange = (field: string, value: string) => {
-    ensureSession();
+    const ensuredSession = ensureSession();
     // Format phone if it's a tel field
     const question = sortedQuestions.find(q => q.id === field);
     if (question?.type === "tel") {
       value = formatPhoneForCountry(value, selectedCountry);
     }
-    setAnswers(prev => ({ ...prev, [field]: value }));
+    const updatedAnswers = { ...answersRef.current, [field]: value };
+    answersRef.current = updatedAnswers;
+    setAnswers(updatedAnswers);
     setErrorMessage(null);
+    updateStoredState({
+      sessionId: ensuredSession,
+      answers: updatedAnswers,
+      stepToResume: currentStep,
+    });
 
     if (autoSaveRef.current) window.clearTimeout(autoSaveRef.current);
     autoSaveRef.current = window.setTimeout(() => {
-      const error = getFieldError(question, { ...answers, [field]: value }, selectedCountry);
+      const error = getFieldError(question, updatedAnswers, selectedCountry);
       if (!error && currentQuestion?.id === field) {
         // For phone fields, save with country code prefix
         const valueToSave = question?.type === "tel" && value
@@ -537,15 +568,23 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
   };
 
   const handleOptionSelect = (field: string, value: string) => {
-    const updated = { ...answers, [field]: value };
+    ensureSession();
+    const updated = { ...answersRef.current, [field]: value };
+    const overrideAnswers: Answers = { [field]: value };
     // Clear conditional field if option changes
     const question = sortedQuestions.find(q => q.id === field);
     if (question?.conditionalField && value !== question.conditionalField.showWhen) {
       updated[question.conditionalField.id] = "";
+      overrideAnswers[question.conditionalField.id] = "";
     }
+    answersRef.current = updated;
     setAnswers(updated);
     setErrorMessage(null);
-    void persistProgress(currentStep, { stepToResume: currentStep, overrideAnswers: { [field]: value } });
+    updateStoredState({
+      answers: updated,
+      stepToResume: currentStep,
+    });
+    void persistProgress(currentStep, { stepToResume: currentStep, overrideAnswers });
   };
 
   const handleNext = async () => {
@@ -568,6 +607,10 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
     const nextStep = Math.min(currentStep + 1, totalQuestions);
     setDirection(1);
     setCurrentStep(nextStep);
+    updateStoredState({
+      stepToResume: nextStep,
+      answeredStep: Math.max(lastAnsweredStep, questionNumber),
+    });
 
     try {
       const lead = await persistProgress(questionNumber, { stepToResume: nextStep });
@@ -591,8 +634,10 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
       autoSaveRef.current = undefined;
     }
     setDirection(-1);
-    setCurrentStep(prev => Math.max(1, prev - 1));
+    const previousStep = Math.max(1, currentStep - 1);
+    setCurrentStep(previousStep);
     setErrorMessage(null);
+    updateStoredState({ stepToResume: previousStep });
   };
 
   const handleFinish = async () => {
@@ -639,18 +684,30 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
   };
 
   const handleClose = () => {
+    if (autoSaveRef.current) {
+      window.clearTimeout(autoSaveRef.current);
+      autoSaveRef.current = undefined;
+    }
+
     if (view === "form") {
       trackEvent("form_abandoned", { step: currentStep });
     }
-    clearStoredState();
-    setAnswers(buildInitialAnswers(config));
-    setCurrentStep(1);
-    setLastAnsweredStep(0);
-    setSessionId(generateSessionId());
-    setStartedAt(new Date());
-    setView("form");
-    setErrorMessage(null);
-    setDirection(1);
+
+    updateStoredState({
+      answers: answersRef.current,
+      stepToResume: currentStep,
+      answeredStep: lastAnsweredStep,
+      pending: pendingSync,
+    });
+
+    const currentStepHasValidAnswer = !getFieldError(currentQuestion, answersRef.current, selectedCountry);
+
+    if (currentStepHasValidAnswer) {
+      void persistProgress(Math.max(currentStep, lastAnsweredStep, 1), { stepToResume: currentStep }).catch(() => {
+        // Local draft is already preserved; network sync can retry on reopen.
+      });
+    }
+
     onClose();
   };
 
@@ -803,7 +860,14 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                             setSelectedCountryCode(country.code);
                                             setIsCountryDropdownOpen(false);
                                             // Clear phone when changing country
-                                            setAnswers(prev => ({ ...prev, [currentQuestion.id]: "" }));
+                                            const updatedAnswers = { ...answersRef.current, [currentQuestion.id]: "" };
+                                            answersRef.current = updatedAnswers;
+                                            setAnswers(updatedAnswers);
+                                            updateStoredState({
+                                              answers: updatedAnswers,
+                                              selectedCountry: country.code,
+                                              stepToResume: currentStep,
+                                            });
                                           }}
                                           className={clsx(
                                             "w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 transition-colors",

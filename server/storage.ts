@@ -64,6 +64,7 @@ async function ensureFormLeadGhlColumns() {
     .query(`
       ALTER TABLE form_leads ADD COLUMN IF NOT EXISTS ghl_contact_id text;
       ALTER TABLE form_leads ADD COLUMN IF NOT EXISTS ghl_sync_status text DEFAULT 'pending';
+      ALTER TABLE form_leads ADD COLUMN IF NOT EXISTS notificacao_abandono_enviada boolean NOT NULL DEFAULT false;
       DROP INDEX IF EXISTS form_leads_email_unique;
       DROP INDEX IF EXISTS quiz_leads_email_unique;
       CREATE INDEX IF NOT EXISTS form_leads_email_idx ON form_leads (email);
@@ -382,7 +383,7 @@ export interface IStorage {
   getFormLeadBySession(sessionId: string): Promise<FormLead | undefined>;
   getFormLeadByConversationId(conversationId: string): Promise<FormLead | undefined>;
   listFormLeads(filters?: { status?: LeadStatus; classificacao?: LeadClassification; formCompleto?: boolean; completionStatus?: 'completo' | 'em_progresso' | 'abandonado'; search?: string }): Promise<FormLead[]>;
-  updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "ghlContactId" | "ghlSyncStatus">>): Promise<FormLead | undefined>;
+  updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "notificacaoAbandonoEnviada" | "ghlContactId" | "ghlSyncStatus">>): Promise<FormLead | undefined>;
   getFormLeadByEmail(email: string): Promise<FormLead | undefined>;
   deleteFormLead(id: number): Promise<boolean>;
   
@@ -860,6 +861,7 @@ export class DatabaseStorage implements IStorage {
       formCompleto: isComplete || existing?.formCompleto || false,
       ultimaPerguntaRespondida: latestQuestion,
       notificacaoEnviada: existing?.notificacaoEnviada ?? false,
+      notificacaoAbandonoEnviada: existing?.notificacaoAbandonoEnviada ?? false,
       updatedAt: now,
       ghlContactId: existing?.ghlContactId ?? null,
       ghlSyncStatus: existing?.ghlSyncStatus ?? "pending",
@@ -904,6 +906,7 @@ export class DatabaseStorage implements IStorage {
         formCompleto: payload.formCompleto ?? false,
         ultimaPerguntaRespondida: payload.ultimaPerguntaRespondida ?? latestQuestion,
         notificacaoEnviada: payload.notificacaoEnviada ?? false,
+        notificacaoAbandonoEnviada: payload.notificacaoAbandonoEnviada ?? false,
         dataContato: null,
         observacoes: payload.observacoes ?? null,
         ghlContactId: null,
@@ -982,7 +985,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(formLeads).orderBy(desc(formLeads.createdAt));
   }
 
-  async updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "ghlContactId" | "ghlSyncStatus">>): Promise<FormLead | undefined> {
+  async updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "notificacaoAbandonoEnviada" | "ghlContactId" | "ghlSyncStatus">>): Promise<FormLead | undefined> {
     await ensureFormLeadGhlColumns();
     const [existing] = await db.select().from(formLeads).where(eq(formLeads.id, id));
     if (!existing) return undefined;

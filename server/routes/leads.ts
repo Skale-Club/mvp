@@ -9,6 +9,7 @@ import { api } from "#shared/routes.js";
 import { sendHotLeadNotification } from "../integrations/twilio.js";
 import { getOrCreateGHLContact } from "../integrations/ghl.js";
 import { applyPublicCache } from "./helpers.js";
+import { queueAbandonedLeadNotificationSweep } from "../leads/abandonedNotifications.js";
 
 /**
  * Register form configuration and lead management routes
@@ -21,6 +22,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/form-config', async (req, res) => {
     try {
+      queueAbandonedLeadNotificationSweep();
       applyPublicCache(res, { edgeMaxAge: 300 });
       const settings = await storage.getCompanySettings();
       const existing = settings?.formConfig || DEFAULT_FORM_CONFIG;
@@ -164,6 +166,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
 
   app.post('/api/form-leads/progress', async (req, res) => {
     try {
+      queueAbandonedLeadNotificationSweep();
       const parsed = formLeadProgressSchema.parse(req.body);
       const settings = await storage.getCompanySettings();
       const formConfig = settings?.formConfig || DEFAULT_FORM_CONFIG;
@@ -178,7 +181,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
       let lead = await storage.upsertFormLeadProgress(payload, { userAgent: req.get('user-agent') || undefined }, formConfig);
 
       const hasPhone = !!lead.telefone?.trim();
-      if (hasPhone && !lead.notificacaoEnviada) {
+      if (lead.formCompleto && hasPhone && !lead.notificacaoEnviada) {
         (async () => {
           try {
             const twilioSettings = await storage.getTwilioSettings();
@@ -276,6 +279,7 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
 
   app.get('/api/form-leads', requireAdmin, async (req, res) => {
     try {
+      queueAbandonedLeadNotificationSweep();
       const parsed = api.formLeads.list.input ? api.formLeads.list.input.parse(req.query) : {};
       const filters = (parsed || {}) as {
         status?: LeadStatus;
