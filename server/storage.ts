@@ -350,6 +350,7 @@ export interface IStorage {
   
   // FAQs
   getFaqs(): Promise<Faq[]>;
+  searchFaqs(query: string): Promise<Faq[]>;
   createFaq(faq: InsertFaq): Promise<Faq>;
   updateFaq(id: number, faq: Partial<InsertFaq>): Promise<Faq>;
   deleteFaq(id: number): Promise<void>;
@@ -371,6 +372,8 @@ export interface IStorage {
   saveTwilioSettings(settings: InsertTwilioSettings): Promise<TwilioSettings>;
 
   listConversations(): Promise<Conversation[]>;
+  listConversationsWithLastMessage(): Promise<Array<Conversation & { lastMessage: string; lastMessageRole: string | null; messageCount: number }>>;
+  getAverageResponseTimeMs(): Promise<{ avgMs: number; samples: number }>;
   getConversation(id: string): Promise<Conversation | undefined>;
   updateConversation(id: string, updates: Partial<Conversation>): Promise<Conversation | undefined>;
   deleteConversation(id: string): Promise<void>;
@@ -535,6 +538,15 @@ export class DatabaseStorage implements IStorage {
 
   async getFaqs(): Promise<Faq[]> {
     return await db.select().from(faqs).orderBy(faqs.order);
+  }
+
+  async searchFaqs(query: string): Promise<Faq[]> {
+    const term = `%${query}%`;
+    return await db
+      .select()
+      .from(faqs)
+      .where(or(ilike(faqs.question, term), ilike(faqs.answer, term)))
+      .orderBy(faqs.order);
   }
 
   async createFaq(faq: InsertFaq): Promise<Faq> {
@@ -720,6 +732,70 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(conversations)
       .orderBy(desc(sql`COALESCE(${conversations.lastMessageAt}, ${conversations.createdAt})`));
+  }
+
+  async getAverageResponseTimeMs(): Promise<{ avgMs: number; samples: number }> {
+    const result = await db.execute(sql`
+      SELECT
+        AVG(EXTRACT(EPOCH FROM (next_time - curr_time)) * 1000)::float AS avg_ms,
+        COUNT(*)::int AS samples
+      FROM (
+        SELECT
+          created_at AS curr_time,
+          role        AS curr_role,
+          LEAD(created_at) OVER (PARTITION BY conversation_id ORDER BY created_at) AS next_time,
+          LEAD(role)       OVER (PARTITION BY conversation_id ORDER BY created_at) AS next_role
+        FROM conversation_messages
+      ) pairs
+      WHERE curr_role = 'visitor'
+        AND next_role = 'assistant'
+        AND next_time > curr_time
+    `);
+
+    const row = (result as unknown as { rows: Record<string, unknown>[] }).rows[0];
+    return {
+      avgMs: Number(row?.avg_ms) || 0,
+      samples: Number(row?.samples) || 0,
+    };
+  }
+
+  async listConversationsWithLastMessage(): Promise<Array<Conversation & { lastMessage: string; lastMessageRole: string | null; messageCount: number }>> {
+    const result = await db.execute(sql`
+      SELECT
+        c.*,
+        lm.content  AS last_message_content,
+        lm.role     AS last_message_role,
+        COALESCE(mc.cnt, 0)::int AS message_count
+      FROM conversations c
+      LEFT JOIN LATERAL (
+        SELECT content, role
+        FROM conversation_messages
+        WHERE conversation_id = c.id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) lm ON TRUE
+      LEFT JOIN (
+        SELECT conversation_id, COUNT(*) AS cnt
+        FROM conversation_messages
+        GROUP BY conversation_id
+      ) mc ON mc.conversation_id = c.id
+      ORDER BY COALESCE(c.last_message_at, c.created_at) DESC
+    `);
+
+    return (result as unknown as { rows: Record<string, unknown>[] }).rows.map((row) => ({
+      id: row.id as string,
+      visitorEmail: row.visitor_email as string | null,
+      visitorPhone: row.visitor_phone as string | null,
+      visitorName: row.visitor_name as string | null,
+      firstPageUrl: row.first_page_url as string | null,
+      status: row.status as string,
+      lastMessageAt: row.last_message_at as Date | null,
+      createdAt: row.created_at as Date,
+      updatedAt: row.updated_at as Date,
+      lastMessage: (row.last_message_content as string) || '',
+      lastMessageRole: (row.last_message_role as string) || null,
+      messageCount: Number(row.message_count) || 0,
+    }));
   }
 
   async getConversation(id: string): Promise<Conversation | undefined> {

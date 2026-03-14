@@ -80,27 +80,9 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
   // Calculate average response time
   app.get('/api/chat/response-time', requireAdmin, async (_req, res) => {
     try {
-      const conversations = await storage.listConversations();
-      let totalMs = 0;
-      let samples = 0;
+      const { avgMs, samples } = await storage.getAverageResponseTimeMs();
 
-      for (const conversation of conversations) {
-        const messages = await storage.getConversationMessages(conversation.id);
-        for (let i = 0; i < messages.length; i++) {
-          const msg = messages[i];
-          if (msg.role !== 'visitor') continue;
-          const nextAssistant = messages.slice(i + 1).find((m) => m.role === 'assistant');
-          if (!nextAssistant || !msg.createdAt || !nextAssistant.createdAt) continue;
-          const start = new Date(msg.createdAt).getTime();
-          const end = new Date(nextAssistant.createdAt).getTime();
-          if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-          if (end < start) continue;
-          totalMs += end - start;
-          samples += 1;
-        }
-      }
-
-      const avgSeconds = samples ? Math.round(totalMs / samples / 1000) : 0;
+      const avgSeconds = samples ? Math.round(avgMs / 1000) : 0;
       const minutes = Math.floor(avgSeconds / 60);
       const seconds = avgSeconds % 60;
       const formatted = samples
@@ -177,19 +159,7 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
   // Admin conversations list
   app.get('/api/chat/conversations', requireAdmin, async (_req, res) => {
     try {
-      const conversations = await storage.listConversations();
-      const withPreview = await Promise.all(
-        conversations.map(async (conv) => {
-          const messages = await storage.getConversationMessages(conv.id);
-          const lastMessage = messages[messages.length - 1];
-          return {
-            ...conv,
-            lastMessage: lastMessage?.content || '',
-            lastMessageRole: lastMessage?.role || null,
-            messageCount: messages.length,
-          };
-        })
-      );
+      const withPreview = await storage.listConversationsWithLastMessage();
       res.json(withPreview);
     } catch (err) {
       res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });

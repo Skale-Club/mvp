@@ -417,10 +417,10 @@ export async function runChatTool(
       if (options?.allowFaqs === false) {
         return { error: 'FAQ search is disabled for this chat.' };
       }
-      const query = (args?.query as string | undefined)?.toLowerCase?.()?.trim();
-      const allFaqs = await storage.getFaqs();
+      const query = (args?.query as string | undefined)?.trim();
 
       if (!query) {
+        const allFaqs = await storage.getFaqs();
         return {
           faqs: allFaqs.map(faq => ({
             question: faq.question,
@@ -429,10 +429,7 @@ export async function runChatTool(
         };
       }
 
-      const filtered = allFaqs.filter(faq =>
-        faq.question.toLowerCase().includes(query) ||
-        faq.answer.toLowerCase().includes(query)
-      );
+      const filtered = await storage.searchFaqs(query);
 
       return {
         faqs: filtered.map(faq => ({
