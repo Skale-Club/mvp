@@ -12,6 +12,52 @@ async function main() {
     );
   `);
 
+  await pool.query(`
+    DO $$
+    BEGIN
+      ALTER TABLE public.supabase_keepalive ENABLE ROW LEVEL SECURITY;
+
+      IF EXISTS (
+        SELECT 1
+        FROM pg_roles
+        WHERE rolname = 'postgres'
+      ) AND NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'supabase_keepalive'
+          AND policyname = 'backend_postgres_supabase_keepalive'
+      ) THEN
+        CREATE POLICY "backend_postgres_supabase_keepalive"
+          ON public.supabase_keepalive
+          FOR ALL
+          TO postgres
+          USING (true)
+          WITH CHECK (true);
+      END IF;
+
+      IF EXISTS (
+        SELECT 1
+        FROM pg_roles
+        WHERE rolname = 'service_role'
+      ) AND NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'supabase_keepalive'
+          AND policyname = 'backend_service_role_supabase_keepalive'
+      ) THEN
+        CREATE POLICY "backend_service_role_supabase_keepalive"
+          ON public.supabase_keepalive
+          FOR ALL
+          TO service_role
+          USING (true)
+          WITH CHECK (true);
+      END IF;
+    END
+    $$;
+  `);
+
   const result = await pool.query<{
     id: number;
     last_heartbeat_at: Date;
