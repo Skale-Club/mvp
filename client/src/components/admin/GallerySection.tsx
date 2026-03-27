@@ -74,6 +74,29 @@ function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
 }
 
+async function processInBatches<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length) as R[];
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex++;
+      results[currentIndex] = await fn(items[currentIndex], currentIndex);
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    () => worker()
+  );
+  await Promise.all(workers);
+  return results;
+}
+
 async function uploadFileToServer(file: File, options: UploadFileToServerOptions = {}): Promise<string> {
   const { signal, onProgress } = options;
   onProgress?.(5);
@@ -420,12 +443,11 @@ export function GallerySection() {
     setIsQuickUploading(true);
 
     try {
-      const outcomes = await Promise.all(
-        pendingItems.map(async (item, index) => {
-          const file = imageFiles[index];
-          const controller = new AbortController();
-          uploadControllersRef.current.set(item.id, controller);
-          updateUploadItem(item.id, { status: "uploading", progress: 5, error: undefined });
+      const outcomes = await processInBatches(pendingItems, 5, async (item, index) => {
+        const file = imageFiles[index];
+        const controller = new AbortController();
+        uploadControllersRef.current.set(item.id, controller);
+        updateUploadItem(item.id, { status: "uploading", progress: 5, error: undefined });
 
           try {
             const imagePath = await uploadFileToServer(file, {
@@ -478,8 +500,7 @@ export function GallerySection() {
           } finally {
             uploadControllersRef.current.delete(item.id);
           }
-        }),
-      );
+      });
 
       const successCount = outcomes.filter((status) => status === "success").length;
       const failedCount = outcomes.filter((status) => status === "error").length;
