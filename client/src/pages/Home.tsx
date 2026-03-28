@@ -343,7 +343,7 @@ export default function Home() {
                   />
                 </div>
               ) : null}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 lg:mb-6 font-display leading-[0.95] sm:leading-[1.0] lg:leading-[1.05]">
+              <h1 className="text-6xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 lg:mb-6 font-display leading-[0.95] sm:leading-[1.0] lg:leading-[1.05]">
                 {companySettings?.heroTitle ? (
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{companySettings.heroTitle}</span>
                 ) : null}
