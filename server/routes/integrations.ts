@@ -445,6 +445,183 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
   });
 
   // ===============================
+  // Resend Integration Routes
+  // ===============================
+  const resendSettingsSchema = z.object({
+    apiKey: z.string().trim().optional(),
+    fromEmail: z.string().trim().optional(),
+    fromName: z.string().trim().optional(),
+    toEmails: z.array(z.string().trim()).optional(),
+    notifyOnNewLead: z.boolean().optional(),
+    notifyOnNewContact: z.boolean().optional(),
+    enabled: z.boolean().optional(),
+  });
+
+  app.get('/api/integrations/resend', requireAdmin, async (_req, res) => {
+    try {
+      const settings = await storage.getResendSettings();
+      if (!settings) {
+        return res.json({
+          enabled: false,
+          apiKey: '',
+          fromEmail: '',
+          fromName: '',
+          toEmails: [],
+          notifyOnNewLead: true,
+          notifyOnNewContact: true
+        });
+      }
+      const recipients = Array.isArray(settings.toEmails) ? settings.toEmails : [];
+      res.json({
+        ...settings,
+        toEmails: recipients,
+        apiKey: settings.apiKey ? '********' : ''
+      });
+    } catch (err) {
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
+    }
+  });
+
+  app.put('/api/integrations/resend', requireAdmin, async (req, res) => {
+    try {
+      const parsed = resendSettingsSchema.parse(req.body);
+      const existingSettings = await storage.getResendSettings();
+
+      const apiKeyFromRequest = parsed.apiKey && parsed.apiKey !== '********'
+        ? parsed.apiKey.trim()
+        : undefined;
+      const apiKeyToPersist = apiKeyFromRequest || existingSettings?.apiKey;
+      const fromEmail = parsed.fromEmail?.trim() || existingSettings?.fromEmail || '';
+      const fromName = parsed.fromName?.trim() || existingSettings?.fromName || '';
+      const toEmails = parsed.toEmails?.filter(e => e?.trim()) || existingSettings?.toEmails || [];
+      const enabled = parsed.enabled ?? existingSettings?.enabled ?? false;
+      const notifyOnNewLead = parsed.notifyOnNewLead ?? existingSettings?.notifyOnNewLead ?? true;
+      const notifyOnNewContact = parsed.notifyOnNewContact ?? existingSettings?.notifyOnNewContact ?? true;
+
+      if (enabled && (!apiKeyToPersist || !fromEmail || !toEmails.length)) {
+        return res.status(400).json({ message: 'All Resend fields are required to enable notifications' });
+      }
+
+      const settingsToSave: any = {
+        fromEmail,
+        fromName,
+        toEmails,
+        notifyOnNewLead,
+        notifyOnNewContact,
+        enabled
+      };
+
+      if (apiKeyFromRequest) {
+        settingsToSave.apiKey = apiKeyFromRequest;
+      } else if (existingSettings?.apiKey) {
+        settingsToSave.apiKey = existingSettings.apiKey;
+      }
+
+      const settings = await storage.saveResendSettings(settingsToSave);
+
+      res.json({
+        ...settings,
+        apiKey: settings.apiKey ? '********' : ''
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid Resend settings payload', errors: err.errors });
+      }
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
+    }
+  });
+
+  app.post('/api/integrations/resend/test', requireAdmin, async (req, res) => {
+    try {
+      const parsed = resendSettingsSchema.parse(req.body);
+      const existingSettings = await storage.getResendSettings();
+
+      const apiKey = parsed.apiKey && parsed.apiKey !== '********'
+        ? parsed.apiKey.trim()
+        : existingSettings?.apiKey;
+      const fromEmail = parsed.fromEmail?.trim() || existingSettings?.fromEmail;
+      const fromName = parsed.fromName?.trim() || existingSettings?.fromName || '';
+      const toEmails = parsed.toEmails?.length ? parsed.toEmails : existingSettings?.toEmails || [];
+
+      if (!apiKey || !fromEmail || !toEmails.length) {
+        return res.status(400).json({
+          success: false,
+          message: 'All fields are required to test Resend connection'
+        });
+      }
+
+      const company = await storage.getCompanySettings();
+      const companyName = company?.companyName?.trim() || 'Test';
+
+      const { sendTestEmail } = await import('../integrations/resend.js');
+      const result = await sendTestEmail(apiKey, fromEmail, fromName, toEmails[0] as string, companyName);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          message: 'Test email sent successfully!'
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: result.message || 'Failed to send test email'
+        });
+      }
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid Resend test payload',
+          errors: err.errors
+        });
+      }
+      res.status(500).json({
+        success: false,
+        message: err?.message || 'Failed to send test email'
+      });
+    }
+  });
+
+  // ===============================
+  // Contact Form Route
+  // ===============================
+  const contactFormSchema = z.object({
+    name: z.string().trim().min(1).max(100),
+    email: z.string().trim().email().max(255),
+    subject: z.string().trim().min(1).max(200),
+    message: z.string().trim().min(1).max(5000),
+  });
+
+  app.post('/api/contact', async (req, res) => {
+    try {
+      const parsed = contactFormSchema.parse(req.body);
+
+      const company = await storage.getCompanySettings();
+      const companyName = company?.companyName?.trim() || '';
+
+      const resendSettings = await storage.getResendSettings();
+
+      if (resendSettings?.enabled && resendSettings.notifyOnNewContact) {
+        (async () => {
+          try {
+            const { sendContactFormNotification } = await import('../integrations/resend.js');
+            await sendContactFormNotification(resendSettings, parsed, companyName);
+          } catch (notificationError) {
+            console.error('Contact form notification error:', notificationError);
+          }
+        })();
+      }
+
+      res.json({ success: true, message: 'Message sent successfully!' });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid contact form data', errors: err.errors });
+      }
+      res.status(500).json({ message: safeErrorMessage(err, 'Failed to send message') });
+    }
+  });
+
+  // ===============================
   // Analytics Event Health Routes
   // ===============================
 

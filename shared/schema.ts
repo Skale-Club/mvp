@@ -105,6 +105,20 @@ export const twilioSettings = pgTable("twilio_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Resend Integration Settings
+export const resendSettings = pgTable("resend_settings", {
+  id: serial("id").primaryKey(),
+  enabled: boolean("enabled").default(false),
+  apiKey: text("api_key"),
+  fromEmail: text("from_email"),
+  fromName: text("from_name"),
+  toEmails: jsonb("to_emails").$type<string[]>().default([]),
+  notifyOnNewLead: boolean("notify_on_new_lead").default(true),
+  notifyOnNewContact: boolean("notify_on_new_contact").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const conversations = pgTable("conversations", {
   id: uuid("id").primaryKey(),
   status: text("status").notNull().default("open"),
@@ -225,6 +239,11 @@ export const insertTwilioSettingsSchema = createInsertSchema(twilioSettings).omi
   createdAt: true,
   updatedAt: true,
 });
+export const insertResendSettingsSchema = createInsertSchema(resendSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   createdAt: true,
   updatedAt: true,
@@ -294,6 +313,7 @@ export type AnalyticsEventHit = typeof analyticsEventHits.$inferSelect;
 export type ChatSettings = typeof chatSettings.$inferSelect;
 export type ChatIntegrations = typeof chatIntegrations.$inferSelect;
 export type TwilioSettings = typeof twilioSettings.$inferSelect;
+export type ResendSettings = typeof resendSettings.$inferSelect;
 export type Conversation = typeof conversations.$inferSelect;
 export type ConversationMessage = typeof conversationMessages.$inferSelect;
 export type FormLead = typeof formLeads.$inferSelect;
@@ -305,6 +325,7 @@ export type InsertAnalyticsEventHit = z.infer<typeof insertAnalyticsEventHitSche
 export type InsertChatSettings = z.infer<typeof insertChatSettingsSchema>;
 export type InsertChatIntegrations = z.infer<typeof insertChatIntegrationsSchema>;
 export type InsertTwilioSettings = z.infer<typeof insertTwilioSettingsSchema>;
+export type InsertResendSettings = z.infer<typeof insertResendSettingsSchema>;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type InsertConversationMessage = z.infer<typeof insertConversationMessageSchema>;
 export type InsertFormLead = z.infer<typeof insertFormLeadSchema>;

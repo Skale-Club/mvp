@@ -5,6 +5,7 @@ import {
   chatSettings,
   chatIntegrations,
   twilioSettings,
+  resendSettings,
   conversations,
   conversationMessages,
   companySettings,
@@ -20,6 +21,7 @@ import {
   type ChatSettings,
   type ChatIntegrations,
   type TwilioSettings,
+  type ResendSettings,
   type Conversation,
   type ConversationMessage,
   type FormLead,
@@ -35,6 +37,7 @@ import {
   type InsertChatSettings,
   type InsertChatIntegrations,
   type InsertTwilioSettings,
+  type InsertResendSettings,
   type InsertConversation,
   type InsertConversationMessage,
   type FormLeadProgressInput,
@@ -98,6 +101,37 @@ async function ensureTwilioSchema() {
       throw err;
     });
   return ensureTwilioColumnsPromise;
+}
+
+// Ensure Resend settings table exists
+let ensureResendSchemaPromise: Promise<void> | null = null;
+async function ensureResendSchema() {
+  if (!shouldRunRuntimeSchemaGuards) return;
+  if (ensureResendSchemaPromise) return ensureResendSchemaPromise;
+  ensureResendSchemaPromise = pool
+    .query(`
+      CREATE TABLE IF NOT EXISTS resend_settings (
+        id serial PRIMARY KEY,
+        enabled boolean DEFAULT false,
+        api_key text,
+        from_email text,
+        from_name text,
+        to_emails jsonb DEFAULT '[]',
+        notify_on_new_lead boolean DEFAULT true,
+        notify_on_new_contact boolean DEFAULT true,
+        created_at timestamp DEFAULT now(),
+        updated_at timestamp DEFAULT now()
+      );
+      ALTER TABLE resend_settings ADD COLUMN IF NOT EXISTS to_emails jsonb DEFAULT '[]';
+      ALTER TABLE resend_settings ADD COLUMN IF NOT EXISTS notify_on_new_lead boolean DEFAULT true;
+      ALTER TABLE resend_settings ADD COLUMN IF NOT EXISTS notify_on_new_contact boolean DEFAULT true;
+    `)
+    .then(() => undefined)
+    .catch((err) => {
+      ensureResendSchemaPromise = null;
+      throw err;
+    });
+  return ensureResendSchemaPromise;
 }
 
 // Ensure gallery table exists to avoid runtime failures in fresh environments
@@ -370,6 +404,10 @@ export interface IStorage {
   // Twilio Integration
   getTwilioSettings(): Promise<TwilioSettings | undefined>;
   saveTwilioSettings(settings: InsertTwilioSettings): Promise<TwilioSettings>;
+
+  // Resend Integration
+  getResendSettings(): Promise<ResendSettings | undefined>;
+  saveResendSettings(settings: InsertResendSettings): Promise<ResendSettings>;
 
   listConversations(): Promise<Conversation[]>;
   listConversationsWithLastMessage(): Promise<Array<Conversation & { lastMessage: string; lastMessageRole: string | null; messageCount: number }>>;
@@ -723,6 +761,43 @@ export class DatabaseStorage implements IStorage {
     const [created] = await db.insert(twilioSettings).values({
       ...settings,
       toPhoneNumbers,
+    }).returning();
+    return created;
+  }
+
+  async getResendSettings(): Promise<ResendSettings | undefined> {
+    await ensureResendSchema();
+    const [settings] = await db.select().from(resendSettings).limit(1);
+    return settings;
+  }
+
+  async saveResendSettings(settings: InsertResendSettings): Promise<ResendSettings> {
+    await ensureResendSchema();
+    const existing = await this.getResendSettings();
+    const toEmails = Array.isArray(settings.toEmails)
+      ? settings.toEmails.map(email => email?.toString() || "").filter(Boolean)
+      : Array.isArray(existing?.toEmails)
+        ? (existing.toEmails as string[]).map(email => email?.toString() || "").filter(Boolean)
+        : [];
+
+    if (existing) {
+      const payload = {
+        ...settings,
+        toEmails,
+        apiKey: settings.apiKey ?? existing.apiKey,
+        updatedAt: new Date(),
+      };
+      const [updated] = await db
+        .update(resendSettings)
+        .set(payload)
+        .where(eq(resendSettings.id, existing.id))
+        .returning();
+      return updated;
+    }
+
+    const [created] = await db.insert(resendSettings).values({
+      ...settings,
+      toEmails,
     }).returning();
     return created;
   }

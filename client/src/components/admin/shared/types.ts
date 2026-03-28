@@ -171,6 +171,16 @@ export interface TwilioSettingsForm {
   notifyOnNewChat: boolean;
 }
 
+export interface ResendSettingsForm {
+  enabled: boolean;
+  apiKey: string;
+  fromEmail: string;
+  fromName: string;
+  toEmails: string[];
+  notifyOnNewLead: boolean;
+  notifyOnNewContact: boolean;
+}
+
 export type ReviewDisplayMode = 'auto' | 'widget' | 'fallback';
 
 export interface ReviewsSettingsData {

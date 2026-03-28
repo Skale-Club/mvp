@@ -195,6 +195,18 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
             console.error('Lead notification error:', notificationError);
           }
         })();
+
+        (async () => {
+          try {
+            const resendSettings = await storage.getResendSettings();
+            if (resendSettings?.enabled && resendSettings.notifyOnNewLead) {
+              const { sendNewLeadNotification } = await import('../integrations/resend.js');
+              await sendNewLeadNotification(resendSettings, lead, companyName);
+            }
+          } catch (notificationError) {
+            console.error('Resend lead notification error:', notificationError);
+          }
+        })();
       }
 
       if (lead.formCompleto) {
