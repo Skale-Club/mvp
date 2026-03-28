@@ -13,6 +13,7 @@ import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/homepageDefaults";
 import { ErrorState } from "@/components/ui/error-state";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { getServicePostPath } from "@/lib/service-path";
+import { FaqSection } from "@/components/FaqSection";
 
 type FallbackReview = {
   id: number;
@@ -481,6 +482,7 @@ export default function Home() {
         </div>
       </section>
       )}
+      <FaqSection maxItems={8} />
       {(companySettings?.mapEmbedUrl || homepageContent.areasServedSection?.heading || homepageContent.areasServedSection?.description) && (
       <section id="areas-served" className="bg-[#F8FAFC] py-20">
         <AreasServedMap

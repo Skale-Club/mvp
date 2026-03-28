@@ -8,10 +8,18 @@ import {
 } from "@/components/ui/accordion";
 import { Loader2 } from 'lucide-react';
 
-export function FaqSection() {
+type FaqSectionProps = {
+  maxItems?: number;
+};
+
+export function FaqSection({ maxItems }: FaqSectionProps = {}) {
   const { data: faqs, isLoading } = useQuery<Faq[]>({
     queryKey: ['/api/faqs']
   });
+
+  const visibleFaqs = Array.isArray(faqs)
+    ? (typeof maxItems === "number" ? faqs.slice(0, maxItems) : faqs)
+    : [];
 
   if (isLoading) {
     return (
@@ -23,7 +31,7 @@ export function FaqSection() {
     );
   }
 
-  if (!faqs || faqs.length === 0) {
+  if (visibleFaqs.length === 0) {
     return null;
   }
 
@@ -39,7 +47,7 @@ export function FaqSection() {
         
         <div className="max-w-3xl mx-auto">
           <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq) => (
+            {visibleFaqs.map((faq) => (
               <AccordionItem 
                 key={faq.id} 
                 value={`faq-${faq.id}`}
