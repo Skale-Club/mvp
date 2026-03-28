@@ -249,7 +249,8 @@ export function ServicePostsSection() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/service-posts"] });
       toast({ title: "Service page updated" });
-      setEditingPost(null);
+      setIsCreateOpen(false);
+      resetCreateState();
     },
     onError: (error: Error) => {
       toast({ title: "Failed to update service page", description: error.message, variant: "destructive" });
