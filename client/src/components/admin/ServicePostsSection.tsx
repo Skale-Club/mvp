@@ -125,6 +125,7 @@ export function ServicePostsSection() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [editingPost, setEditingPost] = useState<ServicePost | null>(null);
+  const editingPostRef = useRef<ServicePost | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditorExpanded, setIsEditorExpanded] = useState(false);
   const [createForm, setCreateForm] = useState<CreateServiceFormValues>(CREATE_INITIAL_VALUES);
@@ -149,6 +150,7 @@ export function ServicePostsSection() {
     setCreateForm(CREATE_INITIAL_VALUES);
     setIsEditorExpanded(false);
     setEditingPost(null);
+    editingPostRef.current = null;
     if (contentRef.current) {
       contentRef.current.innerHTML = "";
     }
@@ -317,6 +319,7 @@ export function ServicePostsSection() {
 
   const openEditor = (post: ServicePost) => {
     setEditingPost(post);
+    editingPostRef.current = post;
     setCreateForm({
       name: post.title || "",
       slug: post.slug || "",
@@ -419,14 +422,17 @@ export function ServicePostsSection() {
           setCreateForm((prev) => ({ ...prev, content: normalizedContent }));
         }
 
-        if (editingPost) {
+        // Use ref to avoid stale closure — editingPost state can be cleared
+        // by concurrent updates while the form is still mounted
+        const currentEditingPost = editingPostRef.current;
+        if (currentEditingPost) {
           updatePost.mutate({
-            id: editingPost.id,
+            id: currentEditingPost.id,
             values: {
               title: createForm.name,
               slug: createForm.slug,
               status: createForm.status,
-              excerpt: createForm.metaDescription, // Use metaDescription as excerpt
+              excerpt: createForm.metaDescription,
               content: normalizedContent,
               metaDescription: createForm.metaDescription,
               focusKeyword: createForm.focusKeyword,
