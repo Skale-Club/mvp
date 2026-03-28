@@ -166,7 +166,7 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
     return date ? date >= last7Days : false;
   }).length;
   const convertedLeads = leadList.filter((lead) => lead.status === 'convertido').length;
-  const hotLeads = leadList.filter((lead) => lead.classificacao === 'QUENTE').length;
+  const hotLeads = leadList.filter((lead) => lead.classificacao === 'HOT').length;
   const completeLeads = leadList.filter((lead) => lead.formCompleto).length;
   const conversionRate = leadList.length > 0 ? (convertedLeads / leadList.length) * 100 : 0;
   const completionRate = leadList.length > 0 ? (completeLeads / leadList.length) * 100 : 0;

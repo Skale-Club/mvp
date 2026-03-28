@@ -129,10 +129,10 @@ const STATUS_LABELS: Record<LeadStatus, string> = {
 };
 
 const CLASSIFICATION_LABELS: Record<LeadClassification, string> = {
-  QUENTE: 'Hot Lead',
-  MORNO: 'Warm Lead',
-  FRIO: 'Cold Lead',
-  DESQUALIFICADO: 'Disqualified',
+  HOT: 'Hot Lead',
+  WARM: 'Warm Lead',
+  COLD: 'Cold Lead',
+  DISQUALIFIED: 'Disqualified',
 };
 
 const LEGACY_FIELD_LABELS: Record<string, string> = {
@@ -264,9 +264,9 @@ export function LeadsSection() {
     const incomplete = list.filter(l => !l.formCompleto);
     return {
       total: list.length,
-      hot: list.filter(l => l.classificacao === 'QUENTE').length,
-      warm: list.filter(l => l.classificacao === 'MORNO').length,
-      cold: list.filter(l => l.classificacao === 'FRIO').length,
+      hot: list.filter(l => l.classificacao === 'HOT').length,
+      warm: list.filter(l => l.classificacao === 'WARM').length,
+      cold: list.filter(l => l.classificacao === 'COLD').length,
       complete: list.filter(l => l.formCompleto).length,
       inProgress: incomplete.filter(l => l.updatedAt && new Date(l.updatedAt) >= oneDayAgo).length,
       abandoned: incomplete.filter(l => !l.updatedAt || new Date(l.updatedAt) < oneDayAgo).length,
@@ -284,10 +284,10 @@ export function LeadsSection() {
 
   const classificationOptions: { value: LeadClassification | 'all'; label: string }[] = [
     { value: 'all', label: 'All classifications' },
-    { value: 'QUENTE', label: CLASSIFICATION_LABELS.QUENTE },
-    { value: 'MORNO', label: CLASSIFICATION_LABELS.MORNO },
-    { value: 'FRIO', label: CLASSIFICATION_LABELS.FRIO },
-    { value: 'DESQUALIFICADO', label: CLASSIFICATION_LABELS.DESQUALIFICADO },
+    { value: 'HOT', label: CLASSIFICATION_LABELS.HOT },
+    { value: 'WARM', label: CLASSIFICATION_LABELS.WARM },
+    { value: 'COLD', label: CLASSIFICATION_LABELS.COLD },
+    { value: 'DISQUALIFIED', label: CLASSIFICATION_LABELS.DISQUALIFIED },
   ];
 
   const completionOptions: { value: 'all' | 'completo' | 'em_progresso' | 'abandonado'; label: string }[] = [
@@ -304,13 +304,13 @@ export function LeadsSection() {
 
   const classificationBadge = (classificacao?: LeadClassification | null) => {
     switch (classificacao) {
-      case 'QUENTE':
+      case 'HOT':
         return 'bg-green-50 text-green-700 border-green-200';
-      case 'MORNO':
+      case 'WARM':
         return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'FRIO':
+      case 'COLD':
         return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'DESQUALIFICADO':
+      case 'DISQUALIFIED':
         return 'bg-slate-100 text-slate-600 border-slate-200';
       default:
         return 'bg-slate-100 text-slate-600 border-slate-200';

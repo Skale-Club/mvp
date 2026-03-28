@@ -476,6 +476,11 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
         answeredStep: questionNumber,
         pending: pendingSync,
       });
+      // The backend requires a name before creating the first lead record.
+      // Keep early-step progress locally and sync once the user reaches the name step.
+      if (!effectiveAnswers.nome?.trim()) {
+        return null;
+      }
       try {
         const res = await fetch("/api/form-leads/progress", {
           method: "POST",
