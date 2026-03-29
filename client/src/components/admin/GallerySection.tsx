@@ -582,12 +582,29 @@ export function GallerySection() {
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/gallery/${id}`);
     },
+    onMutate: async (id: number) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/gallery"] });
+      const previousImages = queryClient.getQueryData<GalleryImage[]>(["/api/gallery"]);
+      queryClient.setQueryData<GalleryImage[]>(
+        ["/api/gallery"],
+        (old) => (old || []).filter((img) => img.id !== id),
+      );
+      setOrderedImages((prev) => prev.filter((img) => img.id !== id));
+      return { previousImages };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
       toast({ title: "Gallery image deleted" });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _id, context) => {
+      if (context?.previousImages) {
+        queryClient.setQueryData(["/api/gallery"], context.previousImages);
+        setOrderedImages(context.previousImages);
+      }
       toast({ title: "Failed to delete image", description: error.message, variant: "destructive" });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
     },
   });
 
