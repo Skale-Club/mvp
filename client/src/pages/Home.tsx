@@ -343,7 +343,7 @@ export default function Home() {
                   />
                 </div>
               ) : null}
-              <h1 className="text-6xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold mb-3 lg:mb-6 font-display leading-[0.95] sm:leading-[1.0] lg:leading-[1.05]">
+              <h1 className="text-5xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 lg:mb-6 font-display leading-[0.95] sm:leading-[1.0] lg:leading-[1.05]">
                 {companySettings?.heroTitle ? (
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{companySettings.heroTitle}</span>
                 ) : null}
@@ -484,7 +484,7 @@ export default function Home() {
       )}
       <FaqSection maxItems={8} />
       {(companySettings?.mapEmbedUrl || homepageContent.areasServedSection?.heading || homepageContent.areasServedSection?.description) && (
-      <section id="areas-served" className="bg-[#F8FAFC] py-20">
+      <section id="areas-served" className="bg-white py-20">
         <AreasServedMap
           mapEmbedUrl={companySettings?.mapEmbedUrl}
           content={areasServedSection}

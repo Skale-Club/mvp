@@ -23,7 +23,7 @@ export function FaqSection({ maxItems }: FaqSectionProps = {}) {
 
   if (isLoading) {
     return (
-      <section id="faq" className="py-20 bg-white">
+      <section id="faq" className="py-20 bg-[#F8FAFC]">
         <div className="container-custom mx-auto flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -36,7 +36,7 @@ export function FaqSection({ maxItems }: FaqSectionProps = {}) {
   }
 
   return (
-    <section id="faq" className="py-20 bg-white">
+    <section id="faq" className="py-20 bg-[#F8FAFC]">
       <div className="container-custom mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
