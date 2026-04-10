@@ -30,7 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Pencil, Trash2, Image as ImageIcon, Upload, GripVertical } from "lucide-react";
+import { Check, Loader2, Maximize2, Plus, Pencil, Trash2, Image as ImageIcon, Upload, GripVertical } from "lucide-react";
 
 type GalleryFormValues = {
   title: string;
@@ -54,17 +54,47 @@ type UploadFileToServerOptions = {
   onProgress?: (progress: number) => void;
 };
 
-function reorderImagesById(images: GalleryImage[], sourceId: number, targetId: number): GalleryImage[] {
-  const sourceIndex = images.findIndex((image) => image.id === sourceId);
-  const targetIndex = images.findIndex((image) => image.id === targetId);
-  if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) {
+function reorderImagesByIds(images: GalleryImage[], sourceIds: number[], targetId: number): GalleryImage[] {
+  const sourceIdSet = new Set(sourceIds);
+  if (sourceIdSet.size === 0 || sourceIdSet.has(targetId)) {
     return images;
   }
 
-  const next = [...images];
-  const [moved] = next.splice(sourceIndex, 1);
-  next.splice(targetIndex, 0, moved);
+  const sourceIndexes = images
+    .map((image, index) => (sourceIdSet.has(image.id) ? index : -1))
+    .filter((index) => index >= 0);
+  const targetIndex = images.findIndex((image) => image.id === targetId);
+  if (sourceIndexes.length === 0 || targetIndex === -1) {
+    return images;
+  }
+
+  const movingImages = images.filter((image) => sourceIdSet.has(image.id));
+  const remainingImages = images.filter((image) => !sourceIdSet.has(image.id));
+  const remainingTargetIndex = remainingImages.findIndex((image) => image.id === targetId);
+  if (remainingTargetIndex === -1) {
+    return images;
+  }
+
+  const firstSourceIndex = Math.min(...sourceIndexes);
+  const insertIndex = targetIndex > firstSourceIndex ? remainingTargetIndex + 1 : remainingTargetIndex;
+  const next = [...remainingImages];
+  next.splice(insertIndex, 0, ...movingImages);
   return next;
+}
+
+function haveSameImageOrder(a: GalleryImage[], b: GalleryImage[]): boolean {
+  return a.length === b.length && a.every((image, index) => image.id === b[index]?.id);
+}
+
+function orderImagesByIds(images: GalleryImage[], imageIds: number[]): GalleryImage[] {
+  const byId = new Map(images.map((image) => [image.id, image]));
+  return imageIds
+    .map((id) => byId.get(id))
+    .filter((image): image is GalleryImage => Boolean(image));
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest("button, a, input, textarea, select, [role='button']"));
 }
 
 function isAbortError(error: unknown): boolean {
@@ -234,15 +264,21 @@ async function uploadFileToServer(file: File, options: UploadFileToServerOptions
 function GalleryForm({
   initialValues,
   isLoading,
+  mode,
   onSubmit,
 }: {
   initialValues: GalleryFormValues;
   isLoading: boolean;
+  mode: "create" | "edit";
   onSubmit: (values: GalleryFormValues) => void;
 }) {
   const [values, setValues] = useState<GalleryFormValues>(initialValues);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setValues(initialValues);
+  }, [initialValues.altText, initialValues.description, initialValues.imageUrl, initialValues.title]);
 
   const updateField = (field: keyof GalleryFormValues, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -268,6 +304,7 @@ function GalleryForm({
       });
     } finally {
       setIsUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -279,7 +316,7 @@ function GalleryForm({
       }}
     >
       <DialogHeader>
-        <DialogTitle>{initialValues.imageUrl ? "Edit Image" : "Add Image"}</DialogTitle>
+        <DialogTitle>{mode === "edit" ? "Edit Image" : "Add Image"}</DialogTitle>
       </DialogHeader>
 
       <div className="space-y-4 py-4">
@@ -374,19 +411,46 @@ export function GallerySection() {
   const [uploadItems, setUploadItems] = useState<UploadProgressItem[]>([]);
   const [isDropzoneActive, setIsDropzoneActive] = useState(false);
   const [orderedImages, setOrderedImages] = useState<GalleryImage[]>([]);
+  const [selectedImageIds, setSelectedImageIds] = useState<number[]>([]);
+  const [previewImage, setPreviewImage] = useState<GalleryImage | null>(null);
   const [draggedImageId, setDraggedImageId] = useState<number | null>(null);
+  const [draggingImageIds, setDraggingImageIds] = useState<number[]>([]);
   const [dragOverImageId, setDragOverImageId] = useState<number | null>(null);
   const quickUploadInputRef = useRef<HTMLInputElement | null>(null);
   const uploadControllersRef = useRef<Map<string, AbortController>>(new Map());
   const isCancellingUploadsRef = useRef(false);
+  const orderedImagesRef = useRef<GalleryImage[]>([]);
+  const selectedImageIdsRef = useRef<number[]>([]);
+  const draggingImageIdsRef = useRef<number[]>([]);
 
   const { data: images, isLoading } = useQuery<GalleryImage[]>({
     queryKey: ["/api/gallery"],
   });
 
   useEffect(() => {
+    if (draggingImageIdsRef.current.length > 0) return;
     setOrderedImages(images || []);
   }, [images]);
+
+  useEffect(() => {
+    orderedImagesRef.current = orderedImages;
+  }, [orderedImages]);
+
+  useEffect(() => {
+    selectedImageIdsRef.current = selectedImageIds;
+  }, [selectedImageIds]);
+
+  useEffect(() => {
+    draggingImageIdsRef.current = draggingImageIds;
+  }, [draggingImageIds]);
+
+  useEffect(() => {
+    const visibleIds = new Set(orderedImages.map((image) => image.id));
+    setSelectedImageIds((prev) => {
+      const next = prev.filter((id) => visibleIds.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [orderedImages]);
 
   const updateUploadItem = (id: string, patch: Partial<UploadProgressItem>) => {
     setUploadItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
@@ -539,20 +603,75 @@ export function GallerySection() {
     e.target.value = "";
   };
 
+  const toggleSelectedImage = (id: number) => {
+    setSelectedImageIds((prev) => (prev.includes(id) ? prev.filter((imageId) => imageId !== id) : [...prev, id]));
+  };
+
+  const getSelectedIdsInOrder = () => {
+    const selectedSet = new Set(selectedImageIdsRef.current);
+    return orderedImagesRef.current.filter((image) => selectedSet.has(image.id)).map((image) => image.id);
+  };
+
+  const commitImageOrder = (nextImages: GalleryImage[]) => {
+    if (haveSameImageOrder(orderedImagesRef.current, nextImages)) return;
+    orderedImagesRef.current = nextImages;
+    setOrderedImages(nextImages);
+    reorderImages.mutate(nextImages.map((image) => image.id));
+  };
+
   const reorderImages = useMutation({
     mutationFn: async (imageIds: number[]) => {
       await apiRequest("POST", "/api/gallery/reorder", { imageIds });
     },
+    onMutate: async (imageIds: number[]) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/gallery"] });
+      const previousImages = queryClient.getQueryData<GalleryImage[]>(["/api/gallery"]);
+      const currentImages = previousImages || orderedImagesRef.current;
+      const nextImages = orderImagesByIds(currentImages, imageIds);
+      if (nextImages.length === currentImages.length) {
+        orderedImagesRef.current = nextImages;
+        setOrderedImages(nextImages);
+        queryClient.setQueryData(["/api/gallery"], nextImages);
+      }
+      return { previousImages };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _imageIds, context) => {
+      if (context?.previousImages) {
+        orderedImagesRef.current = context.previousImages;
+        setOrderedImages(context.previousImages);
+        queryClient.setQueryData(["/api/gallery"], context.previousImages);
+      }
       toast({
         title: "Failed to reorder images",
         description: error.message,
         variant: "destructive",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
+    },
+  });
+
+  const createImage = useMutation({
+    mutationFn: async (payload: GalleryFormValues) => {
+      const body = {
+        title: payload.title.trim(),
+        altText: payload.altText.trim(),
+        description: payload.description.trim() || null,
+        imageUrl: payload.imageUrl.trim(),
+      };
+      const res = await apiRequest("POST", "/api/gallery", body);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
+      toast({ title: "Gallery image added" });
+      setEditingImage(null);
+      setIsDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to add image", description: error.message, variant: "destructive" });
     },
   });
 
@@ -687,10 +806,15 @@ export function GallerySection() {
   const previewOrderRef = useRef<GalleryImage[] | null>(null);
 
   const handleCardDragStart = (id: number, e: DragEvent<HTMLDivElement>) => {
+    const selectedIds = getSelectedIdsInOrder();
+    const activeDragIds = selectedIds.includes(id) ? selectedIds : [id];
     setDraggedImageId(id);
+    setDraggingImageIds(activeDragIds);
+    draggingImageIdsRef.current = activeDragIds;
     previewOrderRef.current = orderedImages;
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(id));
+    e.dataTransfer.setData("application/json", JSON.stringify(activeDragIds));
 
     // Use the Card element as the drag ghost so the full card is visible
     const card = (e.target as HTMLElement).closest("[data-card]") as HTMLElement | null;
@@ -702,28 +826,54 @@ export function GallerySection() {
 
   const handleCardDragOver = (id: number, e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (draggedImageId === null || draggedImageId === id) return;
+    const activeDragIds = draggingImageIdsRef.current;
+    if (draggedImageId === null || activeDragIds.length === 0 || activeDragIds.includes(id)) return;
     if (dragOverImageId === id) return;
     setDragOverImageId(id);
 
     // Live preview: reorder the grid in real time as the user drags
-    const next = reorderImagesById(orderedImages, draggedImageId, id);
-    const unchanged = next.every((img, i) => img.id === orderedImages[i]?.id);
-    if (!unchanged) setOrderedImages(next);
+    setOrderedImages((prev) => {
+      const next = reorderImagesByIds(prev, activeDragIds, id);
+      if (haveSameImageOrder(prev, next)) return prev;
+      orderedImagesRef.current = next;
+      return next;
+    });
   };
 
   const handleCardDrop = (targetId: number, e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    const sourceId = draggedImageId ?? Number(e.dataTransfer.getData("text/plain"));
+    let sourceIds = draggingImageIdsRef.current;
+    if (sourceIds.length === 0) {
+      try {
+        const parsed = JSON.parse(e.dataTransfer.getData("application/json") || "[]");
+        if (Array.isArray(parsed)) {
+          sourceIds = parsed.filter((id): id is number => typeof id === "number" && Number.isFinite(id));
+        }
+      } catch {
+        sourceIds = [];
+      }
+    }
+    if (sourceIds.length === 0) {
+      const sourceId = Number(e.dataTransfer.getData("text/plain"));
+      if (Number.isFinite(sourceId)) sourceIds = [sourceId];
+    }
+
     setDraggedImageId(null);
+    setDraggingImageIds([]);
+    draggingImageIdsRef.current = [];
     setDragOverImageId(null);
+
+    const initialOrder = previewOrderRef.current;
     previewOrderRef.current = null;
 
-    if (!Number.isFinite(sourceId) || sourceId === targetId) return;
+    if (sourceIds.length === 0 || sourceIds.includes(targetId)) return;
 
-    // orderedImages already contains the final order from live preview
-    reorderImages.mutate(orderedImages.map((image) => image.id));
+    const currentOrder = orderedImagesRef.current;
+    const finalOrder = initialOrder && haveSameImageOrder(initialOrder, currentOrder)
+      ? reorderImagesByIds(initialOrder, sourceIds, targetId)
+      : currentOrder;
+    commitImageOrder(finalOrder);
   };
 
   const getUploadStatusLabel = (status: UploadStatus) => {
@@ -823,13 +973,27 @@ export function GallerySection() {
           <Button
             onClick={() => {
               setEditingImage(null);
-              quickUploadInputRef.current?.click();
+              setIsDialogOpen(true);
             }}
             disabled={isQuickUploading || deleteAllImages.isPending}
             data-testid="button-add-gallery-image"
           >
-            {isQuickUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-            {isQuickUploading ? "Uploading..." : "Add Image"}
+            <Plus className="mr-2 h-4 w-4" />
+            Add Image
+          </Button>
+
+          <Button
+            variant="outline"
+            className={borderlessOutlineButtonClass}
+            onClick={() => {
+              setEditingImage(null);
+              quickUploadInputRef.current?.click();
+            }}
+            disabled={isQuickUploading || deleteAllImages.isPending}
+            data-testid="button-upload-gallery-images"
+          >
+            {isQuickUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            {isQuickUploading ? "Uploading..." : "Upload Images"}
           </Button>
         </div>
 
@@ -844,6 +1008,7 @@ export function GallerySection() {
         >
           <DialogContent className="sm:max-w-xl">
             <GalleryForm
+              mode={editingImage ? "edit" : "create"}
               initialValues={
                 editingImage
                   ? {
@@ -854,10 +1019,13 @@ export function GallerySection() {
                     }
                   : { title: "", altText: "", description: "", imageUrl: "" }
               }
-              isLoading={updateImage.isPending}
+              isLoading={editingImage ? updateImage.isPending : createImage.isPending}
               onSubmit={(values) => {
-                if (!editingImage) return;
-                updateImage.mutate({ id: editingImage.id, payload: values });
+                if (editingImage) {
+                  updateImage.mutate({ id: editingImage.id, payload: values });
+                  return;
+                }
+                createImage.mutate(values);
               }}
             />
           </DialogContent>
@@ -892,6 +1060,34 @@ export function GallerySection() {
               </div>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(previewImage)}
+        onOpenChange={(open) => {
+          if (!open) setPreviewImage(null);
+        }}
+      >
+        <DialogContent className="overflow-hidden p-0 sm:max-w-[min(96vw,1100px)]" data-testid="dialog-gallery-preview">
+          {previewImage ? (
+            <>
+              <DialogHeader className="px-4 pt-4">
+                <DialogTitle>{previewImage.title || "Gallery image"}</DialogTitle>
+                {previewImage.description ? (
+                  <DialogDescription>{previewImage.description}</DialogDescription>
+                ) : null}
+              </DialogHeader>
+              <div className="bg-black">
+                <img
+                  src={previewImage.imageUrl}
+                  alt={previewImage.altText || previewImage.title || "Gallery image preview"}
+                  className="max-h-[75vh] w-full object-contain"
+                  data-testid="img-gallery-admin-preview"
+                />
+              </div>
+            </>
+          ) : null}
         </DialogContent>
       </Dialog>
 
@@ -941,47 +1137,105 @@ export function GallerySection() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : orderedImages.length > 0 ? (
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
-          {orderedImages.map((image) => (
-            <Card
-              key={image.id}
-              data-card
-              draggable={activeMouseCardId === image.id && !reorderImages.isPending}
-              onMouseDown={() => setActiveMouseCardId(image.id)}
-              onDragStart={(e) => handleCardDragStart(image.id, e)}
-              onDragOver={(e) => handleCardDragOver(image.id, e)}
-              onDrop={(e) => handleCardDrop(image.id, e)}
-              onDragEnd={() => {
-                // If dropped outside a valid target, revert to the original order
-                if (previewOrderRef.current) {
-                  setOrderedImages(previewOrderRef.current);
-                  previewOrderRef.current = null;
-                }
-                setDraggedImageId(null);
-                setDragOverImageId(null);
-                setActiveMouseCardId(null);
-              }}
-              className={`overflow-hidden border-border transition-all duration-200 cursor-grab active:cursor-grabbing ${
-                draggedImageId === image.id
-                  ? "opacity-40 scale-95 ring-2 ring-primary/50 shadow-lg"
-                  : draggedImageId !== null
-                    ? "hover:ring-2 hover:ring-primary/30"
-                    : ""
-              }`}
-            >
+        <>
+          {selectedImageIds.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-muted/30 px-4 py-3">
+              <p className="text-sm font-medium">
+                {selectedImageIds.length === 1 ? "1 image selected" : `${selectedImageIds.length} images selected`}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={borderlessOutlineButtonClass}
+                onClick={() => setSelectedImageIds([])}
+              >
+                Clear Selection
+              </Button>
+            </div>
+          ) : null}
+
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
+            {orderedImages.map((image) => {
+              const isSelected = selectedImageIds.includes(image.id);
+              const isDragging = draggingImageIds.includes(image.id);
+
+              return (
+                <Card
+                  key={image.id}
+                  data-card
+                  aria-selected={isSelected}
+                  draggable={activeMouseCardId === image.id && !reorderImages.isPending}
+                  onMouseDown={() => setActiveMouseCardId(image.id)}
+                  onClick={(e) => {
+                    if (isInteractiveTarget(e.target)) return;
+                    if (e.ctrlKey || e.metaKey) {
+                      e.preventDefault();
+                      toggleSelectedImage(image.id);
+                    }
+                  }}
+                  onDragStart={(e) => handleCardDragStart(image.id, e)}
+                  onDragOver={(e) => handleCardDragOver(image.id, e)}
+                  onDrop={(e) => handleCardDrop(image.id, e)}
+                  onDragEnd={() => {
+                    // If dropped outside a valid target, revert to the original order
+                    if (previewOrderRef.current) {
+                      setOrderedImages(previewOrderRef.current);
+                      orderedImagesRef.current = previewOrderRef.current;
+                      previewOrderRef.current = null;
+                    }
+                    setDraggedImageId(null);
+                    setDraggingImageIds([]);
+                    draggingImageIdsRef.current = [];
+                    setDragOverImageId(null);
+                    setActiveMouseCardId(null);
+                  }}
+                  className={`overflow-hidden border-border transition-all duration-200 cursor-grab active:cursor-grabbing ${
+                    isSelected ? "ring-2 ring-primary shadow-md" : ""
+                  } ${
+                    isDragging
+                      ? "opacity-40 scale-95 ring-2 ring-primary/50 shadow-lg"
+                      : draggedImageId !== null
+                        ? "hover:ring-2 hover:ring-primary/30"
+                        : ""
+                  }`}
+                >
               <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                 {image.imageUrl ? (
-                  <img
-                    src={image.imageUrl}
-                    alt={image.altText || image.title || "Gallery image"}
-                    className="h-full w-full object-cover pointer-events-none select-none"
-                    data-testid={`img-gallery-admin-${image.id}`}
-                  />
+                  <button
+                    type="button"
+                    className="group h-full w-full cursor-zoom-in"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        toggleSelectedImage(image.id);
+                        return;
+                      }
+                      setPreviewImage(image);
+                    }}
+                    data-testid={`button-preview-gallery-${image.id}`}
+                  >
+                    <img
+                      src={image.imageUrl}
+                      alt={image.altText || image.title || "Gallery image"}
+                      className="h-full w-full object-cover select-none"
+                      data-testid={`img-gallery-admin-${image.id}`}
+                    />
+                    <span className="absolute right-2 top-2 rounded-md bg-background/90 p-1.5 text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+                      <Maximize2 className="h-4 w-4" />
+                    </span>
+                  </button>
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <ImageIcon className="h-8 w-8 text-muted-foreground" />
                   </div>
                 )}
+                {isSelected ? (
+                  <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
+                    <Check className="h-4 w-4" />
+                  </span>
+                ) : null}
               </div>
 
               <div className="space-y-3 p-4">
@@ -1052,8 +1306,10 @@ export function GallerySection() {
                 </div>
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
+        </>
       ) : (
         <p className="text-sm text-muted-foreground">
           No gallery images yet. Upload photos above to populate this section.
