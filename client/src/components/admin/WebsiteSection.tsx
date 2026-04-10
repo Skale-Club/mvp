@@ -6,7 +6,7 @@ import { TrustBadgesTab } from './website/TrustBadgesTab';
 import { SectionsTab } from './website/SectionsTab';
 import { SIDEBAR_MENU_ITEMS } from '@/components/admin/shared/constants';
 
-export function HeroSettingsSection() {
+export function WebsiteSection() {
   const settings = useWebsiteSettings();
   const { isLoading, isSaving } = settings;
   const heroMenuTitle = SIDEBAR_MENU_ITEMS.find((item) => item.id === 'hero')?.title ?? 'Website';

@@ -9,7 +9,7 @@ import { UsersSection } from './UsersSection';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { DashboardSection } from '@/components/admin/DashboardSection';
-import { HeroSettingsSection } from '@/components/admin/HeroSettingsSection';
+import { WebsiteSection } from '@/components/admin/WebsiteSection';
 import { CompanySettingsSection } from '@/components/admin/CompanySettingsSection';
 import { SEOSection } from '@/components/admin/SEOSection';
 import { LeadsSection } from '@/components/admin/LeadsSection';
@@ -137,7 +137,7 @@ function AdminContent() {
             />
           )}
           {activeSection === 'leads' && <LeadsSection />}
-          {activeSection === 'hero' && <HeroSettingsSection />}
+          {activeSection === 'hero' && <WebsiteSection />}
           {activeSection === 'reviews' && <ReviewsSection />}
           {activeSection === 'company' && <CompanySettingsSection />}
           {activeSection === 'gallery' && <GallerySection />}
