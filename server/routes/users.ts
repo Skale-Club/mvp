@@ -51,6 +51,60 @@ export function registerUserRoutes(app: Express, requireAdmin: any) {
     }
   });
 
+  // Create a new user via Supabase Auth
+  app.post('/api/users', requireAdmin, async (req, res) => {
+    try {
+      const createSchema = z.object({
+        email: z.string().email(),
+        password: z.string().min(8),
+        firstName: z.string().optional().default(''),
+        lastName: z.string().optional().default(''),
+        isAdmin: z.boolean().optional().default(false),
+      });
+      const data = createSchema.parse(req.body);
+
+      const { getSupabaseAdmin } = await import('../lib/supabase.js');
+      const supabaseAdmin = getSupabaseAdmin();
+
+      // Create user in Supabase Auth
+      const { data: authData, error } = await supabaseAdmin.auth.admin.createUser({
+        email: data.email,
+        password: data.password,
+        email_confirm: true,
+        user_metadata: {
+          first_name: data.firstName,
+          last_name: data.lastName,
+        },
+      });
+
+      if (error) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      const authUser = authData.user;
+
+      // Create local DB record
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          id: authUser.id,
+          email: authUser.email!,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          profileImageUrl: '',
+          isAdmin: data.isAdmin,
+        })
+        .returning();
+
+      res.status(201).json(newUser);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: err.errors });
+      }
+      res.status(500).json({ message: safeErrorMessage(err, 'Internal server error') });
+    }
+  });
+
   // Update user role (admin status)
   app.patch('/api/users/:id', requireAdmin, async (req, res) => {
     try {

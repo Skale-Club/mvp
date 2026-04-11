@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Pencil, Trash2, Check, Users, Camera } from 'lucide-react';
+import { Loader2, Pencil, Trash2, Check, Users, Camera, UserPlus } from 'lucide-react';
 
 // User type for the users section
 interface UserData {
@@ -25,12 +25,24 @@ interface UserData {
   emailConfirmed: boolean;
 }
 
+interface NewUserForm {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  isAdmin: boolean;
+}
+
+const defaultNewUser: NewUserForm = { email: '', password: '', firstName: '', lastName: '', isAdmin: false };
+
 export function UsersSection() {
   const { toast } = useToast();
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [addingUser, setAddingUser] = useState(false);
+  const [newUser, setNewUser] = useState<NewUserForm>(defaultNewUser);
 
   const { data: users, isLoading } = useQuery<UserData[]>({
     queryKey: ['/api/users'],
@@ -72,6 +84,30 @@ export function UsersSection() {
     onError: (error: any) => {
       toast({
         title: 'Error deleting user',
+        description: error?.message || 'Please try again',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const createUser = useMutation({
+    mutationFn: async (data: NewUserForm) => {
+      const res = await apiRequest('POST', '/api/users', data);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to create user');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({ title: 'User created successfully' });
+      setAddingUser(false);
+      setNewUser(defaultNewUser);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error creating user',
         description: error?.message || 'Please try again',
         variant: 'destructive'
       });
@@ -127,6 +163,84 @@ export function UsersSection() {
           <h2 className="text-2xl font-bold">Users</h2>
           <p className="text-muted-foreground">Manage user permissions</p>
         </div>
+        <Dialog open={addingUser} onOpenChange={(open) => { setAddingUser(open); if (!open) setNewUser(defaultNewUser); }}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary text-primary-foreground rounded-full" onClick={() => setAddingUser(true)}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add User
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-email">Email</Label>
+                <Input
+                  id="new-email"
+                  type="email"
+                  placeholder="user@example.com"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="Min. 8 characters"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-firstName">First Name</Label>
+                  <Input
+                    id="new-firstName"
+                    value={newUser.firstName}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, firstName: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-lastName">Last Name</Label>
+                  <Input
+                    id="new-lastName"
+                    value={newUser.lastName}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, lastName: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="new-isAdmin"
+                  checked={newUser.isAdmin}
+                  onCheckedChange={(checked) => setNewUser(prev => ({ ...prev, isAdmin: checked as boolean }))}
+                />
+                <Label htmlFor="new-isAdmin" className="cursor-pointer">Admin privileges</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setAddingUser(false); setNewUser(defaultNewUser); }}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => createUser.mutate(newUser)}
+                disabled={createUser.isPending || !newUser.email || !newUser.password}
+                className="bg-primary text-primary-foreground rounded-full"
+              >
+                {createUser.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <UserPlus className="w-4 h-4 mr-2" />
+                )}
+                Create User
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Users Table */}
