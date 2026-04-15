@@ -723,7 +723,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
     return createPortal(
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
         <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[#406EF1]" />
+          <Loader2 className="h-8 w-8 animate-spin text-cta" />
           <p className="text-slate-600">Loading form...</p>
         </div>
       </div>,
@@ -755,7 +755,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
           <div className="flex flex-col h-full">
             <div className="absolute inset-x-6 sm:inset-x-10 h-3 -top-[6px] bg-slate-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#406EF1] transition-all duration-300 rounded-full"
+                className="h-full bg-cta transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -775,7 +775,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                   <form onSubmit={handleSubmit}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-[#406EF1] uppercase tracking-wide">Let's get started!</p>
+                        <p className="text-sm font-semibold text-cta uppercase tracking-wide">Let's get started!</p>
                         <h2 className="text-2xl sm:text-3xl font-bold leading-tight mt-1">{currentQuestion.title}</h2>
                       </div>
                     </div>
@@ -802,7 +802,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                             className={clsx(
                               "w-full rounded-xl border px-4 py-3 text-lg transition-colors",
                               errorMessage ? "border-red-400" : "border-slate-200",
-                              "focus:border-[#406EF1] focus:ring-2 focus:ring-[#406EF1]/30"
+                              "focus:border-cta focus:ring-2 focus:ring-cta/30"
                             )}
                             aria-label={currentQuestion.title}
                           />
@@ -830,7 +830,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                 className={clsx(
                                   "flex items-center gap-1 rounded-xl border px-2 sm:px-3 py-3 text-base sm:text-lg transition-colors h-[52px]",
                                   errorMessage ? "border-red-400" : "border-slate-200",
-                                  "hover:border-[#406EF1]/70 focus:border-[#406EF1] focus:ring-2 focus:ring-[#406EF1]/30"
+                                  "hover:border-cta/70 focus:border-cta focus:ring-2 focus:ring-cta/30"
                                 )}
                               >
                                 <span className="text-lg sm:text-xl">{selectedCountry.flag}</span>
@@ -876,7 +876,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                           }}
                                           className={clsx(
                                             "w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 transition-colors",
-                                            selectedCountryCode === country.code && "bg-[#EFF3FF]"
+                                            selectedCountryCode === country.code && "bg-primary/10"
                                           )}
                                         >
                                           <span className="text-xl">{country.flag}</span>
@@ -902,7 +902,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                               className={clsx(
                                 "flex-1 min-w-0 rounded-xl border px-3 sm:px-4 py-3 text-base sm:text-lg transition-colors",
                                 errorMessage ? "border-red-400" : "border-slate-200",
-                                "focus:border-[#406EF1] focus:ring-2 focus:ring-[#406EF1]/30"
+                                "focus:border-cta focus:ring-2 focus:ring-cta/30"
                               )}
                               aria-label={currentQuestion.title}
                               maxLength={selectedCountry.format.length}
@@ -921,8 +921,8 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                 className={clsx(
                                   "flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all shadow-sm",
                                   answers[currentQuestion.id] === option.value
-                                    ? "border-[#406EF1] bg-[#EFF3FF] shadow-md"
-                                    : "border-slate-200 hover:border-[#406EF1]/70 hover:bg-slate-50",
+                                    ? "border-cta bg-primary/10 shadow-md"
+                                    : "border-slate-200 hover:border-cta/70 hover:bg-slate-50",
                                   errorMessage && !answers[currentQuestion.id] ? "border-red-400" : ""
                                 )}
                               >
@@ -930,7 +930,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                   <p className="font-semibold text-slate-900">{option.label}</p>
                                 </div>
                                 {answers[currentQuestion.id] === option.value && (
-                                  <span className="h-8 w-8 min-h-8 min-w-8 rounded-full bg-[#406EF1] text-white flex items-center justify-center shrink-0">
+                                  <span className="h-8 w-8 min-h-8 min-w-8 rounded-full bg-cta text-white flex items-center justify-center shrink-0">
                                     <Check className="h-4 w-4" />
                                   </span>
                                 )}
@@ -946,7 +946,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200"
+                            className="mt-4 p-4 bg-primary/10 rounded-xl border border-primary/30"
                           >
                             <label htmlFor={`conditional-${currentQuestion.conditionalField.id}`} className="text-sm font-semibold text-slate-700 block mb-2">
                               {currentQuestion.conditionalField.title}
@@ -960,8 +960,8 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                               placeholder={currentQuestion.conditionalField.placeholder}
                               className={clsx(
                                 "w-full rounded-lg border px-4 py-2 text-base transition-colors",
-                                errorMessage ? "border-red-400 bg-red-50" : "border-blue-300 bg-white",
-                                "focus:border-[#406EF1] focus:ring-2 focus:ring-[#406EF1]/30"
+                                errorMessage ? "border-red-400 bg-red-50" : "border-primary/40 bg-white",
+                                "focus:border-cta focus:ring-2 focus:ring-cta/30"
                               )}
                             />
                           </motion.div>
@@ -990,7 +990,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                         type="submit"
                         aria-disabled={!canProceed}
                         className={clsx(
-                          "inline-flex items-center justify-center gap-2 rounded-xl bg-[#406EF1] px-6 py-3 text-white font-semibold hover:bg-[#355CD0] transition-colors flex-1",
+                          "inline-flex items-center justify-center gap-2 rounded-xl bg-cta px-6 py-3 text-white font-semibold hover:bg-cta-hover transition-colors flex-1",
                           !canProceed && "opacity-60 cursor-not-allowed"
                         )}
                       >
@@ -1003,7 +1003,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
 
                 {view === "loading" && (
                   <div className="py-12 flex flex-col items-center justify-center gap-4">
-                    <div className="h-14 w-14 rounded-full border-4 border-slate-200 border-t-[#406EF1] animate-spin" />
+                    <div className="h-14 w-14 rounded-full border-4 border-slate-200 border-t-cta animate-spin" />
                     <div className="text-center space-y-2">
                       <p className="text-xl font-semibold text-slate-900">Preparing your estimate...</p>
                       <p className="text-slate-500">We are reviewing your answers now.</p>

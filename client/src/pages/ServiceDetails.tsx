@@ -248,7 +248,7 @@ export default function ServiceDetails() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-visible bg-slate-950 text-white">
+      <section className="relative overflow-visible bg-website-footer text-white">
         {post.featureImageUrl ? (
           <div className="absolute inset-0 overflow-hidden">
             <img
@@ -256,7 +256,7 @@ export default function ServiceDetails() {
               alt={post.title}
               className="h-full w-full object-cover opacity-30"
             />
-            <div className="absolute inset-0 bg-slate-950/55" />
+            <div className="absolute inset-0 bg-black/55" />
           </div>
         ) : null}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.25),transparent_45%),radial-gradient(circle_at_bottom_left,rgba(30,41,59,0.9),transparent_55%)]" />
@@ -278,7 +278,7 @@ export default function ServiceDetails() {
               </div>
 
               {includedServices.length > 0 ? (
-                <div className="mt-6 text-sm text-blue-100/90 leading-relaxed">
+                <div className="mt-6 text-sm text-white/80 leading-relaxed">
                   {includedServices.map((serviceItem, index) => (
                     <Fragment key={serviceItem}>
                       <a

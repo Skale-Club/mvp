@@ -90,6 +90,12 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        cta: {
+          DEFAULT: "hsl(var(--website-cta-bg-hsl) / <alpha-value>)",
+          hover: "hsl(var(--website-cta-hover-hsl) / <alpha-value>)",
+        },
+        "website-nav": "hsl(var(--website-nav-bg-hsl) / <alpha-value>)",
+        "website-footer": "hsl(var(--website-footer-bg-hsl) / <alpha-value>)",
         'light-gray': '#F1F5F9',
       },
       fontFamily: {

@@ -32,6 +32,16 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 215 71% 37%;
   --radius: 0.75rem;
+  --button-outline: hsl(214.3 31.8% 91.4%);
+  --card-border: 214.3 31.8% 91.4%;
+  --popover-border: 214.3 31.8% 91.4%;
+  --primary-border: transparent;
+  --secondary-border: transparent;
+  --muted-border: transparent;
+  --accent-border: transparent;
+  --destructive-border: transparent;
+  --sidebar-primary-border: transparent;
+  --sidebar-accent-border: transparent;
 
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
@@ -62,6 +72,10 @@
   --website-footer-bg: #18191f;
   --website-cta-bg: #406ef1;
   --website-cta-hover: #355cd0;
+  --website-nav-bg-hsl: 225 8% 13%;
+  --website-footer-bg-hsl: 225 7% 11%;
+  --website-cta-bg-hsl: 224 86% 60%;
+  --website-cta-hover-hsl: 224 65% 51%;
 }
 
 /* Dark Mode Colors */
@@ -96,6 +110,16 @@
   --input: 217 33% 17%;
   /* slate-800 */
   --ring: 217 91% 60%;
+  --button-outline: hsl(217 33% 25%);
+  --card-border: 217 33% 25%;
+  --popover-border: 217 33% 25%;
+  --primary-border: transparent;
+  --secondary-border: transparent;
+  --muted-border: transparent;
+  --accent-border: transparent;
+  --destructive-border: transparent;
+  --sidebar-primary-border: transparent;
+  --sidebar-accent-border: transparent;
 
   --popover: 222 47% 11%;
   --popover-foreground: 210 40% 98%;
@@ -128,6 +152,10 @@
   --website-footer-bg: #18191f;
   --website-cta-bg: #406ef1;
   --website-cta-hover: #355cd0;
+  --website-nav-bg-hsl: 225 8% 13%;
+  --website-footer-bg-hsl: 225 7% 11%;
+  --website-cta-bg-hsl: 224 86% 60%;
+  --website-cta-hover-hsl: 224 65% 51%;
 }
 
 @layer base {

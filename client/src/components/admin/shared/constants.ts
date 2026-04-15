@@ -43,7 +43,6 @@ export const SIDEBAR_MENU_ITEMS: Array<{ id: AdminSection; title: string; icon: 
   { id: 'gallery', title: 'Gallery', icon: Images },
   { id: 'servicePosts', title: 'Services', icon: FileText },
   { id: 'leads', title: 'Leads', icon: Sparkles },
-  { id: 'chat', title: 'Chat', icon: MessageSquare },
   { id: 'faqs', title: 'FAQs', icon: HelpCircle },
   { id: 'users', title: 'Users', icon: Users },
   { id: 'blog', title: 'Blog', icon: FileText },

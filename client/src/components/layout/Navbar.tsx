@@ -118,7 +118,7 @@ export function Navbar() {
                     {user.isAdmin && (
                       <DropdownMenuItem
                         asChild
-                        className="cursor-pointer data-[highlighted]:bg-slate-100 data-[highlighted]:text-[#1D1D1D]"
+                        className="cursor-pointer data-[highlighted]:bg-muted data-[highlighted]:text-foreground"
                       >
                         <Link href="/admin" className="w-full flex items-center" data-testid="link-admin">
                           <User className="mr-2 h-4 w-4" />
@@ -129,7 +129,7 @@ export function Navbar() {
                     <DropdownMenuItem
                       onClick={() => logout()}
                       data-testid="button-logout"
-                      className="text-[#1D1D1D] focus:text-[#1D1D1D] data-[highlighted]:bg-slate-100 data-[highlighted]:text-[#1D1D1D] cursor-pointer"
+                      className="text-foreground focus:text-foreground data-[highlighted]:bg-muted data-[highlighted]:text-foreground cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout

@@ -71,7 +71,7 @@ export function AreasServedMap({ mapEmbedUrl, content }: AreasServedMapProps) {
     <div className="container-custom mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <MapPin className="w-4 h-4" />
             {sectionContent?.label || ""}
           </div>
@@ -88,7 +88,7 @@ export function AreasServedMap({ mapEmbedUrl, content }: AreasServedMapProps) {
               <button
                 type="button"
                 data-form-trigger="lead-form"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full transition-all flex items-center justify-center gap-2 text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                className="px-4 py-2 bg-cta hover:bg-cta-hover text-white font-bold rounded-full transition-all flex items-center justify-center gap-2 text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
                 {sectionContent.ctaText}
                 <ArrowRight className="w-4 h-4" />

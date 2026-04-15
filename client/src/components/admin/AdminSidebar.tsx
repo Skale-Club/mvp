@@ -138,7 +138,7 @@ export function AdminSidebar({
                 {companyName?.[0] || 'A'}
               </div>
             )}
-            <span className="font-semibold text-lg text-primary truncate">{companyName || 'Admin Panel'}</span>
+            <span className="font-semibold text-lg text-sidebar-foreground truncate">{companyName || 'Admin Panel'}</span>
           </div>
         </div>
       </SidebarHeader>

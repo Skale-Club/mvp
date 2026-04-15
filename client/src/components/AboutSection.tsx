@@ -15,11 +15,11 @@ export function AboutSection({ content, aboutImageUrl }: AboutSectionProps) {
     <div className="container-custom mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="order-2 lg:order-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <User className="w-4 h-4" />
             {sectionContent?.label || 'About Us'}
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-[#1D1D1D]">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
             {sectionContent?.heading || ""}
           </h2>
 
@@ -33,7 +33,7 @@ export function AboutSection({ content, aboutImageUrl }: AboutSectionProps) {
                 <div key={index} className="flex items-start gap-3">
                   <CheckCircle className="w-6 h-6 text-green-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-[#1D1D1D] mb-1">{highlight.title}</h4>
+                    <h4 className="font-semibold text-foreground mb-1">{highlight.title}</h4>
                     <p className="text-slate-600">{highlight.description}</p>
                   </div>
                 </div>

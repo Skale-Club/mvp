@@ -27,7 +27,7 @@ export default function AboutUs() {
             { icon: Award, title: "Premium Service", desc: "Transparent pricing and straightforward onboarding." }
           ].map((item, i) => (
             <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-              <item.icon className="w-10 h-10 text-blue-600 mb-4" />
+              <item.icon className="w-10 h-10 text-primary mb-4" />
               <h3 className="text-xl font-bold mb-2">{item.title}</h3>
               <p className="text-slate-600">{item.desc}</p>
             </div>
@@ -35,7 +35,7 @@ export default function AboutUs() {
         </div>
       </section>
 
-      <section className="bg-slate-900 text-white py-20">
+      <section className="bg-website-footer text-white py-20">
         <div className="container-custom mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-3xl md:text-5xl font-bold mb-6">Our Mission</h2>

@@ -83,7 +83,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
       <div className="container-custom mx-auto">
         <div className="flex items-center justify-between mb-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1D1D1D] mb-2" data-testid="text-blog-section-title">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2" data-testid="text-blog-section-title">
               {sectionContent.title}
             </h2>
             <p className="text-slate-600 text-lg">{sectionContent.subtitle}</p>
@@ -120,7 +120,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                         </div>
                       ) : (
                         <div className="aspect-video bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-                          <FileText className="w-12 h-12 text-blue-300" />
+                          <FileText className="w-12 h-12 text-primary/40" />
                         </div>
                       )}
                       <div className="p-6 flex flex-col flex-1">
@@ -130,7 +130,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                             {post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : ''}
                           </span>
                         </div>
-                        <h3 className="text-lg font-bold text-[#1D1D1D] mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
+                        <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
                           {post.title}
                         </h3>
                         <p className="text-slate-600 text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
@@ -199,7 +199,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                   </div>
                 ) : (
                   <div className="aspect-video bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-                    <FileText className="w-12 h-12 text-blue-300" />
+                    <FileText className="w-12 h-12 text-primary/40" />
                   </div>
                 )}
                 <div className="p-6 flex flex-col flex-1">
@@ -209,7 +209,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                       {post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : ''}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-[#1D1D1D] mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
+                  <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
                     {post.title}
                   </h3>
                   <p className="text-slate-600 text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
@@ -330,7 +330,7 @@ export default function Home() {
   return (
     <div className="pb-0">
       {/* Hero Section */}
-      <section className="relative flex items-center justify-center overflow-hidden bg-[#1C53A3] min-h-[65vh] sm:min-h-[50vh] lg:min-h-[500px] xl:min-h-[550px] py-16 sm:py-20">
+      <section className="relative flex items-center justify-center overflow-hidden bg-primary min-h-[65vh] sm:min-h-[50vh] lg:min-h-[500px] xl:min-h-[550px] py-16 sm:py-20">
         <div className={`container-custom mx-auto relative z-10 w-full py-8 ${trustBadges.length > 0 ? 'translate-y-4 sm:translate-y-2 lg:translate-y-0' : 'translate-y-8'}`}>
           <div className={hasHeroImage ? "grid grid-cols-1 lg:grid-cols-2 gap-1 sm:gap-6 lg:gap-8 items-center lg:items-center" : "grid grid-cols-1 place-items-center"}>
             <div className={hasHeroImage ? "order-1 lg:order-2 text-white relative z-20" : "order-1 text-white relative z-20 w-full max-w-4xl text-center"}>
@@ -348,14 +348,14 @@ export default function Home() {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{companySettings.heroTitle}</span>
                 ) : null}
               </h1>
-              <p className={hasHeroImage ? "text-base sm:text-xl text-blue-50/80 mb-4 lg:mb-8 leading-relaxed max-w-xl" : "text-base sm:text-xl text-blue-50/80 mb-4 lg:mb-8 leading-relaxed max-w-xl mx-auto"}>
+              <p className={hasHeroImage ? "text-base sm:text-xl text-primary-foreground/80 mb-4 lg:mb-8 leading-relaxed max-w-xl" : "text-base sm:text-xl text-primary-foreground/80 mb-4 lg:mb-8 leading-relaxed max-w-xl mx-auto"}>
                 {companySettings?.heroSubtitle || ""}
               </p>
               <div className={hasHeroImage ? "flex flex-col sm:flex-row gap-3 lg:gap-5 flex-wrap" : "flex flex-col sm:flex-row gap-3 lg:gap-5 flex-wrap justify-center"}>
                 {companySettings?.ctaText ? (
                   <button
                     data-form-trigger="lead-form"
-                    className="w-full sm:w-auto shrink-0 px-6 sm:px-8 py-3 sm:py-4 bg-[#406EF1] hover:bg-[#355CD0] hover:scale-105 text-white font-bold rounded-full transition-all flex items-center justify-center gap-2 text-base sm:text-lg whitespace-nowrap"
+                    className="w-full sm:w-auto shrink-0 px-6 sm:px-8 py-3 sm:py-4 bg-cta hover:bg-cta-hover hover:scale-105 text-white font-bold rounded-full transition-all flex items-center justify-center gap-2 text-base sm:text-lg whitespace-nowrap"
                     onClick={() => {
                       setIsFormOpen(true);
                       trackCTAClick('hero', companySettings?.ctaText || '');
@@ -385,21 +385,7 @@ export default function Home() {
           style={{
             background: heroBackgroundImageUrl
               ? `linear-gradient(to right bottom, rgba(0, 0, 0, 0.6), rgba(20, 20, 30, 0.7)), url(${heroBackgroundImageUrl}) center/cover no-repeat`
-              : `linear-gradient(
-                to right bottom,
-                #09152d,
-                #0b152a,
-                #0d1427,
-                #0f1424,
-                #101421,
-                #121622,
-                #151723,
-                #171924,
-                #1c1c29,
-                #21202e,
-                #262332,
-                #2c2637
-              )`
+              : `linear-gradient(to right bottom, var(--website-nav-bg), var(--website-footer-bg))`
           }}
         ></div>
       </section>
@@ -413,11 +399,11 @@ export default function Home() {
               const Icon = badgeIconMap[iconKey] || badgeIconMap.star || Star;
               return (
                 <div key={i} className="p-8 flex items-center gap-6 hover:bg-gray-50 transition-colors">
-                  <div className="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-[#1D1D1D]">{feature.title}</h3>
+                    <h3 className="font-bold text-foreground">{feature.title}</h3>
                     <p className="text-sm text-slate-500">{feature.description}</p>
                   </div>
                 </div>
@@ -427,12 +413,12 @@ export default function Home() {
         </div>
       </section>
       )}
-      <div className="h-0 bg-[#111111]"></div>
+      <div className="h-0 bg-website-footer"></div>
       <ServicesCarouselSection posts={servicePostsList} />
       <GalleryShowcaseSection images={galleryPreview || []} />
       <BlogSection content={homepageContent.blogSection} />
       {(companySettings?.aboutImageUrl || homepageContent.aboutSection?.description || (homepageContent.aboutSection?.highlights && homepageContent.aboutSection.highlights.length > 0)) && (
-      <section id="about" className="bg-[#F8FAFC] py-20">
+      <section id="about" className="bg-muted/40 py-20">
         <AboutSection
           aboutImageUrl={companySettings?.aboutImageUrl}
           content={homepageContent.aboutSection}
@@ -459,13 +445,13 @@ export default function Home() {
           ) : null}
           {reviewsUseWidget && reviewsEmbedUrl ? (
             <div className="w-full px-0">
-                <div className="pb-0 bg-[#F8FAFC] -mt-6 sm:-mt-8 lg:-mt-10">
+                <div className="pb-0 bg-muted/40 -mt-6 sm:-mt-8 lg:-mt-10">
                 <iframe 
                   className="lc_reviews_widget rounded-none" 
                   src={reviewsEmbedUrl}
                   frameBorder='0' 
                   scrolling='no' 
-                   style={{ minWidth: '100%', width: '100%', height: '488px', border: 'none', display: 'block', borderRadius: '0', background: '#F8FAFC' }}
+                   style={{ minWidth: '100%', width: '100%', height: '488px', border: 'none', display: 'block', borderRadius: '0', background: 'transparent' }}
                   onLoad={() => {
                     const script = document.createElement('script');
                     script.type = 'text/javascript';
@@ -554,7 +540,7 @@ function ServicesCarouselSection({ posts }: { posts: ServicePost[] }) {
       <div className="container-custom mx-auto">
         <div className="mb-10 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-[#1D1D1D] md:text-4xl">Featured Services</h2>
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">Featured Services</h2>
             <p className="mt-2 text-lg text-slate-600">Explore our most requested services and open each page for details.</p>
           </div>
           <Link href="/services" className="hidden md:inline-flex items-center gap-2 text-primary font-semibold hover:underline">
@@ -697,11 +683,11 @@ function GalleryShowcaseSection({ images }: { images: GalleryImage[] }) {
   if (!images.length) return null;
 
   return (
-    <section className="bg-[#F8FAFC] py-20">
+    <section className="bg-muted/40 py-20">
       <div className="container-custom mx-auto">
         <div className="mb-10 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-[#1D1D1D] md:text-4xl">Gallery Showcase</h2>
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">Gallery Showcase</h2>
             <p className="mt-2 text-lg text-slate-600">A quick preview of our latest project photos.</p>
           </div>
           <Link href="/gallery" className="hidden md:inline-flex items-center gap-2 text-primary font-semibold hover:underline">

@@ -296,7 +296,7 @@ export function TwilioSection() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-0 bg-muted">
+      <Card className="rounded-xl border border-border bg-card transition-all hover:shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -420,7 +420,7 @@ export function TwilioSection() {
             </Label>
           </div>
 
-          <div className="flex items-center gap-3 pt-4 border-t">
+          <div className="flex items-center gap-3 pt-4 border-t border-border">
             <Button
               onClick={saveSettings}
               disabled={isSaving}

@@ -324,8 +324,8 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
               <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500 font-semibold">{whatWeDoLabel}</p>
               <p className="text-slate-700 leading-relaxed mt-2 text-sm">{step.whatWeDo}</p>
             </div>
-            <div className="rounded-b-2xl border border-blue-100 bg-gradient-to-r from-[#eef2ff] to-[#e0eaff] p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-blue-700 font-semibold">{outcomeLabel}</p>
+            <div className="rounded-b-2xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-primary font-semibold">{outcomeLabel}</p>
               <p className="text-slate-800 leading-relaxed mt-2 text-sm font-semibold">{step.outcome}</p>
             </div>
           </div>
@@ -337,11 +337,11 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
   return (
     <section
       id={sectionId}
-      className="relative pt-24 md:pt-28 pb-14 md:pb-16 -mt-16 sm:-mt-16 lg:-mt-20 bg-gradient-to-br from-[#f7f9fc] via-white to-[#eaf1ff] overflow-hidden"
+      className="relative pt-24 md:pt-28 pb-14 md:pb-16 -mt-16 sm:-mt-16 lg:-mt-20 bg-gradient-to-br from-muted/40 via-background to-primary/5 overflow-hidden"
     >
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute w-80 h-80 bg-primary/5 blur-3xl -left-20 top-0 rounded-full" />
-        <div className="absolute w-[420px] h-[420px] bg-indigo-200/30 blur-3xl right-[-10%] bottom-[-20%] rounded-full" />
+        <div className="absolute w-[420px] h-[420px] bg-primary/10 blur-3xl right-[-10%] bottom-[-20%] rounded-full" />
       </div>
       <div className="relative z-10 space-y-6 md:space-y-8 pb-4 md:pb-8">
         <div className="container-custom mx-auto px-4 sm:px-6 md:px-10">
@@ -373,8 +373,8 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
             </div>
           ) : (
             <>
-              <div className="pointer-events-none absolute left-0 top-0 h-full w-12 sm:w-16 bg-gradient-to-r from-[#f7f9fc] via-[#f7f9fc] to-transparent z-10" />
-              <div className="pointer-events-none absolute right-0 top-0 h-full w-12 sm:w-16 bg-gradient-to-l from-[#f7f9fc] via-[#f7f9fc] to-transparent z-10" />
+              <div className="pointer-events-none absolute left-0 top-0 h-full w-12 sm:w-16 bg-gradient-to-r from-background via-background to-transparent z-10" />
+              <div className="pointer-events-none absolute right-0 top-0 h-full w-12 sm:w-16 bg-gradient-to-l from-background via-background to-transparent z-10" />
               <div
                 ref={trackRef}
                 className={`flex gap-6 md:gap-7 xl:gap-8 overflow-x-scroll overflow-y-visible no-scrollbar pt-2 pb-10 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -416,7 +416,7 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
             <a
               href={ctaHref}
               onClick={handleCta}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#406EF1] hover:bg-[#355CD0] text-white font-semibold shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#406EF1] whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-cta hover:bg-cta-hover text-white font-semibold shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cta whitespace-nowrap"
               data-form-trigger="lead-form"
             >
               {ctaLabel}
