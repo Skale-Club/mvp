@@ -237,6 +237,8 @@ async function ensureCompanySettingsSchema() {
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_footer_background_color text DEFAULT '#18191F';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_background_color text DEFAULT '#406EF1';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS website_cta_hover_color text DEFAULT '#355CD0';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS admin_background_color text DEFAULT '#0F1729';
+      ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS admin_sidebar_color text DEFAULT '#1D283A';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS facebook_app_id text DEFAULT '';
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS gtm_enabled_at timestamp;
       ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS ga4_enabled_at timestamp;
@@ -541,6 +543,7 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getCompanySettings();
     const now = new Date();
     const nextSettings: Partial<CompanySettings> = { ...settings };
+    const isSameValue = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 
     if (
       typeof settings.gtmEnabled === "boolean" &&
@@ -566,9 +569,20 @@ export class DatabaseStorage implements IStorage {
       nextSettings.facebookPixelEnabledAt = now;
     }
 
+    const changesToPersist = Object.fromEntries(
+      Object.entries(nextSettings).filter(([key, value]) => {
+        if (typeof value === "undefined") return false;
+        return !isSameValue(value, existing[key as keyof CompanySettings]);
+      })
+    ) as Partial<CompanySettings>;
+
+    if (Object.keys(changesToPersist).length === 0) {
+      return existing;
+    }
+
     const [updated] = await db
       .update(companySettings)
-      .set(nextSettings)
+      .set(changesToPersist)
       .where(eq(companySettings.id, existing.id))
       .returning();
     return updated;

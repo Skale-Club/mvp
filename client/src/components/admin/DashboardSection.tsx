@@ -39,6 +39,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useToast } from '@/hooks/use-toast';
 import { ErrorState } from '@/components/ui/error-state';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   Loader2,
   Plus,
@@ -276,41 +277,12 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
 
   return (
     <div className="space-y-6" data-testid="dashboard-overview">
-      <div className="rounded-2xl border border-border bg-gradient-to-r from-card via-card to-muted/40 p-6">
-        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-xl border border-border bg-background flex items-center justify-center overflow-hidden">
-              {companySettings?.logoIcon ? (
-                <img src={companySettings.logoIcon} alt={companySettings.companyName || 'Logo'} className="h-full w-full object-contain p-2" />
-              ) : (
-                <Building2 className="h-6 w-6 text-muted-foreground" />
-              )}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{dashboardMenuTitle}</h1>
-              <p className="text-sm text-muted-foreground">
-                {companySettings?.companyName || 'Your business'} performance snapshot for your white-label operation
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <Button variant="outline" className="border-0 bg-background" onClick={() => onNavigate('leads')}>
-              <Users className="h-4 w-4 mr-2" />
-              Leads
-            </Button>
-            <Button variant="outline" className="border-0 bg-background" onClick={() => onNavigate('chat')}>
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Chat
-            </Button>
-            <Button variant="outline" className="border-0 bg-background" onClick={() => onNavigate('integrations')}>
-              <Puzzle className="h-4 w-4 mr-2" />
-              Integrations
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader
+        title={dashboardMenuTitle}
+        description={`${companySettings?.companyName || 'Your business'} performance snapshot for your white-label operation.`}
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="rounded-xl border border-border bg-card p-5 transition-all hover:shadow-sm">
             <div className="flex items-start justify-between gap-3">
@@ -327,11 +299,11 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-12">
+      <div className="grid gap-4 xl:grid-cols-12 items-start">
         <div className="xl:col-span-7 rounded-xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold">Lead Funnel</h2>
-            <Badge variant="secondary" className="border-0 bg-muted">
+            <Badge variant="secondary" className="border-0 bg-primary/10 text-primary font-semibold">
               Completion {completionRate.toFixed(1)}%
             </Badge>
           </div>
@@ -356,7 +328,6 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
             <div className="rounded-lg bg-muted/50 p-3">
               <p className="text-xs text-muted-foreground">Lead Sources</p>
               <p className="mt-1 text-sm font-medium">Form: {sourceCounts.form}</p>
-              <p className="text-sm font-medium">Chat: {sourceCounts.chat}</p>
             </div>
             <div className="rounded-lg bg-muted/50 p-3">
               <p className="text-xs text-muted-foreground">Qualification</p>
@@ -386,7 +357,7 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
                       <p className="truncate font-medium">{lead.nome}</p>
                       <p className="truncate text-xs text-muted-foreground">{lead.email || lead.telefone || 'No contact yet'}</p>
                     </div>
-                    <Badge variant="secondary" className="border-0 bg-muted text-[10px] uppercase">
+                    <Badge variant="secondary" className="border-0 bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wide">
                       {(lead.source || 'form') === 'chat' ? 'Chat' : 'Form'}
                     </Badge>
                   </div>
@@ -407,7 +378,7 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
         <div className="xl:col-span-5 rounded-xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold">Brand Profile</h2>
-            <Badge variant="secondary" className="border-0 bg-muted">
+            <Badge variant="secondary" className="border-0 bg-primary/15 text-primary font-semibold">
               {brandCompletion}%
             </Badge>
           </div>

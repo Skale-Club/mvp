@@ -474,6 +474,8 @@ export const companySettings = pgTable("company_settings", {
   websiteFooterBackgroundColor: text("website_footer_background_color").default('#18191F'),
   websiteCtaBackgroundColor: text("website_cta_background_color").default('#406EF1'),
   websiteCtaHoverColor: text("website_cta_hover_color").default('#355CD0'),
+  adminBackgroundColor: text("admin_background_color").default('#0F1729'),
+  adminSidebarColor: text("admin_sidebar_color").default('#1D283A'),
   timeFormat: text("time_format").default('12h'), // '12h' or '24h'
   businessHours: jsonb("business_hours"), // Day-by-day business hours
   seoTitle: text("seo_title").default(''),

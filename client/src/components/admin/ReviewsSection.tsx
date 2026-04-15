@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader2, Plus, Trash2, Check, ArrowUp, ArrowDown, Star } from 'lucide-react';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -252,27 +253,27 @@ export function ReviewsSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">Reviews</h1>
-          <p className="text-muted-foreground">Configure widget and fallback reviews for clients without widget</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isSavingSettings ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Saving...</span>
-            </>
-          ) : lastSavedAt ? (
-            <>
-              <Check className="h-4 w-4 text-green-500" />
-              <span>Auto-saved</span>
-            </>
-          ) : null}
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Reviews"
+        description="Configure the widget and fallback reviews for clients without the widget."
+        actions={
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {isSavingSettings ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : lastSavedAt ? (
+              <>
+                <Check className="h-4 w-4 text-green-500" />
+                <span>Auto-saved</span>
+              </>
+            ) : null}
+          </div>
+        }
+      />
 
-      <div className="bg-muted p-6 rounded-lg space-y-5">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-5 transition-all hover:shadow-sm">
         <h2 className="text-lg font-semibold">Section Settings</h2>
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="space-y-2">
@@ -348,7 +349,7 @@ export function ReviewsSection() {
         </div>
       </div>
 
-      <div className="bg-muted p-6 rounded-lg space-y-4">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
         <h2 className="text-lg font-semibold">Add fallback review</h2>
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="space-y-2">
@@ -411,7 +412,7 @@ export function ReviewsSection() {
         </div>
       </div>
 
-      <div className="bg-muted p-6 rounded-lg space-y-4">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
         <h2 className="text-lg font-semibold">Fallback reviews list</h2>
         {sortedItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">No fallback reviews available.</p>

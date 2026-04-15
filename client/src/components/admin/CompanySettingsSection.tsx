@@ -37,6 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   Loader2,
   Plus,
@@ -150,6 +151,8 @@ export function CompanySettingsSection() {
     websiteFooterBackgroundColor: '#18191F',
     websiteCtaBackgroundColor: '#406EF1',
     websiteCtaHoverColor: '#355CD0',
+    adminBackgroundColor: '#0F1729',
+    adminSidebarColor: '#1D283A',
     homepageContent: DEFAULT_HOMEPAGE_CONTENT,
     timeFormat: '12h',
     businessHours: DEFAULT_BUSINESS_HOURS,
@@ -257,29 +260,29 @@ export function CompanySettingsSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">Company Settings</h1>
-          <p className="text-muted-foreground">Manage your business information and assets</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Saving...</span>
-            </>
-          ) : lastSaved ? (
-            <>
-              <Check className="h-4 w-4 text-green-500" />
-              <span>Auto-saved</span>
-            </>
-          ) : null}
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Company Settings"
+        description="Manage your business information and assets."
+        actions={
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <Check className="h-4 w-4 text-green-500" />
+                <span>Auto-saved</span>
+              </>
+            ) : null}
+          </div>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-muted p-6 rounded-lg space-y-6 transition-all">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-6 transition-all hover:shadow-sm">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Building2 className="w-5 h-5 text-primary" />
               Business Information
@@ -347,7 +350,7 @@ export function CompanySettingsSection() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-muted p-6 rounded-lg space-y-6 transition-all">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-6 transition-all hover:shadow-sm">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Image className="w-5 h-5 text-primary" />
               Branding Assets
@@ -413,7 +416,7 @@ export function CompanySettingsSection() {
                 </div>
               </div>
 
-              <div className="space-y-4 border-t pt-6 mt-2">
+              <div className="space-y-4 border-t border-border pt-6 mt-2">
                 <Label className="text-base font-semibold">Social Media Links (Max 5)</Label>
                 <div className="space-y-3">
                   {(settings.socialLinks || []).map((link, index) => (
@@ -489,5 +492,4 @@ export function CompanySettingsSection() {
     </div>
   );
 }
-
 

@@ -16,6 +16,8 @@ export const WEBSITE_COLOR_DEFAULTS = {
   websiteFooterBackgroundColor: '#18191F',
   websiteCtaBackgroundColor: '#406EF1',
   websiteCtaHoverColor: '#355CD0',
+  adminBackgroundColor: '#0F1729',
+  adminSidebarColor: '#1D283A',
 };
 
 export function normalizeColorInputValue(value: string | null | undefined, fallback: string): string {
@@ -43,6 +45,8 @@ export function useWebsiteSettings() {
   const [websiteFooterBackgroundColor, setWebsiteFooterBackgroundColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteFooterBackgroundColor);
   const [websiteCtaBackgroundColor, setWebsiteCtaBackgroundColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteCtaBackgroundColor);
   const [websiteCtaHoverColor, setWebsiteCtaHoverColor] = useState(WEBSITE_COLOR_DEFAULTS.websiteCtaHoverColor);
+  const [adminBackgroundColor, setAdminBackgroundColor] = useState(WEBSITE_COLOR_DEFAULTS.adminBackgroundColor);
+  const [adminSidebarColor, setAdminSidebarColor] = useState(WEBSITE_COLOR_DEFAULTS.adminSidebarColor);
   const [homepageContent, setHomepageContent] = useState<HomepageContent>(DEFAULT_HOMEPAGE_CONTENT);
   const [isSaving, setIsSaving] = useState(false);
   const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
@@ -67,6 +71,8 @@ export function useWebsiteSettings() {
       setWebsiteFooterBackgroundColor(normalizeColorInputValue(settings.websiteFooterBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteFooterBackgroundColor));
       setWebsiteCtaBackgroundColor(normalizeColorInputValue(settings.websiteCtaBackgroundColor, WEBSITE_COLOR_DEFAULTS.websiteCtaBackgroundColor));
       setWebsiteCtaHoverColor(normalizeColorInputValue(settings.websiteCtaHoverColor, WEBSITE_COLOR_DEFAULTS.websiteCtaHoverColor));
+      setAdminBackgroundColor(normalizeColorInputValue(settings.adminBackgroundColor, WEBSITE_COLOR_DEFAULTS.adminBackgroundColor));
+      setAdminSidebarColor(normalizeColorInputValue(settings.adminSidebarColor, WEBSITE_COLOR_DEFAULTS.adminSidebarColor));
       setHomepageContent({
         ...DEFAULT_HOMEPAGE_CONTENT,
         ...(settings.homepageContent || {}),
@@ -175,6 +181,8 @@ export function useWebsiteSettings() {
     websiteFooterBackgroundColor, setWebsiteFooterBackgroundColor,
     websiteCtaBackgroundColor, setWebsiteCtaBackgroundColor,
     websiteCtaHoverColor, setWebsiteCtaHoverColor,
+    adminBackgroundColor, setAdminBackgroundColor,
+    adminSidebarColor, setAdminSidebarColor,
     // homepage content
     homepageContent,
     // actions

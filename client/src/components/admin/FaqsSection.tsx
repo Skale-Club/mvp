@@ -19,6 +19,7 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogT
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { GripVertical, HelpCircle, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { Faq } from '@shared/schema';
 
@@ -262,34 +263,34 @@ export function FaqsSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">FAQs</h1>
-          <p className="text-muted-foreground">Manage frequently asked questions</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingFaq(null); }}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-add-faq">
-              <Plus className="w-4 h-4 mr-2" />
-              Add FAQ
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <FaqForm
-              faq={editingFaq}
-              onSubmit={(data) => {
-                if (editingFaq) {
-                  updateFaq.mutate({ ...data, id: editingFaq.id });
-                } else {
-                  createFaq.mutate(data);
-                }
-              }}
-              isLoading={createFaq.isPending || updateFaq.isPending}
-              nextOrder={faqs?.length || 0}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+      <AdminPageHeader
+        title="FAQs"
+        description="Manage frequently asked questions."
+        actions={
+          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingFaq(null); }}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-faq">
+                <Plus className="w-4 h-4 mr-2" />
+                Add FAQ
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <FaqForm
+                faq={editingFaq}
+                onSubmit={(data) => {
+                  if (editingFaq) {
+                    updateFaq.mutate({ ...data, id: editingFaq.id });
+                  } else {
+                    createFaq.mutate(data);
+                  }
+                }}
+                isLoading={createFaq.isPending || updateFaq.isPending}
+                nextOrder={faqs?.length || 0}
+              />
+            </DialogContent>
+          </Dialog>
+        }
+      />
 
       {faqs?.length === 0 ? (
         <div className="p-12 text-center bg-card rounded-lg">

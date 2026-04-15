@@ -37,6 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   Loader2,
   Plus,
@@ -214,29 +215,29 @@ export function SEOSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">SEO Settings</h1>
-          <p className="text-muted-foreground">Optimize your site for search engines and social media</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Saving...</span>
-            </>
-          ) : lastSaved ? (
-            <>
-              <Check className="h-4 w-4 text-green-500" />
-              <span>Auto-saved</span>
-            </>
-          ) : null}
-        </div>
-      </div>
+      <AdminPageHeader
+        title="SEO Settings"
+        description="Optimize your site for search engines and social media."
+        actions={
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <Check className="h-4 w-4 text-green-500" />
+                <span>Auto-saved</span>
+              </>
+            ) : null}
+          </div>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
-          <div className="bg-muted p-6 rounded-lg space-y-6 transition-all">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-6 transition-all hover:shadow-sm">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Search className="w-5 h-5 text-primary" />
               Basic SEO
@@ -335,7 +336,7 @@ export function SEOSection() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-muted p-6 rounded-lg space-y-6 transition-all">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-6 transition-all hover:shadow-sm">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Globe className="w-5 h-5 text-primary" />
               Open Graph (Social Sharing)
@@ -438,7 +439,7 @@ export function SEOSection() {
             </div>
           </div>
 
-          <div className="bg-muted p-6 rounded-lg space-y-6 transition-all">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-6 transition-all hover:shadow-sm">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Globe className="w-5 h-5 text-primary" />
               Twitter Cards

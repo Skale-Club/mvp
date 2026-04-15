@@ -35,6 +35,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -46,6 +47,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   Loader2,
   Plus,
@@ -548,13 +550,42 @@ export function IntegrationsSection() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">{integrationsMenuTitle}</h1>
-        <p className="text-muted-foreground">Connect your lead capture system with external services</p>
-      </div>
+      <AdminPageHeader
+        title={integrationsMenuTitle}
+        description="Connect your lead capture system with external services."
+      />
 
+      <Tabs defaultValue="openai" className="space-y-6">
+        <TabsList className="grid h-auto grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-1.5 lg:grid-cols-4">
+          <TabsTrigger value="openai" className="h-auto items-center justify-center rounded-xl px-4 py-3 text-center">
+            <div className="w-full space-y-1 text-center">
+              <p className="text-sm font-semibold">OpenAI</p>
+              <p className="text-xs text-muted-foreground">Assistant and responses</p>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="crm" className="h-auto items-center justify-center rounded-xl px-4 py-3 text-center">
+            <div className="w-full space-y-1 text-center">
+              <p className="text-sm font-semibold">CRM</p>
+              <p className="text-xs text-muted-foreground">GoHighLevel and calendar</p>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="h-auto items-center justify-center rounded-xl px-4 py-3 text-center">
+            <div className="w-full space-y-1 text-center">
+              <p className="text-sm font-semibold">Notifications</p>
+              <p className="text-xs text-muted-foreground">SMS and email</p>
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="h-auto items-center justify-center rounded-xl px-4 py-3 text-center">
+            <div className="w-full space-y-1 text-center">
+              <p className="text-sm font-semibold">Analytics</p>
+              <p className="text-xs text-muted-foreground">Pixels, tags and events</p>
+            </div>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="openai" className="space-y-4">
       <div className="space-y-4">
-        <Card className="border-0 bg-muted">
+        <Card className="rounded-xl border border-border bg-card transition-all hover:shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -613,7 +644,7 @@ export function IntegrationsSection() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-4 border-t">
+            <div className="flex items-center gap-3 pt-4 border-t border-border">
               <Button
                 variant="outline"
                 className={openAITestButtonClass}
@@ -646,9 +677,11 @@ export function IntegrationsSection() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
 
+        <TabsContent value="crm" className="space-y-4">
       <div className="space-y-4">
-        <Card className="border-0 bg-muted">
+        <Card className="rounded-xl border border-border bg-card transition-all hover:shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -719,7 +752,7 @@ export function IntegrationsSection() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-4 border-t">
+            <div className="flex items-center gap-3 pt-4 border-t border-border">
               <Button
                 variant="outline"
                 className={ghlTestButtonClass}
@@ -746,14 +779,19 @@ export function IntegrationsSection() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
 
-      <TwilioSection />
+        <TabsContent value="notifications" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2 items-start">
+            <TwilioSection />
+            <ResendSection />
+          </div>
+        </TabsContent>
 
-      <ResendSection />
-
+        <TabsContent value="analytics" className="space-y-6">
       <div className="space-y-6">
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-0 bg-muted">
+          <Card className="rounded-xl border border-border bg-card transition-all hover:shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
@@ -794,7 +832,7 @@ export function IntegrationsSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-muted">
+          <Card className="rounded-xl border border-border bg-card transition-all hover:shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
@@ -835,7 +873,7 @@ export function IntegrationsSection() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-muted">
+          <Card className="rounded-xl border border-border bg-card transition-all hover:shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
@@ -878,8 +916,8 @@ export function IntegrationsSection() {
         </div>
       </div>
 
-      <div className="bg-muted p-6 rounded-lg space-y-4 transition-all">
-        <div className="rounded-xl border border-border/60 bg-card/70 overflow-hidden">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
+        <div className="rounded-lg border border-border bg-background overflow-hidden">
           <div className="px-5 py-4 border-b border-border/60">
             <h2 className="text-xl font-semibold">Website Events</h2>
             <p className="text-sm text-muted-foreground mt-1">
@@ -985,6 +1023,8 @@ export function IntegrationsSection() {
           </Table>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

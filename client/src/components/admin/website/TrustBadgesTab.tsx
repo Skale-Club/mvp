@@ -4,6 +4,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check, Plus, Trash2, Star, Shield, Clock, Sparkles, Heart, BadgeCheck, ThumbsUp, Trophy } from 'lucide-react';
 import { DEFAULT_HOMEPAGE_CONTENT } from '@/lib/homepageDefaults';
+import { uploadFileToServer } from '@/components/admin/shared/utils';
+import { useToast } from '@/hooks/use-toast';
 import type { WebsiteSettingsReturn } from './useWebsiteSettings';
 
 const badgeIconOptions = [
@@ -26,10 +28,69 @@ function SavedIndicator({ field, savedFields }: { field: string; savedFields: Re
 }
 
 export function TrustBadgesTab({ savedFields, homepageContent, updateHomepageContent }: Props) {
+  const { toast } = useToast();
   const trustBadges = homepageContent.trustBadges || [];
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
+        <h2 className="text-base font-semibold flex items-center gap-2">
+          <BadgeCheck className="w-4 h-4 text-primary" />
+          Hero Badge
+        </h2>
+        <div className="flex gap-6 items-start">
+          <div className="shrink-0 space-y-2">
+            <Label>Image</Label>
+            <div className="w-[100px] h-[100px] rounded-lg border-2 border-dashed border-border bg-card flex items-center justify-center overflow-hidden relative group">
+              {homepageContent.heroBadgeImageUrl ? (
+                <img src={homepageContent.heroBadgeImageUrl} alt={homepageContent.heroBadgeAlt || 'Badge'} className="w-full h-full object-contain p-1" />
+              ) : (
+                <div className="text-center p-2">
+                  <BadgeCheck className="w-6 h-6 text-muted-foreground mx-auto mb-1" />
+                  <p className="text-[10px] text-muted-foreground">Upload</p>
+                </div>
+              )}
+              <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer rounded-lg">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const imagePath = await uploadFileToServer(file);
+                      updateHomepageContent((prev) => ({ ...prev, heroBadgeImageUrl: imagePath }), 'homepageContent.heroBadgeImageUrl');
+                      toast({ title: 'Badge uploaded and saved' });
+                    } catch (error: any) {
+                      toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+                    } finally {
+                      if (e.target) e.target.value = '';
+                    }
+                  }}
+                />
+                <Plus className="w-6 h-6 text-white" />
+              </label>
+            </div>
+          </div>
+          <div className="flex-1 space-y-4">
+            <div className="space-y-2">
+              <Label>Alt Text</Label>
+              <div className="relative">
+                <Input
+                  value={homepageContent.heroBadgeAlt || ''}
+                  onChange={(e) =>
+                    updateHomepageContent((prev) => ({ ...prev, heroBadgeAlt: e.target.value }), 'homepageContent.heroBadgeAlt')
+                  }
+                  placeholder="Trusted Experts"
+                />
+                <SavedIndicator field="homepageContent.heroBadgeAlt" savedFields={savedFields} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-base font-semibold flex items-center gap-2">
@@ -57,7 +118,7 @@ export function TrustBadgesTab({ savedFields, homepageContent, updateHomepageCon
         {trustBadges.map((badge, index) => (
           <div
             key={index}
-            className="grid gap-3 md:grid-cols-[1fr_1fr_180px_auto] items-start bg-muted p-4 rounded-lg border border-border"
+            className="grid gap-3 md:grid-cols-[1fr_1fr_180px_auto] items-start rounded-xl border border-border bg-card p-5 transition-all hover:shadow-sm"
           >
             <div className="space-y-2">
               <Label>Title</Label>

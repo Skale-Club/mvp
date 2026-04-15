@@ -21,6 +21,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { renderMarkdown } from '@/lib/markdown';
 import { DEFAULT_HOMEPAGE_CONTENT } from '@/lib/homepageDefaults';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -964,7 +965,7 @@ export function BlogSection({ resetSignal }: { resetSignal: number }) {
             </Button>
           )}
         </div>
-        <div className="bg-muted p-4 sm:p-6 rounded-lg space-y-6 transition-all">
+        <div className="rounded-xl border border-border bg-card p-5 space-y-6 transition-all hover:shadow-sm">
           {renderForm()}
         </div>
       </div>
@@ -973,12 +974,13 @@ export function BlogSection({ resetSignal }: { resetSignal: number }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground" data-testid="text-blog-title">{blogMenuTitle}</h1>
-          <p className="text-sm text-muted-foreground">Manage your blog content and SEO</p>
-        </div>
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+      <AdminPageHeader
+        title={blogMenuTitle}
+        description="Manage your blog content and SEO."
+        titleTestId="text-blog-title"
+        actionsClassName="w-full sm:w-auto"
+        actions={
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <Dialog open={isTagManagerOpen} onOpenChange={setIsTagManagerOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto border-0">
@@ -1071,10 +1073,11 @@ export function BlogSection({ resetSignal }: { resetSignal: number }) {
             <Plus className="w-4 h-4 mr-2" />
             New Post
           </Button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
-      <div className="bg-muted p-4 sm:p-6 rounded-lg space-y-6 transition-all">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-6 transition-all hover:shadow-sm">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
           Posts

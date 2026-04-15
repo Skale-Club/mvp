@@ -60,6 +60,8 @@ export interface CompanySettingsData {
   websiteFooterBackgroundColor: string | null;
   websiteCtaBackgroundColor: string | null;
   websiteCtaHoverColor: string | null;
+  adminBackgroundColor: string | null;
+  adminSidebarColor: string | null;
   homepageContent: HomepageContent | null;
   timeFormat: string | null;
   businessHours: BusinessHours | null;

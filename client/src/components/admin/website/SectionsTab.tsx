@@ -51,9 +51,9 @@ export function SectionsTab({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 lg:grid-cols-2 items-start">
       {/* Categories */}
-      <div className="bg-muted p-6 rounded-lg space-y-4">
+      <div className="h-full rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
         <h2 className="text-base font-semibold flex items-center gap-2">
           <FolderOpen className="w-4 h-4 text-primary" />
           Categories Section
@@ -109,7 +109,7 @@ export function SectionsTab({
       </div>
 
       {/* Blog */}
-      <div className="bg-muted p-6 rounded-lg space-y-4">
+      <div className="h-full rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
         <h2 className="text-base font-semibold flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary" />
           Blog Section
@@ -180,7 +180,7 @@ export function SectionsTab({
       </div>
 
       {/* About Us */}
-      <div className="bg-muted p-6 rounded-lg space-y-4">
+      <div className="h-full rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
         <h2 className="text-base font-semibold flex items-center gap-2">
           <User className="w-4 h-4 text-primary" />
           About Us Section
@@ -269,7 +269,7 @@ export function SectionsTab({
       </div>
 
       {/* Areas Served */}
-      <div className="bg-muted p-6 rounded-lg space-y-4">
+      <div className="h-full rounded-xl border border-border bg-card p-5 space-y-4 transition-all hover:shadow-sm">
         <h2 className="text-base font-semibold flex items-center gap-2">
           <MapPin className="w-4 h-4 text-primary" />
           Areas Served Section

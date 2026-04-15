@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ServicePost } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -714,24 +715,24 @@ export function ServicePostsSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Services</h1>
-          <p className="text-muted-foreground">Manage service pages and SEO content.</p>
-        </div>
-        <Button onClick={() => setIsCreateOpen(true)} data-testid="button-create-service">
-          <Plus className="mr-2 h-4 w-4" />
-          New Service
-        </Button>
-      </div>
+      <AdminPageHeader
+        title="Services"
+        description="Manage service pages and SEO content."
+        actions={
+          <Button onClick={() => setIsCreateOpen(true)} data-testid="button-create-service">
+            <Plus className="mr-2 h-4 w-4" />
+            New Service
+          </Button>
+        }
+      />
 
-      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-sm">
         <div className="p-4 border-b border-border">
           <Input
             placeholder="Search by service, title, or slug..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="max-w-md"
+            className="max-w-md border-0 bg-background"
             data-testid="input-search-service-posts"
           />
         </div>

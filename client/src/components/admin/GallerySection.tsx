@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type { GalleryImage } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -917,85 +918,85 @@ export function GallerySection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Gallery</h1>
-          <p className="text-muted-foreground">Upload, reorder, and manage website gallery photos.</p>
-        </div>
+      <Input
+        ref={quickUploadInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleQuickUpload}
+        className="hidden"
+        data-testid="input-gallery-quick-upload"
+      />
 
-        <Input
-          ref={quickUploadInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleQuickUpload}
-          className="hidden"
-          data-testid="input-gallery-quick-upload"
-        />
-
-        <div className="flex items-center gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                className={borderlessOutlineButtonClass}
-                disabled={isQuickUploading || deleteAllImages.isPending || orderedImages.length === 0}
-                data-testid="button-delete-all-gallery-images"
-              >
-                {deleteAllImages.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-                )}
-                Delete All
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete all gallery images?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone and will remove every image from the website gallery.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => deleteAllImages.mutate()}
-                  variant="destructive"
-                  disabled={deleteAllImages.isPending}
+      <AdminPageHeader
+        title="Gallery"
+        description="Upload, reorder, and manage website gallery photos."
+        actions={
+          <>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={borderlessOutlineButtonClass}
+                  disabled={isQuickUploading || deleteAllImages.isPending || orderedImages.length === 0}
+                  data-testid="button-delete-all-gallery-images"
                 >
+                  {deleteAllImages.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                  )}
                   Delete All
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete all gallery images?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone and will remove every image from the website gallery.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteAllImages.mutate()}
+                    variant="destructive"
+                    disabled={deleteAllImages.isPending}
+                  >
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
-          <Button
-            onClick={() => {
-              setEditingImage(null);
-              setIsDialogOpen(true);
-            }}
-            disabled={isQuickUploading || deleteAllImages.isPending}
-            data-testid="button-add-gallery-image"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Image
-          </Button>
+            <Button
+              onClick={() => {
+                setEditingImage(null);
+                setIsDialogOpen(true);
+              }}
+              disabled={isQuickUploading || deleteAllImages.isPending}
+              data-testid="button-add-gallery-image"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Image
+            </Button>
 
-          <Button
-            variant="outline"
-            className={borderlessOutlineButtonClass}
-            onClick={() => {
-              setEditingImage(null);
-              quickUploadInputRef.current?.click();
-            }}
-            disabled={isQuickUploading || deleteAllImages.isPending}
-            data-testid="button-upload-gallery-images"
-          >
-            {isQuickUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            {isQuickUploading ? "Uploading..." : "Upload Images"}
-          </Button>
-        </div>
+            <Button
+              variant="outline"
+              className={borderlessOutlineButtonClass}
+              onClick={() => {
+                setEditingImage(null);
+                quickUploadInputRef.current?.click();
+              }}
+              disabled={isQuickUploading || deleteAllImages.isPending}
+              data-testid="button-upload-gallery-images"
+            >
+              {isQuickUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {isQuickUploading ? "Uploading..." : "Upload Images"}
+            </Button>
+          </>
+        }
+      />
 
         <Dialog
           open={isDialogOpen}
@@ -1030,7 +1031,6 @@ export function GallerySection() {
             />
           </DialogContent>
         </Dialog>
-      </div>
 
       <Dialog open={isUploadDialogOpen} onOpenChange={handleUploadProgressDialogOpenChange}>
         <DialogContent className="sm:max-w-2xl" data-testid="dialog-gallery-upload-progress">
@@ -1119,8 +1119,8 @@ export function GallerySection() {
         }`}
         data-testid="gallery-upload-dropzone"
       >
-        <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-          <Upload className={`h-10 w-10 ${isDropzoneActive ? "text-primary" : "text-muted-foreground"}`} />
+        <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 text-center">
+          <Upload className={`h-8 w-8 ${isDropzoneActive ? "text-primary" : "text-muted-foreground"}`} />
           <h3 className="text-lg font-semibold">
             {isQuickUploading ? "Uploading images..." : "Click or drag photos here"}
           </h3>

@@ -1,9 +1,11 @@
-import { Loader2, Globe } from 'lucide-react';
+import { Loader2, Image as ImageIcon, BadgeCheck, LayoutGrid, Palette } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWebsiteSettings } from './website/useWebsiteSettings';
 import { HeroTab } from './website/HeroTab';
 import { TrustBadgesTab } from './website/TrustBadgesTab';
 import { SectionsTab } from './website/SectionsTab';
+import { ColorsTab } from './website/ColorsTab';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { SIDEBAR_MENU_ITEMS } from '@/components/admin/shared/constants';
 
 export function WebsiteSection() {
@@ -21,27 +23,35 @@ export function WebsiteSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Globe className="w-6 h-6 text-primary" />
-            {heroMenuTitle}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">Customize your website's hero, colors and homepage sections</p>
-        </div>
-        {isSaving && (
+      <AdminPageHeader
+        title={heroMenuTitle}
+        description="Customize your website hero, colors, and homepage sections."
+        actions={isSaving ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>Saving...</span>
           </div>
-        )}
-      </div>
+        ) : null}
+      />
 
       <Tabs defaultValue="hero">
-        <TabsList className="mb-2">
-          <TabsTrigger value="hero">Hero</TabsTrigger>
-          <TabsTrigger value="badges">Trust Badges</TabsTrigger>
-          <TabsTrigger value="sections">Sections</TabsTrigger>
+        <TabsList className="mb-4 grid w-full grid-cols-4 h-auto p-1.5 rounded-xl">
+          <TabsTrigger value="hero" className="gap-2 rounded-lg py-2.5">
+            <ImageIcon className="h-4 w-4" />
+            Hero
+          </TabsTrigger>
+          <TabsTrigger value="badges" className="gap-2 rounded-lg py-2.5">
+            <BadgeCheck className="h-4 w-4" />
+            Badges
+          </TabsTrigger>
+          <TabsTrigger value="sections" className="gap-2 rounded-lg py-2.5">
+            <LayoutGrid className="h-4 w-4" />
+            Sections
+          </TabsTrigger>
+          <TabsTrigger value="colors" className="gap-2 rounded-lg py-2.5">
+            <Palette className="h-4 w-4" />
+            Colors
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="hero">
@@ -57,24 +67,6 @@ export function WebsiteSection() {
             setHeroImageUrl={settings.setHeroImageUrl}
             heroBackgroundImageUrl={settings.heroBackgroundImageUrl}
             setHeroBackgroundImageUrl={settings.setHeroBackgroundImageUrl}
-            websitePrimaryColor={settings.websitePrimaryColor}
-            setWebsitePrimaryColor={settings.setWebsitePrimaryColor}
-            websiteSecondaryColor={settings.websiteSecondaryColor}
-            setWebsiteSecondaryColor={settings.setWebsiteSecondaryColor}
-            websiteAccentColor={settings.websiteAccentColor}
-            setWebsiteAccentColor={settings.setWebsiteAccentColor}
-            websiteBackgroundColor={settings.websiteBackgroundColor}
-            setWebsiteBackgroundColor={settings.setWebsiteBackgroundColor}
-            websiteForegroundColor={settings.websiteForegroundColor}
-            setWebsiteForegroundColor={settings.setWebsiteForegroundColor}
-            websiteNavBackgroundColor={settings.websiteNavBackgroundColor}
-            setWebsiteNavBackgroundColor={settings.setWebsiteNavBackgroundColor}
-            websiteFooterBackgroundColor={settings.websiteFooterBackgroundColor}
-            setWebsiteFooterBackgroundColor={settings.setWebsiteFooterBackgroundColor}
-            websiteCtaBackgroundColor={settings.websiteCtaBackgroundColor}
-            setWebsiteCtaBackgroundColor={settings.setWebsiteCtaBackgroundColor}
-            websiteCtaHoverColor={settings.websiteCtaHoverColor}
-            setWebsiteCtaHoverColor={settings.setWebsiteCtaHoverColor}
             homepageContent={settings.homepageContent}
             saveSettings={settings.saveSettings}
             triggerAutoSave={settings.triggerAutoSave}
@@ -97,6 +89,35 @@ export function WebsiteSection() {
             updateHomepageContent={settings.updateHomepageContent}
             aboutImageUrl={settings.aboutImageUrl}
             setAboutImageUrl={settings.setAboutImageUrl}
+            triggerAutoSave={settings.triggerAutoSave}
+          />
+        </TabsContent>
+
+        <TabsContent value="colors">
+          <ColorsTab
+            savedFields={settings.savedFields}
+            websitePrimaryColor={settings.websitePrimaryColor}
+            setWebsitePrimaryColor={settings.setWebsitePrimaryColor}
+            websiteSecondaryColor={settings.websiteSecondaryColor}
+            setWebsiteSecondaryColor={settings.setWebsiteSecondaryColor}
+            websiteAccentColor={settings.websiteAccentColor}
+            setWebsiteAccentColor={settings.setWebsiteAccentColor}
+            websiteBackgroundColor={settings.websiteBackgroundColor}
+            setWebsiteBackgroundColor={settings.setWebsiteBackgroundColor}
+            websiteForegroundColor={settings.websiteForegroundColor}
+            setWebsiteForegroundColor={settings.setWebsiteForegroundColor}
+            websiteNavBackgroundColor={settings.websiteNavBackgroundColor}
+            setWebsiteNavBackgroundColor={settings.setWebsiteNavBackgroundColor}
+            websiteFooterBackgroundColor={settings.websiteFooterBackgroundColor}
+            setWebsiteFooterBackgroundColor={settings.setWebsiteFooterBackgroundColor}
+            websiteCtaBackgroundColor={settings.websiteCtaBackgroundColor}
+            setWebsiteCtaBackgroundColor={settings.setWebsiteCtaBackgroundColor}
+            websiteCtaHoverColor={settings.websiteCtaHoverColor}
+            setWebsiteCtaHoverColor={settings.setWebsiteCtaHoverColor}
+            adminBackgroundColor={settings.adminBackgroundColor}
+            setAdminBackgroundColor={settings.setAdminBackgroundColor}
+            adminSidebarColor={settings.adminSidebarColor}
+            setAdminSidebarColor={settings.setAdminSidebarColor}
             triggerAutoSave={settings.triggerAutoSave}
           />
         </TabsContent>

@@ -78,6 +78,8 @@ const DEFAULT_WEBSITE_COLORS = {
   websiteFooterBackgroundColor: "#18191F",
   websiteCtaBackgroundColor: "#406EF1",
   websiteCtaHoverColor: "#355CD0",
+  adminBackgroundColor: "#0F1729",
+  adminSidebarColor: "#1D283A",
 } as const;
 
 function normalizeHexColor(value: string | null | undefined, fallback: string): string {
@@ -152,16 +154,11 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     const isAdminRoute = location.startsWith('/admin');
 
     if (isAdminRoute) {
-      root.style.removeProperty("--primary");
-      root.style.removeProperty("--secondary");
-      root.style.removeProperty("--accent");
-      root.style.removeProperty("--background");
-      root.style.removeProperty("--foreground");
-      root.style.removeProperty("--ring");
-      root.style.removeProperty("--website-nav-bg");
-      root.style.removeProperty("--website-footer-bg");
-      root.style.removeProperty("--website-cta-bg");
-      root.style.removeProperty("--website-cta-hover");
+      const adminBackground = normalizeHexColor(settings?.adminBackgroundColor, DEFAULT_WEBSITE_COLORS.adminBackgroundColor);
+      const adminSidebar = normalizeHexColor(settings?.adminSidebarColor, DEFAULT_WEBSITE_COLORS.adminSidebarColor);
+      root.style.setProperty("--background", hexToHslToken(adminBackground));
+      root.style.setProperty("--section", hexToHslToken(adminBackground));
+      root.style.setProperty("--sidebar", hexToHslToken(adminSidebar));
       return;
     }
 
@@ -185,6 +182,12 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--website-footer-bg", footerBg);
     root.style.setProperty("--website-cta-bg", ctaBg);
     root.style.setProperty("--website-cta-hover", ctaHover);
+    root.style.setProperty("--website-cta-bg-hsl", hexToHslToken(ctaBg));
+    root.style.setProperty("--website-cta-hover-hsl", hexToHslToken(ctaHover));
+    root.style.setProperty("--website-nav-bg-hsl", hexToHslToken(navBg));
+    root.style.setProperty("--website-footer-bg-hsl", hexToHslToken(footerBg));
+    root.style.removeProperty("--section");
+    root.style.removeProperty("--sidebar");
   }, [location, settings]);
 
   return <>{children}</>;

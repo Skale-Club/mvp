@@ -37,6 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   Loader2,
   Plus,
@@ -516,10 +517,10 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Chat</h1>
-        <p className="text-muted-foreground">Prioritize conversations, then open the settings drawer when needed.</p>
-      </div>
+      <AdminPageHeader
+        title="Chat"
+        description="Prioritize conversations, then open the settings drawer when needed."
+      />
 
       <Card className="shadow-sm border-0 bg-muted dark:bg-slate-800/70">
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

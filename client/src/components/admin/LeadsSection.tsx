@@ -37,6 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import {
   Loader2,
   Plus,
@@ -403,67 +404,67 @@ export function LeadsSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground uppercase tracking-wide">Form Leads</p>
-          <h1 className="text-2xl font-bold">Qualification Tracking</h1>
-          <p className="text-muted-foreground">See who started the form, where they stopped, and update the status quickly.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" disabled={isFetching} onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/form-leads'] })}>
-            {isFetching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
-            Refresh
-          </Button>
-          <Sheet open={isFormEditorOpen} onOpenChange={setIsFormEditorOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline">
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Form
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Form Editor</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6">
-                <FormEditorContent />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
+      <AdminPageHeader
+        eyebrow="Form Leads"
+        title="Qualification Tracking"
+        description="See who started the form, where they stopped, and update the status quickly."
+        actions={
+          <>
+            <Button variant="outline" disabled={isFetching} onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/form-leads'] })}>
+              {isFetching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+              Refresh
+            </Button>
+            <Sheet open={isFormEditorOpen} onOpenChange={setIsFormEditorOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline">
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Form
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Form Editor</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <FormEditorContent />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="p-4 rounded-xl border bg-card shadow-sm">
+        <div className="p-4 rounded-xl border border-border bg-card transition-all hover:shadow-sm">
           <p className="text-xs text-muted-foreground">Total</p>
           <p className="text-2xl font-bold">{stats.total}</p>
         </div>
-        <div className="p-4 rounded-xl border bg-card shadow-sm">
+        <div className="p-4 rounded-xl border border-border bg-card transition-all hover:shadow-sm">
           <p className="text-xs text-muted-foreground">Hot</p>
           <p className="text-2xl font-bold text-green-600">{stats.hot}</p>
         </div>
-        <div className="p-4 rounded-xl border bg-card shadow-sm">
+        <div className="p-4 rounded-xl border border-border bg-card transition-all hover:shadow-sm">
           <p className="text-xs text-muted-foreground">Warm</p>
           <p className="text-2xl font-bold text-amber-600">{stats.warm}</p>
         </div>
-        <div className="p-4 rounded-xl border bg-card shadow-sm">
+        <div className="p-4 rounded-xl border border-border bg-card transition-all hover:shadow-sm">
           <p className="text-xs text-muted-foreground">Cold</p>
           <p className="text-2xl font-bold text-blue-600">{stats.cold}</p>
         </div>
-        <div className="p-4 rounded-xl border bg-card shadow-sm">
+        <div className="p-4 rounded-xl border border-border bg-card transition-all hover:shadow-sm">
           <p className="text-xs text-muted-foreground">In Progress</p>
           <p className="text-2xl font-bold text-amber-500">{stats.inProgress}</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-sm">
         <div className="p-4 border-b border-border flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
           <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 w-full lg:w-auto">
             <Input
               placeholder="Search by name, email, or phone"
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              className="col-span-2 sm:w-64"
+              className="col-span-2 sm:w-64 border-0 bg-background"
             />
             <Select
               value={filters.classification}
@@ -680,7 +681,7 @@ export function LeadsSection() {
                 {questionsForDisplay.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No questions configured.</p>
                 ) : (
-                  <div className="divide-y divide-border rounded-lg border bg-card">
+                  <div className="divide-y divide-border rounded-lg border border-border bg-card">
                     {questionsForDisplay.map((question) => {
                       const answer = getAnswerForQuestion(selectedLead, question);
                       const conditionalAnswer = getConditionalAnswer(selectedLead, question);
@@ -914,7 +915,7 @@ function FormEditorContent() {
       </div>
 
       {/* Questions list */}
-      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-sm">
         <div className="p-4 border-b border-border bg-muted/50">
           <p className="text-sm font-semibold text-muted-foreground">{sortedQuestions.length} questions</p>
         </div>
@@ -1305,7 +1306,7 @@ function QuestionForm({
                 {/* Standard GHL Fields */}
                 {ghlFieldsData?.standardFields && ghlFieldsData.standardFields.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1">
                       Standard Fields
                     </div>
                     {ghlFieldsData.standardFields.map((field) => (
@@ -1318,7 +1319,7 @@ function QuestionForm({
                 {/* Custom GHL Fields */}
                 {ghlFieldsData?.customFields && ghlFieldsData.customFields.length > 0 && (
                   <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t border-border mt-1">
                       Custom Fields
                     </div>
                     {ghlFieldsData.customFields.map((field) => (
@@ -1377,7 +1378,7 @@ function QuestionForm({
             </div>
 
             {/* Conditional field */}
-            <div className="pt-3 border-t space-y-3">
+            <div className="pt-3 border-t border-border space-y-3">
               <div className="flex items-center gap-2">
                 <Checkbox id="has-conditional" checked={hasConditional} onCheckedChange={(c) => setHasConditional(!!c)} />
                 <Label htmlFor="has-conditional" className="text-sm font-semibold">Add conditional field</Label>

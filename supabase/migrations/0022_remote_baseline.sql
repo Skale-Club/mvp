@@ -1,0 +1,4 @@
+-- Remote baseline migration placeholder.
+-- The linked database already records version 0022 in supabase_migrations.schema_migrations.
+-- This no-op file exists so Supabase CLI can reconcile remote migration history
+-- before applying newer local migrations.
