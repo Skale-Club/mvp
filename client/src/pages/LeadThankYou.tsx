@@ -1,10 +1,8 @@
 import { Link } from "wouter";
 import { useEffect } from "react";
-import { ChevronDown, Home } from "lucide-react";
+import { Check, ChevronDown, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { CompanySettings } from "@shared/schema";
-import Lottie from "lottie-react";
-import successAnimation from "../assets/success-animation.json";
 import { trackEvent } from "@/lib/analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
@@ -71,12 +69,12 @@ export default function LeadThankYou() {
         <div className="grid md:grid-cols-[1.2fr_1fr] gap-6 items-start">
           <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 flex-shrink-0">
-                <Lottie
-                  animationData={successAnimation}
-                  loop={true}
-                  style={{ width: '100%', height: '100%' }}
-                />
+              <div className="relative flex h-16 w-16 flex-shrink-0 items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-cta/15 animate-ping" />
+                <div className="absolute inset-1 rounded-full border border-white/15 bg-white/5" />
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-cta text-white shadow-lg shadow-blue-500/25">
+                  <Check className="h-6 w-6" />
+                </div>
               </div>
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-cta/10 text-white/80 text-xs font-semibold border border-cta/30">
                 Request received

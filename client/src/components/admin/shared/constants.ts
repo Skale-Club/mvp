@@ -1,19 +1,5 @@
-import {
-  Building2,
-  FileText,
-  HelpCircle,
-  Image,
-  Images,
-  LayoutDashboard,
-  MessageSquare,
-  Puzzle,
-  Search,
-  Star,
-  Sparkles,
-  Users,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import type { AdminSection, BusinessHours, IntakeObjective } from './types';
+import { ADMIN_ROUTES } from './routes';
 
 export const DEFAULT_BUSINESS_HOURS: BusinessHours = {
   monday: { isOpen: true, start: '08:00', end: '18:00' },
@@ -35,17 +21,10 @@ export const DEFAULT_CHAT_OBJECTIVES: IntakeObjective[] = [
   { id: 'address', label: 'Address', description: 'Full address with street, unit, city, state', enabled: true },
 ];
 
-export const SIDEBAR_MENU_ITEMS: Array<{ id: AdminSection; title: string; icon: LucideIcon }> = [
-  { id: 'dashboard', title: 'Dashboard', icon: LayoutDashboard },
-  { id: 'company', title: 'Company Infos', icon: Building2 },
-  { id: 'hero', title: 'Website', icon: Image },
-  { id: 'reviews', title: 'Reviews', icon: Star },
-  { id: 'gallery', title: 'Gallery', icon: Images },
-  { id: 'servicePosts', title: 'Services', icon: FileText },
-  { id: 'leads', title: 'Leads', icon: Sparkles },
-  { id: 'faqs', title: 'FAQs', icon: HelpCircle },
-  { id: 'users', title: 'Users', icon: Users },
-  { id: 'blog', title: 'Blog', icon: FileText },
-  { id: 'seo', title: 'SEO', icon: Search },
-  { id: 'integrations', title: 'Integrations', icon: Puzzle },
-];
+export const SIDEBAR_MENU_ITEMS = ADMIN_ROUTES
+  .filter((route) => !route.hiddenInSidebar)
+  .map((route) => ({
+    id: route.id as AdminSection,
+    title: route.title,
+    icon: route.icon,
+  }));

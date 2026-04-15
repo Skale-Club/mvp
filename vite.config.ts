@@ -30,6 +30,56 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return;
+          }
+
+          if (id.includes("@tanstack/react-query")) {
+            return "query-vendor";
+          }
+
+          if (id.includes("@dnd-kit")) {
+            return "dnd-vendor";
+          }
+
+          if (
+            id.includes("@radix-ui") ||
+            id.includes("cmdk") ||
+            id.includes("vaul") ||
+            id.includes("react-day-picker") ||
+            id.includes("input-otp")
+          ) {
+            return "ui-vendor";
+          }
+
+          if (id.includes("lucide-react") || id.includes("react-icons")) {
+            return "icons-vendor";
+          }
+
+          if (
+            id.includes("recharts") ||
+            id.includes("framer-motion") ||
+            id.includes("embla-carousel-react") ||
+            id.includes("lottie-react") ||
+            id.includes("lottie-web")
+          ) {
+            return "visual-vendor";
+          }
+
+          if (
+            id.includes("@supabase/supabase-js") ||
+            id.includes("openai") ||
+            id.includes("zod") ||
+            id.includes("date-fns")
+          ) {
+            return "app-vendor";
+          }
+        },
+      },
+    },
   },
   server: {
     fs: {

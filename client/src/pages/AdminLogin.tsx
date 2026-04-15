@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft, Mail, LockKeyhole } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { CompanySettings } from '@shared/schema';
+import { DEFAULT_ADMIN_PATH } from '@/components/admin/shared/routes';
 
 export default function AdminLogin() {
   const { isAdmin, loading, signIn } = useAdminAuth();
@@ -22,7 +23,7 @@ export default function AdminLogin() {
 
   useEffect(() => {
     if (!loading && isAdmin) {
-      setLocation('/admin');
+      setLocation(DEFAULT_ADMIN_PATH);
     }
   }, [loading, isAdmin, setLocation]);
 

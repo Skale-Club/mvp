@@ -112,6 +112,7 @@ import { DEFAULT_FORM_CONFIG, calculateMaxScore, getSortedQuestions } from '@sha
 import ghlLogo from '@assets/ghl-logo.webp';
 import { SiFacebook, SiGoogleanalytics, SiGoogletagmanager, SiOpenai, SiTwilio } from 'react-icons/si';
 import { DEFAULT_BUSINESS_HOURS, DEFAULT_CHAT_OBJECTIVES, SIDEBAR_MENU_ITEMS } from '@/components/admin/shared/constants';
+import type { IntegrationsAdminTab } from '@/components/admin/shared/routes';
 import {
   type AdminSection,
   type AnalyticsSettings,
@@ -131,7 +132,12 @@ import { TwilioSection } from '@/components/admin/TwilioSection';
 import { ResendSection } from '@/components/admin/ResendSection';
 
 const menuItems = SIDEBAR_MENU_ITEMS;
-export function IntegrationsSection() {
+interface IntegrationsSectionProps {
+  activeTab: IntegrationsAdminTab;
+  onTabChange: (tab: IntegrationsAdminTab) => void;
+}
+
+export function IntegrationsSection({ activeTab, onTabChange }: IntegrationsSectionProps) {
   const { toast } = useToast();
   const [settings, setSettings] = useState<GHLSettings>({
     provider: 'gohighlevel',
@@ -555,7 +561,11 @@ export function IntegrationsSection() {
         description="Connect your lead capture system with external services."
       />
 
-      <Tabs defaultValue="openai" className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => onTabChange(value as IntegrationsAdminTab)}
+        className="space-y-6"
+      >
         <TabsList className="grid h-auto grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-1.5 lg:grid-cols-4">
           <TabsTrigger value="openai" className="h-auto items-center justify-center rounded-xl px-4 py-3 text-center">
             <div className="w-full space-y-1 text-center">

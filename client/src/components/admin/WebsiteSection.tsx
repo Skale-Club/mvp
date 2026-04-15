@@ -7,8 +7,14 @@ import { SectionsTab } from './website/SectionsTab';
 import { ColorsTab } from './website/ColorsTab';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { SIDEBAR_MENU_ITEMS } from '@/components/admin/shared/constants';
+import type { WebsiteAdminTab } from '@/components/admin/shared/routes';
 
-export function WebsiteSection() {
+interface WebsiteSectionProps {
+  activeTab: WebsiteAdminTab;
+  onTabChange: (tab: WebsiteAdminTab) => void;
+}
+
+export function WebsiteSection({ activeTab, onTabChange }: WebsiteSectionProps) {
   const settings = useWebsiteSettings();
   const { isLoading, isSaving } = settings;
   const heroMenuTitle = SIDEBAR_MENU_ITEMS.find((item) => item.id === 'hero')?.title ?? 'Website';
@@ -34,7 +40,7 @@ export function WebsiteSection() {
         ) : null}
       />
 
-      <Tabs defaultValue="hero">
+      <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as WebsiteAdminTab)}>
         <TabsList className="mb-4 grid w-full grid-cols-4 h-auto p-1.5 rounded-xl">
           <TabsTrigger value="hero" className="gap-2 rounded-lg py-2.5">
             <ImageIcon className="h-4 w-4" />

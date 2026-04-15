@@ -13,6 +13,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import type { CompanySettings } from "@shared/schema";
+import { DEFAULT_ADMIN_PATH } from "@/components/admin/shared/routes";
+import { trackEvent } from "@/lib/analytics";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -92,7 +94,11 @@ export function Navbar() {
               ))}
             </div>
             {displayPhone && (
-              <a href={`tel:${telPhone}`} onClick={() => import("@/lib/analytics").then(m => m.trackEvent("contact_click", { location: "header", label: "phone" }))} className="px-4 py-2 bg-[var(--website-cta-bg)] hover:bg-[var(--website-cta-hover)] text-white font-bold rounded-full hover-elevate transition-all text-sm flex items-center gap-2">
+              <a
+                href={`tel:${telPhone}`}
+                onClick={() => trackEvent("contact_click", { location: "header", label: "phone" })}
+                className="px-4 py-2 bg-[var(--website-cta-bg)] hover:bg-[var(--website-cta-hover)] text-white font-bold rounded-full hover-elevate transition-all text-sm flex items-center gap-2"
+              >
                 <Phone className="w-4 h-4 fill-current" />
                 {displayPhone}
               </a>
@@ -120,7 +126,7 @@ export function Navbar() {
                         asChild
                         className="cursor-pointer data-[highlighted]:bg-muted data-[highlighted]:text-foreground"
                       >
-                        <Link href="/admin" className="w-full flex items-center" data-testid="link-admin">
+                        <Link href={DEFAULT_ADMIN_PATH} className="w-full flex items-center" data-testid="link-admin">
                           <User className="mr-2 h-4 w-4" />
                           Admin Panel
                         </Link>
@@ -207,7 +213,7 @@ export function Navbar() {
                 <div className="flex flex-col gap-4 px-1">
                   {user.isAdmin && (
                     <Link
-                      href="/admin"
+                      href={DEFAULT_ADMIN_PATH}
                       className="text-base font-semibold text-slate-700 hover:text-primary transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >

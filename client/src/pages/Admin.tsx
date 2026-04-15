@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type CSSProperties } from 'react';
+import { useState, useEffect, useCallback, useMemo, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/context/AuthContext';
@@ -21,23 +21,19 @@ import { GallerySection } from '@/components/admin/GallerySection';
 import { ServicePostsSection } from '@/components/admin/ServicePostsSection';
 import { ReviewsSection } from '@/components/admin/ReviewsSection';
 import { SIDEBAR_MENU_ITEMS } from '@/components/admin/shared/constants';
+import {
+  getAdminPath,
+  resolveAdminLocation,
+  type IntegrationsAdminTab,
+  type WebsiteAdminTab,
+} from '@/components/admin/shared/routes';
 import type { AdminSection, CompanySettingsData } from '@/components/admin/shared/types';
-
-function getInitialSection(): AdminSection {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('admin-active-section');
-    if (stored && SIDEBAR_MENU_ITEMS.some((item) => item.id === stored)) {
-      return stored as AdminSection;
-    }
-  }
-  return 'dashboard';
-}
 
 function AdminContent() {
   const { isAdmin, email, loading, signOut } = useAdminAuth();
-  const [, setLocation] = useLocation();
-
-  const [activeSection, setActiveSection] = useState<AdminSection>(getInitialSection);
+  const [location, setLocation] = useLocation();
+  const routeState = useMemo(() => resolveAdminLocation(location), [location]);
+  const activeSection = routeState.section;
   const [blogResetSignal, setBlogResetSignal] = useState(0);
   const [sectionsOrder, setSectionsOrder] = useState<AdminSection[]>(SIDEBAR_MENU_ITEMS.map((item) => item.id));
 
@@ -52,10 +48,10 @@ function AdminContent() {
   }, [loading, isAdmin, setLocation]);
 
   useEffect(() => {
-    if (activeSection) {
-      localStorage.setItem('admin-active-section', activeSection);
+    if (!loading && isAdmin && routeState.redirectTo && routeState.redirectTo !== location) {
+      setLocation(routeState.redirectTo);
     }
-  }, [activeSection]);
+  }, [isAdmin, loading, location, routeState.redirectTo, setLocation]);
 
   useEffect(() => {
     if (companySettings?.sectionsOrder && companySettings.sectionsOrder.length > 0) {
@@ -77,21 +73,38 @@ function AdminContent() {
     }
   }, []);
 
-  const handleSectionSelect = useCallback(
+  const navigateToSection = useCallback(
     (section: AdminSection) => {
-      if (section === 'blog') {
-        if (activeSection === 'blog') {
-          setBlogResetSignal((prev) => prev + 1);
-        } else {
-          setActiveSection(section);
-          localStorage.setItem('admin-active-section', section);
-        }
+      const nextPath = getAdminPath(section);
+      if (section === 'blog' && activeSection === 'blog' && location === nextPath) {
+        setBlogResetSignal((prev) => prev + 1);
         return;
       }
-      setActiveSection(section);
-      localStorage.setItem('admin-active-section', section);
+      if (location !== nextPath) {
+        setLocation(nextPath);
+      }
     },
-    [activeSection]
+    [activeSection, location, setLocation]
+  );
+
+  const navigateToWebsiteTab = useCallback(
+    (tab: WebsiteAdminTab) => {
+      const nextPath = getAdminPath('hero', tab);
+      if (location !== nextPath) {
+        setLocation(nextPath);
+      }
+    },
+    [location, setLocation]
+  );
+
+  const navigateToIntegrationsTab = useCallback(
+    (tab: IntegrationsAdminTab) => {
+      const nextPath = getAdminPath('integrations', tab);
+      if (location !== nextPath) {
+        setLocation(nextPath);
+      }
+    },
+    [location, setLocation]
   );
 
   const handleLogout = useCallback(async () => {
@@ -119,7 +132,7 @@ function AdminContent() {
         companyName={companySettings?.companyName}
         logoIcon={companySettings?.logoIcon}
         email={email}
-        onSectionChange={handleSectionSelect}
+        onSectionChange={navigateToSection}
         onSectionsReorder={updateSectionOrder}
         onLogout={handleLogout}
       />
@@ -131,13 +144,18 @@ function AdminContent() {
           {activeSection === 'dashboard' && (
             <DashboardSection
               onNavigate={(section) => {
-                handleSectionSelect(section);
+                navigateToSection(section);
                 document.getElementById('admin-top')?.scrollIntoView({ behavior: 'smooth' });
               }}
             />
           )}
           {activeSection === 'leads' && <LeadsSection />}
-          {activeSection === 'hero' && <WebsiteSection />}
+          {activeSection === 'hero' && (
+            <WebsiteSection
+              activeTab={(routeState.tab?.id as WebsiteAdminTab | undefined) ?? 'hero'}
+              onTabChange={navigateToWebsiteTab}
+            />
+          )}
           {activeSection === 'reviews' && <ReviewsSection />}
           {activeSection === 'company' && <CompanySettingsSection />}
           {activeSection === 'gallery' && <GallerySection />}
@@ -146,7 +164,12 @@ function AdminContent() {
           {activeSection === 'faqs' && <FaqsSection />}
           {activeSection === 'users' && <UsersSection />}
           {activeSection === 'chat' && <ChatSection />}
-          {activeSection === 'integrations' && <IntegrationsSection />}
+          {activeSection === 'integrations' && (
+            <IntegrationsSection
+              activeTab={(routeState.tab?.id as IntegrationsAdminTab | undefined) ?? 'openai'}
+              onTabChange={navigateToIntegrationsTab}
+            />
+          )}
           {activeSection === 'blog' && <BlogSection resetSignal={blogResetSignal} />}
         </div>
       </main>
