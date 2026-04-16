@@ -141,6 +141,22 @@ export function registerServiceRoutes(app: Express, requireAdmin: any) {
     }
   });
 
+  app.post('/api/service-posts/reorder', requireAdmin, async (req, res) => {
+    try {
+      const reorderSchema = z.object({
+        ids: z.array(z.number().int().positive()).min(1),
+      });
+      const { ids } = reorderSchema.parse(req.body);
+      await storage.reorderServicePosts(ids);
+      res.json({ success: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: err.errors });
+      }
+      res.status(400).json({ message: safeErrorMessage(err, 'Invalid request') });
+    }
+  });
+
   // ===============================
   // Gallery Routes
   // ===============================
