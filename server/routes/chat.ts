@@ -102,7 +102,13 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
           if (twilioSettings) {
             const company = await storage.getCompanySettings();
             const companyName = company?.companyName?.trim() || '';
-            const result = await sendLowPerformanceAlert(twilioSettings, avgSeconds, samples, companyName);
+            const result = await sendLowPerformanceAlert(
+              twilioSettings,
+              avgSeconds,
+              samples,
+              companyName,
+              { leadId: null, trigger: "low_performance" },
+            );
             if (result.success) {
               updateLastLowPerformanceAlert(now);
             }
@@ -293,7 +299,13 @@ export function registerChatRoutes(app: Express, requireAdmin: any) {
         const companyName = company?.companyName?.trim() || '';
         const twilioSettings = await storage.getTwilioSettings();
         if (twilioSettings && isNewConversation) {
-          sendNewChatNotification(twilioSettings, conversationId, input.pageUrl, companyName).catch(err => {
+          sendNewChatNotification(
+            twilioSettings,
+            conversationId,
+            input.pageUrl,
+            companyName,
+            { leadId: null, trigger: "new_chat" },
+          ).catch(err => {
             console.error('Failed to send Twilio notification:', err);
           });
         }

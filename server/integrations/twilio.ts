@@ -1,6 +1,14 @@
 import type { TwilioSettings, FormLead } from "#shared/schema.js";
+import { logNotification, type NotificationLogContext } from "../notifications/logger.js";
 
 type TwilioResult = { success: boolean; message?: string };
+
+type TwilioLogParams = {
+  trigger: string;
+  leadId?: number | null;
+  recipientName?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
 
 type TwilioConfig = {
   accountSid: string;
@@ -72,17 +80,43 @@ function validateConfig(
   };
 }
 
-async function sendSms(config: TwilioConfig, body: string): Promise<TwilioResult> {
+async function sendSms(
+  config: TwilioConfig,
+  body: string,
+  logParams: TwilioLogParams,
+): Promise<TwilioResult> {
   try {
     const twilio = await import("twilio");
     const client = twilio.default(config.accountSid, config.authToken);
 
     for (const to of config.recipients) {
-      await client.messages.create({
-        body,
-        from: config.from,
-        to,
-      });
+      try {
+        const result = await client.messages.create({ body, from: config.from, to });
+        await logNotification({
+          channel: "sms",
+          trigger: logParams.trigger,
+          recipient: to,
+          recipientName: logParams.recipientName ?? null,
+          preview: body,
+          status: "sent",
+          providerMessageId: result?.sid ?? null,
+          leadId: logParams.leadId ?? null,
+          metadata: logParams.metadata ?? null,
+        });
+      } catch (perRecipientError: any) {
+        await logNotification({
+          channel: "sms",
+          trigger: logParams.trigger,
+          recipient: to,
+          recipientName: logParams.recipientName ?? null,
+          preview: body,
+          status: "failed",
+          errorMessage: perRecipientError?.message || "Unknown error",
+          leadId: logParams.leadId ?? null,
+          metadata: logParams.metadata ?? null,
+        });
+        throw perRecipientError;
+      }
     }
 
     return { success: true };
@@ -96,7 +130,8 @@ export async function sendNewChatNotification(
   twilioSettings: TwilioSettings,
   conversationId: string,
   pageUrl?: string,
-  companyName?: string
+  companyName?: string,
+  logContext?: NotificationLogContext,
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const validation = validateConfig(twilioSettings, { requireNotify: true, companyName });
@@ -111,7 +146,12 @@ export async function sendNewChatNotification(
       .filter(Boolean)
       .join("\n");
 
-    return await sendSms(config, message);
+    return await sendSms(config, message, {
+      trigger: logContext?.trigger ?? "new_chat",
+      leadId: logContext?.leadId ?? null,
+      recipientName: logContext?.recipientName ?? null,
+      metadata: logContext?.metadata ?? { conversationId, pageUrl: pageUrl ?? null },
+    });
   } catch (error: any) {
     console.error("Failed to send Twilio notification:", error);
     return { success: false, message: error?.message || "Unknown error" };
@@ -122,7 +162,8 @@ export async function sendLowPerformanceAlert(
   twilioSettings: TwilioSettings,
   avgSeconds: number,
   samples: number,
-  companyName?: string
+  companyName?: string,
+  logContext?: NotificationLogContext,
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const validation = validateConfig(twilioSettings, { companyName });
@@ -139,7 +180,11 @@ export async function sendLowPerformanceAlert(
       `Samples: ${samples}`,
     ].join("\n");
 
-    return await sendSms(config, message);
+    return await sendSms(config, message, {
+      trigger: logContext?.trigger ?? "low_performance",
+      leadId: null,
+      metadata: logContext?.metadata ?? { avgSeconds, samples },
+    });
   } catch (error: any) {
     console.error("Failed to send Twilio alert:", error);
     return { success: false, message: error?.message || "Unknown error" };
@@ -149,7 +194,8 @@ export async function sendLowPerformanceAlert(
 export async function sendHotLeadNotification(
   twilioSettings: TwilioSettings,
   lead: Pick<FormLead, "nome" | "email" | "telefone" | "cidadeEstado" | "classificacao">,
-  companyName?: string
+  companyName?: string,
+  logContext?: NotificationLogContext,
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const validation = validateConfig(twilioSettings, { companyName });
@@ -161,7 +207,15 @@ export async function sendHotLeadNotification(
     const companyLabel = companyName?.trim() || config.companyName || "My Company";
     const message = `🧲 NEW LEAD | ${companyLabel} | ${cleanName} | ${cleanPhone}`;
 
-    return await sendSms(config, message);
+    return await sendSms(config, message, {
+      trigger: logContext?.trigger ?? "lead_completed",
+      leadId: logContext?.leadId ?? null,
+      recipientName: logContext?.recipientName ?? null,
+      metadata: logContext?.metadata ?? {
+        classificacao: lead.classificacao,
+        cidadeEstado: lead.cidadeEstado,
+      },
+    });
   } catch (error: any) {
     console.error("Failed to send lead notification:", error);
     return { success: false, message: error?.message || "Unknown error" };
@@ -171,7 +225,8 @@ export async function sendHotLeadNotification(
 export async function sendAbandonedLeadNotification(
   twilioSettings: TwilioSettings,
   lead: Pick<FormLead, "nome" | "telefone" | "email" | "ultimaPerguntaRespondida" | "urlOrigem">,
-  companyName?: string
+  companyName?: string,
+  logContext?: NotificationLogContext,
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const validation = validateConfig(twilioSettings, { companyName });
@@ -195,7 +250,15 @@ export async function sendAbandonedLeadNotification(
       .filter(Boolean)
       .join("\n");
 
-    return await sendSms(config, message);
+    return await sendSms(config, message, {
+      trigger: logContext?.trigger ?? "lead_abandoned",
+      leadId: logContext?.leadId ?? null,
+      recipientName: logContext?.recipientName ?? null,
+      metadata: logContext?.metadata ?? {
+        lastQuestion: step,
+        urlOrigem: page ?? null,
+      },
+    });
   } catch (error: any) {
     console.error("Failed to send abandoned lead notification:", error);
     return { success: false, message: error?.message || "Unknown error" };

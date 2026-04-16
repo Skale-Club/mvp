@@ -246,7 +246,12 @@ export async function runChatTool(
           const twilioSettings = await storage.getTwilioSettings();
           const companyName = settings?.companyName || 'My Company';
           if (twilioSettings) {
-            const notifyResult = await sendHotLeadNotification(twilioSettings, lead, companyName);
+            const notifyResult = await sendHotLeadNotification(
+              twilioSettings,
+              lead,
+              companyName,
+              { leadId: lead.id, trigger: "lead_completed" },
+            );
             if (notifyResult.success) {
               await storage.updateFormLead(lead.id, { notificacaoEnviada: true });
             }
@@ -389,7 +394,8 @@ export async function runChatTool(
                 phone: lead.telefone || '',
                 address: lead.cidadeEstado || undefined,
                 customFields: customFields.length > 0 ? customFields : undefined,
-              }
+              },
+              { leadId: lead.id, trigger: "lead_completed" },
             );
 
             if (contactResult.success && contactResult.contactId) {

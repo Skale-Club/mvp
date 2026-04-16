@@ -605,7 +605,12 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         (async () => {
           try {
             const { sendContactFormNotification } = await import('../integrations/resend.js');
-            await sendContactFormNotification(resendSettings, parsed, companyName);
+            await sendContactFormNotification(
+              resendSettings,
+              parsed,
+              companyName,
+              { leadId: null, trigger: "contact_form" },
+            );
           } catch (notificationError) {
             console.error('Contact form notification error:', notificationError);
           }

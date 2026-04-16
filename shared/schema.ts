@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, numeric, timestamp, boolean, jsonb, uuid, pgEnum, uniqueIndex, index, check } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, numeric, timestamp, boolean, jsonb, uuid, pgEnum, uniqueIndex, index, check, varchar } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -214,6 +214,27 @@ export const formLeads = pgTable("form_leads", {
   conversationIdx: index("form_leads_conversation_idx").on(table.conversationId),
 }));
 
+export const notificationLogs = pgTable("notification_logs", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => formLeads.id, { onDelete: "set null" }),
+  channel: varchar("channel", { length: 20 }).notNull(),
+  trigger: varchar("trigger", { length: 40 }).notNull(),
+  recipient: varchar("recipient", { length: 255 }).notNull(),
+  recipientName: varchar("recipient_name", { length: 100 }),
+  subject: varchar("subject", { length: 255 }),
+  preview: text("preview").notNull(),
+  status: varchar("status", { length: 20 }).notNull(),
+  errorMessage: text("error_message"),
+  providerMessageId: varchar("provider_message_id", { length: 100 }),
+  metadata: jsonb("metadata"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+}, (table) => ({
+  leadIdx: index("notification_logs_lead_idx").on(table.leadId),
+  sentAtIdx: index("notification_logs_sent_at_idx").on(table.sentAt),
+  channelIdx: index("notification_logs_channel_idx").on(table.channel),
+  statusIdx: index("notification_logs_status_idx").on(table.status),
+}));
+
 // === SCHEMAS ===
 
 export const insertIntegrationSettingsSchema = createInsertSchema(integrationSettings).omit({ 
@@ -264,6 +285,10 @@ export const insertFormLeadSchema = createInsertSchema(formLeads).omit({
   dataContato: true,
   ghlContactId: true,
   ghlSyncStatus: true,
+});
+export const insertNotificationLogSchema = createInsertSchema(notificationLogs).omit({
+  id: true,
+  sentAt: true,
 });
 
 const leadClassificationValues = leadClassificationEnum.enumValues as [string, ...string[]];
@@ -317,6 +342,7 @@ export type ResendSettings = typeof resendSettings.$inferSelect;
 export type Conversation = typeof conversations.$inferSelect;
 export type ConversationMessage = typeof conversationMessages.$inferSelect;
 export type FormLead = typeof formLeads.$inferSelect;
+export type NotificationLog = typeof notificationLogs.$inferSelect;
 export type LeadClassification = typeof leadClassificationEnum.enumValues[number];
 export type LeadStatus = typeof leadStatusEnum.enumValues[number];
 
@@ -329,6 +355,7 @@ export type InsertResendSettings = z.infer<typeof insertResendSettingsSchema>;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type InsertConversationMessage = z.infer<typeof insertConversationMessageSchema>;
 export type InsertFormLead = z.infer<typeof insertFormLeadSchema>;
+export type InsertNotificationLog = z.infer<typeof insertNotificationLogSchema>;
 export type FormLeadProgressInput = z.infer<typeof formLeadProgressSchema>;
 
 // Day-by-day business hours type

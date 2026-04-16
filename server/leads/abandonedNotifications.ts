@@ -71,7 +71,12 @@ export function queueAbandonedLeadNotificationSweep() {
       const claimed = await claimLeadNotification(lead.id);
       if (!claimed) continue;
 
-      const result = await sendAbandonedLeadNotification(twilioSettings, lead, companyName);
+      const result = await sendAbandonedLeadNotification(
+        twilioSettings,
+        lead,
+        companyName,
+        { leadId: lead.id, trigger: "lead_abandoned" },
+      );
       if (!result.success) {
         await releaseLeadNotification(lead.id);
       }

@@ -1,6 +1,14 @@
 import type { ResendSettings, FormLead } from "#shared/schema.js";
+import { logNotification, type NotificationLogContext } from "../notifications/logger.js";
 
 type ResendResult = { success: boolean; message?: string };
+
+type ResendLogParams = {
+  trigger: string;
+  leadId?: number | null;
+  recipientName?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
 
 type ResendConfig = {
   apiKey: string;
@@ -64,20 +72,62 @@ function validateConfig(
   };
 }
 
-async function sendEmail(config: ResendConfig, subject: string, html: string): Promise<ResendResult> {
+async function sendEmail(
+  config: ResendConfig,
+  subject: string,
+  html: string,
+  logParams: ResendLogParams,
+): Promise<ResendResult> {
+  let firstFailureMessage: string | null = null;
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(config.apiKey);
 
     for (const to of config.recipients) {
-      await resend.emails.send({
-        from: `${config.fromName} <${config.fromEmail}>`,
-        to,
+      let status: "sent" | "failed" = "sent";
+      let errorMessage: string | null = null;
+      let providerMessageId: string | null = null;
+
+      try {
+        const result = await resend.emails.send({
+          from: `${config.fromName} <${config.fromEmail}>`,
+          to,
+          subject,
+          html,
+        });
+        if (result?.error?.message) {
+          status = "failed";
+          errorMessage = result.error.message;
+        } else {
+          providerMessageId = (result as any)?.data?.id ?? null;
+        }
+      } catch (perRecipientError: any) {
+        status = "failed";
+        errorMessage = perRecipientError?.message || "Unknown error";
+      }
+
+      await logNotification({
+        channel: "email",
+        trigger: logParams.trigger,
+        recipient: to,
+        recipientName: logParams.recipientName ?? null,
         subject,
-        html,
+        preview: html,
+        status,
+        errorMessage,
+        providerMessageId,
+        leadId: logParams.leadId ?? null,
+        metadata: logParams.metadata ?? null,
       });
+
+      if (status === "failed" && firstFailureMessage === null) {
+        firstFailureMessage = errorMessage ?? "Failed to send email";
+      }
     }
 
+    if (firstFailureMessage !== null) {
+      return { success: false, message: firstFailureMessage };
+    }
     return { success: true };
   } catch (error: any) {
     console.error("Failed to send Resend email:", error);
@@ -88,7 +138,8 @@ async function sendEmail(config: ResendConfig, subject: string, html: string): P
 export async function sendContactFormNotification(
   resendSettings: ResendSettings,
   formData: { name: string; email: string; subject: string; message: string },
-  companyName?: string
+  companyName?: string,
+  logContext?: NotificationLogContext,
 ): Promise<ResendResult> {
   try {
     const validation = validateConfig(resendSettings, { requireNotify: true, companyName });
@@ -128,7 +179,15 @@ export async function sendContactFormNotification(
       </div>
     `;
 
-    return await sendEmail(config, subject, html);
+    return await sendEmail(config, subject, html, {
+      trigger: logContext?.trigger ?? "contact_form",
+      leadId: logContext?.leadId ?? null,
+      recipientName: logContext?.recipientName ?? null,
+      metadata: logContext?.metadata ?? {
+        contactName: cleanName,
+        contactEmail: cleanEmail,
+      },
+    });
   } catch (error: any) {
     console.error("Failed to send contact form notification:", error);
     return { success: false, message: error?.message || "Unknown error" };
@@ -138,7 +197,8 @@ export async function sendContactFormNotification(
 export async function sendNewLeadNotification(
   resendSettings: ResendSettings,
   lead: Pick<FormLead, "nome" | "email" | "telefone" | "cidadeEstado" | "classificacao">,
-  companyName?: string
+  companyName?: string,
+  logContext?: NotificationLogContext,
 ): Promise<ResendResult> {
   try {
     const validation = validateConfig(resendSettings, { companyName });
@@ -184,7 +244,15 @@ export async function sendNewLeadNotification(
       </div>
     `;
 
-    return await sendEmail(config, subject, html);
+    return await sendEmail(config, subject, html, {
+      trigger: logContext?.trigger ?? "lead_completed",
+      leadId: logContext?.leadId ?? null,
+      recipientName: logContext?.recipientName ?? null,
+      metadata: logContext?.metadata ?? {
+        classificacao: lead.classificacao,
+        cidadeEstado: lead.cidadeEstado,
+      },
+    });
   } catch (error: any) {
     console.error("Failed to send lead notification:", error);
     return { success: false, message: error?.message || "Unknown error" };

@@ -1,3 +1,5 @@
+import { logNotification, type NotificationLogContext } from "../notifications/logger.js";
+
 const GHL_BASE_URL = "https://services.leadconnectorhq.com";
 const GHL_API_VERSION = "2021-07-28";
 
@@ -442,36 +444,76 @@ export async function getOrCreateGHLContact(
     phone: string;
     address?: string;
     customFields?: Array<{ id: string; field_value: string }>;
-  }
+  },
+  logContext?: NotificationLogContext,
 ): Promise<{ success: boolean; contactId?: string; message?: string }> {
-  const existingByEmail = await findGHLContactByEmail(apiKey, locationId, contact.email);
+  const recipientName = `${contact.firstName} ${contact.lastName}`.trim() || null;
+  const previewPayload = JSON.stringify({
+    email: contact.email,
+    phone: contact.phone,
+    address: contact.address,
+    customFieldsCount: contact.customFields?.length ?? 0,
+  });
 
-  if (existingByEmail.contactId) {
-    console.log(`GHL contact found by email: ${existingByEmail.contactId}`);
-    // Update with address and/or custom fields if provided
-    if (contact.address || (contact.customFields && contact.customFields.length > 0)) {
-      await updateGHLContact(apiKey, existingByEmail.contactId, {
-        address: contact.address,
-        customFields: contact.customFields
-      });
+  const writeLog = async (
+    status: "sent" | "failed",
+    providerMessageId: string | null,
+    errorMessage: string | null,
+  ) => {
+    if (!logContext) return;
+    await logNotification({
+      channel: "ghl_sync",
+      trigger: logContext.trigger,
+      recipient: contact.email || contact.phone || "unknown",
+      recipientName,
+      preview: previewPayload,
+      status,
+      errorMessage,
+      providerMessageId,
+      leadId: logContext.leadId ?? null,
+      metadata: logContext.metadata ?? null,
+    });
+  };
+
+  try {
+    const existingByEmail = await findGHLContactByEmail(apiKey, locationId, contact.email);
+
+    if (existingByEmail.contactId) {
+      console.log(`GHL contact found by email: ${existingByEmail.contactId}`);
+      if (contact.address || (contact.customFields && contact.customFields.length > 0)) {
+        await updateGHLContact(apiKey, existingByEmail.contactId, {
+          address: contact.address,
+          customFields: contact.customFields,
+        });
+      }
+      await writeLog("sent", existingByEmail.contactId, null);
+      return { success: true, contactId: existingByEmail.contactId };
     }
-    return { success: true, contactId: existingByEmail.contactId };
-  }
 
-  const existingByPhone = await findGHLContactByPhone(apiKey, locationId, contact.phone);
+    const existingByPhone = await findGHLContactByPhone(apiKey, locationId, contact.phone);
 
-  if (existingByPhone.contactId) {
-    console.log(`GHL contact found by phone: ${existingByPhone.contactId}`);
-    // Update with address and/or custom fields if provided
-    if (contact.address || (contact.customFields && contact.customFields.length > 0)) {
-      await updateGHLContact(apiKey, existingByPhone.contactId, {
-        address: contact.address,
-        customFields: contact.customFields
-      });
+    if (existingByPhone.contactId) {
+      console.log(`GHL contact found by phone: ${existingByPhone.contactId}`);
+      if (contact.address || (contact.customFields && contact.customFields.length > 0)) {
+        await updateGHLContact(apiKey, existingByPhone.contactId, {
+          address: contact.address,
+          customFields: contact.customFields,
+        });
+      }
+      await writeLog("sent", existingByPhone.contactId, null);
+      return { success: true, contactId: existingByPhone.contactId };
     }
-    return { success: true, contactId: existingByPhone.contactId };
-  }
 
-  console.log('GHL contact not found, creating new contact');
-  return createGHLContact(apiKey, locationId, contact);
+    console.log("GHL contact not found, creating new contact");
+    const created = await createGHLContact(apiKey, locationId, contact);
+    await writeLog(
+      created.success ? "sent" : "failed",
+      created.contactId ?? null,
+      created.success ? null : (created.message ?? "Unknown error"),
+    );
+    return created;
+  } catch (error: any) {
+    await writeLog("failed", null, error?.message || "Unknown error");
+    throw error;
+  }
 }

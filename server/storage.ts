@@ -17,6 +17,7 @@ import {
   galleryImages,
   reviewsSettings,
   reviewItems,
+  notificationLogs,
   type CompanySettings,
   type ChatSettings,
   type ChatIntegrations,
@@ -51,6 +52,8 @@ import {
   type ReviewItem,
   type InsertReviewsSettings,
   type InsertReviewItem,
+  type NotificationLog,
+  type InsertNotificationLog,
 } from "#shared/schema.js";
 import { eq, and, or, ilike, gte, lte, lt, inArray, desc, asc, sql, ne } from "drizzle-orm";
 
@@ -429,7 +432,22 @@ export interface IStorage {
   updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "notificacaoAbandonoEnviada" | "ghlContactId" | "ghlSyncStatus">>): Promise<FormLead | undefined>;
   getFormLeadByEmail(email: string): Promise<FormLead | undefined>;
   deleteFormLead(id: number): Promise<boolean>;
-  
+
+  // Notification Logs
+  createNotificationLog(entry: InsertNotificationLog): Promise<NotificationLog>;
+  getNotificationLogsByLead(leadId: number): Promise<NotificationLog[]>;
+  listNotificationLogs(filters?: {
+    channel?: string;
+    status?: string;
+    trigger?: string;
+    leadId?: number;
+    from?: Date;
+    to?: Date;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<NotificationLog[]>;
+
   // Blog Posts
   getBlogPosts(status?: string): Promise<BlogPost[]>;
   getBlogPost(id: number): Promise<BlogPost | undefined>;
@@ -1169,6 +1187,57 @@ export class DatabaseStorage implements IStorage {
     if (!existing) return false;
     await db.delete(formLeads).where(eq(formLeads.id, id));
     return true;
+  }
+
+  async createNotificationLog(entry: InsertNotificationLog): Promise<NotificationLog> {
+    const [row] = await db.insert(notificationLogs).values(entry).returning();
+    return row;
+  }
+
+  async getNotificationLogsByLead(leadId: number): Promise<NotificationLog[]> {
+    return await db
+      .select()
+      .from(notificationLogs)
+      .where(eq(notificationLogs.leadId, leadId))
+      .orderBy(desc(notificationLogs.sentAt));
+  }
+
+  async listNotificationLogs(filters?: {
+    channel?: string;
+    status?: string;
+    trigger?: string;
+    leadId?: number;
+    from?: Date;
+    to?: Date;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<NotificationLog[]> {
+    const conditions = [] as any[];
+    if (filters?.channel) conditions.push(eq(notificationLogs.channel, filters.channel));
+    if (filters?.status) conditions.push(eq(notificationLogs.status, filters.status));
+    if (filters?.trigger) conditions.push(eq(notificationLogs.trigger, filters.trigger));
+    if (filters?.leadId !== undefined) conditions.push(eq(notificationLogs.leadId, filters.leadId));
+    if (filters?.from) conditions.push(gte(notificationLogs.sentAt, filters.from));
+    if (filters?.to) conditions.push(lte(notificationLogs.sentAt, filters.to));
+    if (filters?.search) {
+      const pattern = `%${filters.search}%`;
+      conditions.push(
+        or(
+          ilike(notificationLogs.recipient, pattern),
+          ilike(notificationLogs.preview, pattern),
+          ilike(notificationLogs.subject, pattern),
+        ),
+      );
+    }
+
+    const requestedLimit = filters?.limit ?? 100;
+    const limit = Math.min(Math.max(requestedLimit, 1), 500);
+    const offset = Math.max(filters?.offset ?? 0, 0);
+
+    const query = db.select().from(notificationLogs);
+    const scoped = conditions.length ? query.where(and(...conditions)) : query;
+    return await scoped.orderBy(desc(notificationLogs.sentAt)).limit(limit).offset(offset);
   }
 
   async getBlogPosts(status?: string): Promise<BlogPost[]> {

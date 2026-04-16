@@ -186,7 +186,12 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
           try {
             const twilioSettings = await storage.getTwilioSettings();
             if (twilioSettings) {
-              const notifyResult = await sendHotLeadNotification(twilioSettings, lead, companyName);
+              const notifyResult = await sendHotLeadNotification(
+                twilioSettings,
+                lead,
+                companyName,
+                { leadId: lead.id, trigger: "lead_completed" },
+              );
               if (notifyResult.success) {
                 await storage.updateFormLead(lead.id, { notificacaoEnviada: true });
               }
@@ -201,7 +206,12 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
             const resendSettings = await storage.getResendSettings();
             if (resendSettings?.enabled && resendSettings.notifyOnNewLead) {
               const { sendNewLeadNotification } = await import('../integrations/resend.js');
-              await sendNewLeadNotification(resendSettings, lead, companyName);
+              await sendNewLeadNotification(
+                resendSettings,
+                lead,
+                companyName,
+                { leadId: lead.id, trigger: "lead_completed" },
+              );
             }
           } catch (notificationError) {
             console.error('Resend lead notification error:', notificationError);
@@ -254,7 +264,8 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
                   phone: lead.telefone || '',
                   address: lead.cidadeEstado || undefined,
                   customFields: customFields.length > 0 ? customFields : undefined,
-                }
+                },
+                { leadId: lead.id, trigger: "lead_completed" },
               );
 
               if (contactResult.success && contactResult.contactId) {

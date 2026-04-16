@@ -98,7 +98,9 @@ import type {
   FormOption,
   ConsultingStep,
   TwilioSettings,
+  NotificationLog,
 } from '@shared/schema';
+import { NotificationIconCell } from '@/components/admin/notification-indicators';
 import { DEFAULT_FORM_CONFIG, calculateMaxScore, getSortedQuestions } from '@shared/form';
 import ghlLogo from '@assets/ghl-logo.webp';
 import { SiFacebook, SiGoogleanalytics, SiGoogletagmanager, SiOpenai, SiTwilio } from 'react-icons/si';
@@ -214,6 +216,35 @@ export function LeadsSection() {
       return res.json();
     }
   });
+
+  const { data: allNotificationLogs = [] } = useQuery<NotificationLog[]>({
+    queryKey: ['/api/admin/notification-logs', { limit: 500 }],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/notification-logs?limit=500');
+      return res.json();
+    },
+    staleTime: 30_000,
+  });
+
+  const notificationsByLead = useMemo(() => {
+    const map = new Map<number, { email?: NotificationLog; sms?: NotificationLog; ghl?: NotificationLog }>();
+    for (const log of allNotificationLogs) {
+      if (log.leadId == null) continue;
+      const slot: 'email' | 'sms' | 'ghl' | null =
+        log.channel === 'email' ? 'email'
+        : log.channel === 'sms' ? 'sms'
+        : log.channel === 'ghl_sync' ? 'ghl'
+        : null;
+      if (!slot) continue;
+      const existing = map.get(log.leadId) ?? {};
+      const current = existing[slot];
+      if (!current || new Date(log.sentAt as any) > new Date(current.sentAt as any)) {
+        existing[slot] = log;
+      }
+      map.set(log.leadId, existing);
+    }
+    return map;
+  }, [allNotificationLogs]);
 
   const questionsForDisplay = useMemo(() => getSortedQuestions(formConfig || DEFAULT_FORM_CONFIG), [formConfig]);
   const totalQuestions = questionsForDisplay.length || DEFAULT_FORM_CONFIG.questions.length;
@@ -517,6 +548,7 @@ export function LeadsSection() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Classification</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Last Step</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Notif.</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Updated</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</th>
               </tr>
@@ -524,7 +556,7 @@ export function LeadsSection() {
             <tbody className="divide-y divide-border">
               {isLoading && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">
                     <Loader2 className="w-5 h-5 animate-spin inline-block mr-2" />
                     Loading leads...
                   </td>
@@ -532,7 +564,7 @@ export function LeadsSection() {
               )}
               {!isLoading && (!leads || leads.length === 0) && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
                     No leads found yet.
                   </td>
                 </tr>
@@ -574,6 +606,9 @@ export function LeadsSection() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <NotificationIconCell summary={notificationsByLead.get(lead.id) ?? {}} />
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
                     {formatDate((lead.updatedAt as any) || (lead.createdAt as any))}

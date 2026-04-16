@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { formLeadProgressSchema, formLeads, leadStatusEnum, leadClassificationEnum } from './schema.js';
+import { formLeadProgressSchema, formLeads, leadStatusEnum, leadClassificationEnum, notificationLogs } from './schema.js';
 
 const urlRuleSchema = z.object({
   pattern: z.string(),
@@ -129,6 +129,36 @@ export const api = {
       responses: {
         200: z.object({ message: z.string() }),
         404: errorSchemas.notFound,
+      },
+    },
+  },
+  notificationLogs: {
+    listByLead: {
+      method: 'GET' as const,
+      path: '/api/form-leads/:id/notifications',
+      responses: {
+        200: z.array(z.custom<typeof notificationLogs.$inferSelect>()),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+    list: {
+      method: 'GET' as const,
+      path: '/api/admin/notification-logs',
+      input: z.object({
+        channel: z.enum(['sms', 'email', 'ghl_sync']).optional(),
+        status: z.enum(['sent', 'failed', 'skipped']).optional(),
+        trigger: z.string().min(1).max(40).optional(),
+        leadId: z.coerce.number().int().positive().optional(),
+        from: z.string().datetime().transform((v) => new Date(v)).optional(),
+        to: z.string().datetime().transform((v) => new Date(v)).optional(),
+        search: z.string().min(1).max(200).optional(),
+        limit: z.coerce.number().int().min(1).max(500).optional(),
+        offset: z.coerce.number().int().min(0).optional(),
+      }).optional(),
+      responses: {
+        200: z.array(z.custom<typeof notificationLogs.$inferSelect>()),
+        400: errorSchemas.validation,
       },
     },
   },
