@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAdminAuth } from '@/context/AuthContext';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
+import { PageLoader } from '@/components/ui/spinner';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { UsersSection } from './UsersSection';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -113,11 +114,7 @@ function AdminContent() {
   }, [setLocation, signOut]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!isAdmin) {

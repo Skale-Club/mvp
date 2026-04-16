@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, ArrowLeft, Mail, LockKeyhole } from 'lucide-react';
+import { PageLoader } from '@/components/ui/spinner';
 import { useQuery } from '@tanstack/react-query';
 import type { CompanySettings } from '@shared/schema';
 import { DEFAULT_ADMIN_PATH } from '@/components/admin/shared/routes';
@@ -28,11 +29,7 @@ export default function AdminLogin() {
   }, [loading, isAdmin, setLocation]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   const handleSupabaseLogin = async (e: React.FormEvent) => {
