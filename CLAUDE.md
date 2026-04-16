@@ -4,12 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-[companyname] is a full-stack service booking platform for a marketing company. Customers browse services by category, add to cart, select available time slots, and complete bookings. Includes admin dashboard and GoHighLevel CRM integration.
+This repository is the production website for **MVP** — a service business — and a **forkable base template** for building websites for other service businesses. The same codebase ships MVP's live site and doubles as the starting point for other clients in the same segment. Branding, SEO, catalog content, and integrations are configurable from the admin dashboard without a redeploy.
+
+Authoritative project context (milestones, active phase, decisions, deferred work) lives in [`.paul/PROJECT.md`](.paul/PROJECT.md). Read that first for anything beyond code-level tasks.
 
 ## Commands
 
 ```bash
-npm run dev          # Start development server (port 5000)
+npm run dev          # Start development server (default port 7000)
 npm run build        # Build client (Vite) and server (esbuild) to /dist
 npm run start        # Run production server
 npm run check        # TypeScript type checking
@@ -18,26 +20,31 @@ npm run db:push      # Apply database schema changes via Drizzle Kit
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite, Wouter (routing), React Query, shadcn/ui, Tailwind CSS
+- **Frontend**: React 18, TypeScript, Vite, Wouter (routing), TanStack React Query, shadcn/ui, Tailwind CSS
 - **Backend**: Express.js, TypeScript, Drizzle ORM, PostgreSQL
-- **Auth**: Session-based with bcrypt, Replit Auth integration for admin
+- **Auth**: Session-based authentication with Supabase-backed identity; bcrypt for admin password
+- **Platform**: Deployed on Vercel (Fluid Compute); Supabase for Postgres, Auth, Storage, and RLS
 
 ## Architecture
 
 ```
 client/src/
 ├── pages/          # Route components (Home, Services, Admin, Booking flow)
-├── components/     # UI components (ui/ has shadcn components)
+├── components/     # UI components (ui/ has shadcn components; admin/ has section components)
 ├── hooks/          # Custom hooks (useAuth, useBooking, useSEO, useUpload)
 ├── context/        # CartContext, AuthContext
 └── lib/            # Utilities (queryClient, analytics)
 
 server/
 ├── index.ts        # Express setup, middleware, port config
-├── routes.ts       # All API endpoints (~2800 lines)
+├── routes.ts       # Route registrar (wires the modules below)
+├── routes/         # Modular route files (leads, notifications, chat, integrations, users, content, reviews, services)
 ├── storage.ts      # Database queries via IStorage interface
-├── db.ts           # Database connection
-└── integrations/   # GoHighLevel API (ghl.ts)
+├── notifications/  # logNotification helper + audit log utilities
+├── integrations/   # Twilio, Resend, GoHighLevel, OpenAI
+├── leads/          # Lead-specific jobs (abandoned-notification sweep)
+├── auth/           # Supabase auth wiring
+└── db.ts           # Database connection
 
 shared/
 ├── schema.ts       # Drizzle tables + Zod schemas (source of truth for types)
@@ -54,26 +61,38 @@ shared/
 
 **State Management**: React Query for server state, Context API for cart/auth. No Redux.
 
+**Notification Logging**: Every outbound SMS/email/CRM sync is logged to `notification_logs` via `server/notifications/logger.ts`. Integration functions accept an optional `logContext?: NotificationLogContext` as their last parameter.
+
 ## Database Tables
 
-- `categories`, `subcategories`, `services` - Service catalog
-- `serviceAddons` - Cross-sell relationships between services
-- `bookings`, `bookingItems` - Customer bookings with snapshot pricing
-- `companySettings` - Singleton for business hours, SEO, analytics config
-- `integrationSettings` - GoHighLevel credentials
-- `faqs` - FAQ entries
+- `categories`, `subcategories`, `services` — Service catalog
+- `serviceAddons` — Cross-sell relationships between services
+- `bookings`, `bookingItems` — Customer bookings with snapshot pricing
+- `formLeads` — Lead capture with scoring + classification
+- `notificationLogs` — Audit trail for every outgoing notification (SMS/email/GHL sync)
+- `conversations`, `conversationMessages` — AI chat threads and messages
+- `companySettings` — Singleton for business hours, SEO, analytics, branding, homepage content
+- `integrationSettings`, `twilioSettings`, `resendSettings`, `chatSettings`, `chatIntegrations` — Integration credentials and toggles
+- `faqs`, `blogPosts`, `servicePosts`, `galleryImages`, `reviewItems`, `reviewsSettings` — Admin-managed content
+- `users`, `sessions` — Auth
 
 ## Environment Variables
 
 Required:
-- `DATABASE_URL` - PostgreSQL connection string
-- `SESSION_SECRET` - Express session encryption
-- `ADMIN_EMAIL` - Admin login email
-- `ADMIN_PASSWORD_HASH` - bcrypt hash of admin password
+- `DATABASE_URL` — PostgreSQL connection string
+- `SESSION_SECRET` — Express session encryption
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase project credentials
+- `ADMIN_EMAIL` — Admin login email
+- `ADMIN_PASSWORD_HASH` — bcrypt hash of admin password
 
-## Brand Guidelines
+See `README.md` for the full list including optional variables.
+
+## Brand Guidelines (this deployment — MVP's live brand)
+
+The values below describe **MVP's live brand**, which is what the current production site uses. They are stored in the DB (`companySettings`) and configurable per fork via admin → Website → Colors and admin → Company Infos. Treat them as variables, not constants: when you fork this repo for another service business, these change.
 
 - **Colors**: Primary Blue `#1C53A3`, Brand Yellow `#FFFF01`
 - **Fonts**: Outfit (headings), Inter (body)
 - **CTA Buttons**: Primary Blue with white bold text, pill-shaped (`rounded-full`) — use `bg-primary text-primary-foreground`
 
+When reviewing UI changes for the live MVP site, keep these values in mind. When building features that other forks will use, read from the computed CSS variables / `companySettings` rather than hardcoding.

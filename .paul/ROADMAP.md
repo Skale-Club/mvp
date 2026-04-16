@@ -7,8 +7,8 @@ Production website for MVP (a service business) that also serves as a forkable t
 ## Current Milestone
 
 **v1.1 Notification Log + Docs Alignment** (v1.1.0)
-Status: In progress
-Phases: 1 of 2 complete
+Status: Complete
+Phases: 2 of 2 complete
 
 ## Phases
 
@@ -19,7 +19,7 @@ Phases: 1 of 2 complete
 | Phase | Name | Plans | Status | Completed |
 |-------|------|-------|--------|-----------|
 | 1 | Lead Notification Log | 4 | ✅ Complete | 2026-04-16 |
-| 2 | Docs Alignment (dual nature) | 1 | Not started | - |
+| 2 | Docs Alignment (dual nature) | 1 | ✅ Complete | 2026-04-16 |
 
 ## Phase Details
 
@@ -55,7 +55,7 @@ Phases: 1 of 2 complete
 - Update `AGENTS.md` (add note about dual nature / forkability)
 
 **Plans:**
-- [ ] 02-01: Rewrite the three files with a "template + production" tone
+- [x] 02-01: Rewrite the three files with a "template + production" tone
 
 ---
 *Roadmap created: 2026-04-15*

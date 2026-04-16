@@ -10,22 +10,22 @@ See: .paul/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Milestone: v1.1 Notification Log + Docs Alignment
-Phase: 1 of 2 — COMPLETE
-Plan: —
-Status: Ready for next PLAN (Phase 2)
-Last activity: 2026-04-16 — Closed loop for 01-04; Phase 1 complete
+Phase: 2 of 2 (Docs Alignment) — Applying
+Plan: 02-01 applied; awaiting UNIFY
+Status: APPLY complete, ready for UNIFY
+Last activity: 2026-04-16 — Applied plan 02-01 (README + CLAUDE.md + AGENTS.md rewritten)
 
 Progress:
-- Milestone: [█████░░░░░] 50%
-- Phase 1: [██████████] 100% (4 of 4 plans complete) ✓
-- Phase 2: [░░░░░░░░░░] 0%
+- Milestone: [████████░░] 90%
+- Phase 1: [██████████] 100% ✓
+- Phase 2: [██████████] 100% (applied, pending unify)
 
 ## Loop Position
 
 Current loop state:
 ```
 PLAN ──▶ APPLY ──▶ UNIFY
-  ✓        ✓        ✓     [Phase 1 complete — ready for Phase 2 PLAN]
+  ✓        ✓        ○     [Ready for UNIFY]
 ```
 
 ## Accumulated Context
@@ -73,7 +73,11 @@ None.
 
 ## Boundaries (Active)
 
-None (phase complete).
+From plan 02-01 (docs only):
+- All code files — no `.ts`/`.tsx`/`.sql`/`.json` edits
+- `.paul/**` — planning artifacts untouched
+- `docs/**` — other docs untouched
+- Only README.md, CLAUDE.md, AGENTS.md modified
 
 ## Session Continuity
 

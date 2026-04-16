@@ -41,7 +41,9 @@ Delivers a complete service-business website (service catalog, booking, leads, a
 ### Active (In Progress)
 
 - [ ] Refactor of monolithic `client/src/pages/Admin.tsx` into per-section components (partial — see docs/ADMIN_REFACTOR_PLAN.md)
-- [ ] Docs alignment (CLAUDE.md, README.md, AGENTS.md) to reflect the dual nature — v1.1 Phase 2
+### Validated (Shipped — v1.1 Phase 2)
+
+- [x] Docs alignment (CLAUDE.md, README.md, AGENTS.md) — dual nature + accurate tech/port/features — v1.1.0
 
 ### Validated (Shipped — v1.1 Phase 1)
 

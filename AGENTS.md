@@ -1,5 +1,12 @@
 # Repository Guidelines
 
+## About This Repository
+
+This is the production website for MVP — a service business — and a forkable
+base template for building websites for other service businesses. See
+`.paul/PROJECT.md` for authoritative project context, milestones, and
+accumulated decisions.
+
 ## Project Structure & Module Organization
 - `client/src/` holds the React UI (pages, components, hooks, context, lib).
 - `server/` contains the Express API, storage layer, and integrations.
@@ -14,7 +21,7 @@ shared/schema.ts         # Drizzle tables + Zod schemas
 ```
 
 ## Build, Test, and Development Commands
-- `npm run dev` starts the dev server (client + API) at `http://localhost:5000`.
+- `npm run dev` starts the dev server (client + API) at `http://localhost:7000`.
 - `npm run build` builds the client and server into `dist/`.
 - `npm run start` runs the production server from `dist/`.
 - `npm run check` runs TypeScript type checking.
@@ -39,6 +46,5 @@ shared/schema.ts         # Drizzle tables + Zod schemas
 - Link related issues when applicable.
 
 ## Security & Configuration
-- Required env vars live in `.env` (see `README.md`): `DATABASE_URL`,
-  `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`.
+- See `README.md` for the current `.env` contract (required + optional vars).
 - Do not commit secrets; use local `.env` files and secret managers for production.
