@@ -343,15 +343,15 @@ export function ChatWidget() {
           onClick={toggleOpen}
           className="mb-2 mr-2 flex items-end justify-end gap-2 animate-in fade-in slide-in-from-bottom-1"
         >
-          <div className="relative bg-white shadow-lg border rounded-2xl px-4 py-3 text-sm max-w-[240px] text-left">
+          <div className="relative bg-card shadow-lg border rounded-2xl px-4 py-3 text-sm max-w-[240px] text-left">
             <p className="leading-snug">{config.welcomeMessage}</p>
-            <div className="absolute -right-2 top-4 h-3 w-3 rotate-45 bg-white border-b border-r border-slate-200" />
+            <div className="absolute -right-2 top-4 h-3 w-3 rotate-45 bg-card border-b border-r border-border" />
           </div>
           <div className="relative">
             <img
               src={avatarUrl}
               alt={displayName}
-              className="h-14 w-14 rounded-full border border-slate-200 object-cover"
+              className="h-14 w-14 rounded-full border border-border object-cover"
               onError={handleAvatarError}
             />
             {showOnlineDot && (
@@ -392,10 +392,10 @@ export function ChatWidget() {
       {renderLauncher()}
 
       {isOpen && (
-        <div className="w-80 sm:w-96 bg-white border shadow-2xl rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+        <div className="w-80 sm:w-96 bg-card border shadow-2xl rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center justify-between bg-primary text-white px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-white border border-white/40 overflow-hidden flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-card border border-white/40 overflow-hidden flex items-center justify-center">
                 <img
                   src={headerIcon}
                   alt="Company icon"
@@ -414,13 +414,13 @@ export function ChatWidget() {
           </div>
 
           {config?.languageSelectorEnabled && (
-            <div className="px-4 py-2 border-b bg-white">
+            <div className="px-4 py-2 border-b bg-card">
               <label className="text-xs text-muted-foreground" htmlFor="chat-language">
                 Language
               </label>
               <select
                 id="chat-language"
-                className="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-sm"
+                className="mt-1 w-full rounded-md border border-border bg-card px-2 py-1 text-sm"
                 value={language || config?.defaultLanguage || "en"}
                 onChange={(event) => handleLanguageChange(event.target.value)}
               >
@@ -433,7 +433,7 @@ export function ChatWidget() {
             </div>
           )}
 
-          <div ref={scrollRef} className="p-3 space-y-2 h-80 overflow-y-auto bg-slate-50">
+          <div ref={scrollRef} className="p-3 space-y-2 h-80 overflow-y-auto bg-muted">
             {loadingHistory && (
               <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading conversation...
@@ -451,12 +451,12 @@ export function ChatWidget() {
                       src={avatarUrl}
                       alt={displayName}
                       onError={handleAvatarError}
-                      className="h-7 w-7 rounded-full border border-slate-200 object-cover mt-0.5"
+                      className="h-7 w-7 rounded-full border border-border object-cover mt-0.5"
                     />
                   )}
                   <div
                     className={`rounded-lg px-3 py-2 text-sm max-w-[85%] ${
-                      isAssistant ? "bg-white border text-slate-800" : "bg-primary text-white"
+                      isAssistant ? "bg-card border text-foreground" : "bg-primary text-white"
                     }`}
                   >
                     <p className="whitespace-pre-wrap break-words leading-snug">
@@ -475,9 +475,9 @@ export function ChatWidget() {
                   src={avatarUrl}
                   alt={displayName}
                   onError={handleAvatarError}
-                  className="h-7 w-7 rounded-full border border-slate-200 object-cover mt-0.5"
+                  className="h-7 w-7 rounded-full border border-border object-cover mt-0.5"
                 />
-                <div className="rounded-lg px-3 py-2.5 text-sm bg-white border text-slate-800">
+                <div className="rounded-lg px-3 py-2.5 text-sm bg-card border text-foreground">
                   <div className="flex items-center justify-center gap-1 h-4">
                     <span className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                     <span className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce [animation-delay:-0.15s]"></span>

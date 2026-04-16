@@ -577,7 +577,7 @@ export function BlogSection({ resetSignal }: { resetSignal: number }) {
               )}
             </div>
             {focusScore && (
-              <div className="h-[3px] bg-slate-200 dark:bg-slate-700">
+              <div className="h-[3px] bg-muted">
                 <div className={clsx("h-full transition-all", focusScore.barColor)} style={{ width: `${focusScore.score}%` }} />
               </div>
             )}
@@ -1085,7 +1085,7 @@ export function BlogSection({ resetSignal }: { resetSignal: number }) {
         {sortedPosts && sortedPosts.length > 0 ? (
           <div className="space-y-3">
             {sortedPosts.map(post => (
-              <div key={post.id} className="flex flex-col gap-4 p-3 sm:p-4 bg-card/90 dark:bg-slate-900/70 rounded-lg sm:flex-row sm:items-start" data-testid={`row-blog-${post.id}`}>
+              <div key={post.id} className="flex flex-col gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg sm:flex-row sm:items-start" data-testid={`row-blog-${post.id}`}>
                 {post.featureImageUrl ? (
                   <img
                     src={post.featureImageUrl}

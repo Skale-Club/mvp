@@ -79,7 +79,7 @@ export function AreasServedMap({ mapEmbedUrl, content }: AreasServedMapProps) {
             {sectionContent?.heading || ""}
           </h2>
           
-          <p className="text-slate-600 text-lg mb-8 leading-relaxed">
+          <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
             {sectionContent?.description || ""}
           </p>
 
@@ -97,7 +97,7 @@ export function AreasServedMap({ mapEmbedUrl, content }: AreasServedMapProps) {
           ) : null}
         </div>
         
-        <div className="h-[450px] rounded-2xl overflow-hidden shadow-2xl border border-slate-100 lg:col-span-1 relative">
+        <div className="h-[450px] rounded-2xl overflow-hidden shadow-2xl border border-border lg:col-span-1 relative">
           {embedUrl ? (
             <iframe
               src={embedUrl}

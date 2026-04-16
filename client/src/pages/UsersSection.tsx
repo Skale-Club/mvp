@@ -278,7 +278,7 @@ export function UsersSection() {
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-medium">
+                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium">
                               {getInitials(user)}
                             </div>
                           )}
@@ -320,7 +320,7 @@ export function UsersSection() {
                                         className="w-16 h-16 rounded-full object-cover"
                                       />
                                     ) : (
-                                      <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-medium text-xl">
+                                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium text-xl">
                                         {getInitials(editingUser ?? user)}
                                       </div>
                                     )}

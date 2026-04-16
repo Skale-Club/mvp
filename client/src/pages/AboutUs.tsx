@@ -14,7 +14,7 @@ export default function AboutUs() {
       <section className="container-custom mx-auto mb-20">
         <div className="max-w-3xl">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">About Us</h1>
-          <p className="text-xl text-slate-600 leading-relaxed mb-8">
+          <p className="text-xl text-muted-foreground leading-relaxed mb-8">
             At {companyName}, we believe in empowering businesses to reach their full potential. Founded with a passion for excellence, we've become a trusted name in digital marketing services.
           </p>
         </div>
@@ -26,10 +26,10 @@ export default function AboutUs() {
             { icon: Users, title: "Professional Team", desc: "Experienced and highly trained specialists." },
             { icon: Award, title: "Premium Service", desc: "Transparent pricing and straightforward onboarding." }
           ].map((item, i) => (
-            <div key={i} className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+            <div key={i} className="p-6 bg-muted rounded-2xl border border-border">
               <item.icon className="w-10 h-10 text-primary mb-4" />
               <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-              <p className="text-slate-600">{item.desc}</p>
+              <p className="text-muted-foreground">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -39,7 +39,7 @@ export default function AboutUs() {
         <div className="container-custom mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-3xl md:text-5xl font-bold mb-6">Our Mission</h2>
-            <p className="text-lg text-slate-300 mb-8 leading-relaxed">
+            <p className="text-lg text-foreground/70 mb-8 leading-relaxed">
               To provide top-tier marketing services that help you grow your business, allowing you to focus on what matters most. We use data-driven strategies and proven techniques to ensure real results for your company.
             </p>
           </div>

@@ -116,8 +116,8 @@ export function Navbar() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-100 shadow-lg">
-                    <div className="px-2 py-2 border-b border-gray-100 mb-1">
+                  <DropdownMenuContent align="end" className="w-56 bg-popover border border-border shadow-lg">
+                    <div className="px-2 py-2 border-b border-border mb-1">
                       <p className="font-medium text-sm leading-none">{user.firstName} {user.lastName}</p>
                       <p className="text-xs text-muted-foreground mt-1.5 leading-none">{user.email}</p>
                     </div>
@@ -158,12 +158,12 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-100 py-6 px-6 flex flex-col gap-6 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="md:hidden bg-card border-b border-border py-6 px-6 flex flex-col gap-6 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col gap-5">
             {navLinks.map((link) => {
               const isHashLink = link.href.startsWith("/#");
               const Content = (
-                <span className="text-lg font-semibold text-slate-700 hover:text-primary transition-colors">
+                <span className="text-lg font-semibold text-foreground hover:text-primary transition-colors">
                   {link.label}
                 </span>
               );
@@ -196,25 +196,25 @@ export function Navbar() {
             })}
           </div>
 
-          <div className="pt-6 border-t border-gray-100 flex flex-col gap-6">
+          <div className="pt-6 border-t border-border flex flex-col gap-6">
             {/* Mobile User Profile (only shown when logged in) */}
             {!isLoading && isAuthenticated && user && (
               <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                  <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-xl">
+                  <Avatar className="h-10 w-10 border-2 border-border shadow-sm">
                     <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
                     <AvatarFallback>{getInitials(user.firstName, user.lastName)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-bold text-slate-900 leading-none text-base">{user.firstName} {user.lastName}</p>
-                    <p className="text-xs text-slate-500 mt-1">{user.email}</p>
+                    <p className="font-bold text-foreground leading-none text-base">{user.firstName} {user.lastName}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
                   </div>
                 </div>
                 <div className="flex flex-col gap-4 px-1">
                   {user.isAdmin && (
                     <Link
                       href={DEFAULT_ADMIN_PATH}
-                      className="text-base font-semibold text-slate-700 hover:text-primary transition-colors"
+                      className="text-base font-semibold text-foreground hover:text-primary transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Admin Panel
@@ -222,7 +222,7 @@ export function Navbar() {
                   )}
                   <button
                     onClick={() => { setIsMenuOpen(false); logout(); }}
-                    className="flex items-center gap-2 text-base font-semibold text-slate-500 hover:text-red-500 transition-colors"
+                    className="flex items-center gap-2 text-base font-semibold text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <LogOut className="w-5 h-5" />
                     Logout

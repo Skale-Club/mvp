@@ -18,7 +18,7 @@ export default function FaqPage() {
       <div className="container-custom mx-auto py-20">
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h1>
-          <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             Find answers to common questions about our services.
           </p>
         </div>
@@ -29,16 +29,16 @@ export default function FaqPage() {
           </div>
         ) : !faqs || faqs.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-slate-500 text-lg">No FAQs available yet. Check back soon!</p>
+            <p className="text-muted-foreground text-lg">No FAQs available yet. Check back soon!</p>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-sm p-6 md:p-8">
+          <div className="max-w-3xl mx-auto bg-card rounded-lg shadow-sm p-6 md:p-8">
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq) => (
                 <AccordionItem 
                   key={faq.id} 
                   value={`faq-${faq.id}`}
-                  className="border-b border-slate-200"
+                  className="border-b border-border"
                   data-testid={`faq-accordion-${faq.id}`}
                 >
                   <AccordionTrigger 
@@ -47,7 +47,7 @@ export default function FaqPage() {
                   >
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-slate-600 pb-5 text-base whitespace-pre-wrap">
+                  <AccordionContent className="text-muted-foreground pb-5 text-base whitespace-pre-wrap">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>

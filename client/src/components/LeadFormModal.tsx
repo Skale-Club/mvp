@@ -722,9 +722,9 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
   if (isConfigLoading) {
     return createPortal(
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4">
+        <div className="bg-card rounded-2xl p-8 flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-cta" />
-          <p className="text-slate-600">Loading form...</p>
+          <p className="text-muted-foreground">Loading form...</p>
         </div>
       </div>,
       document.body
@@ -743,9 +743,9 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
         exit={{ opacity: 0 }}
       >
         <div className="w-full max-w-[640px]">
-          <div className="relative bg-white text-slate-900 h-full sm:h-auto rounded-none sm:rounded-3xl shadow-2xl overflow-hidden" ref={containerRef}>
+          <div className="relative bg-card text-foreground h-full sm:h-auto rounded-none sm:rounded-3xl shadow-2xl overflow-hidden" ref={containerRef}>
             <button
-              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               aria-label="Close form"
               onClick={handleClose}
             >
@@ -753,7 +753,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
           </button>
 
           <div className="flex flex-col h-full">
-            <div className="absolute inset-x-6 sm:inset-x-10 h-3 -top-[6px] bg-slate-100 rounded-full overflow-hidden">
+            <div className="absolute inset-x-6 sm:inset-x-10 h-3 -top-[6px] bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-cta transition-all duration-300 rounded-full"
                 style={{ width: `${progressPercent}%` }}
@@ -801,7 +801,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                             placeholder={currentQuestion.placeholder || ""}
                             className={clsx(
                               "w-full rounded-xl border px-4 py-3 text-lg transition-colors",
-                              errorMessage ? "border-red-400" : "border-slate-200",
+                              errorMessage ? "border-red-400" : "border-border",
                               "focus:border-cta focus:ring-2 focus:ring-cta/30"
                             )}
                             aria-label={currentQuestion.title}
@@ -829,14 +829,14 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                 }}
                                 className={clsx(
                                   "flex items-center gap-1 rounded-xl border px-2 sm:px-3 py-3 text-base sm:text-lg transition-colors h-[52px]",
-                                  errorMessage ? "border-red-400" : "border-slate-200",
+                                  errorMessage ? "border-red-400" : "border-border",
                                   "hover:border-cta/70 focus:border-cta focus:ring-2 focus:ring-cta/30"
                                 )}
                               >
                                 <span className="text-lg sm:text-xl">{selectedCountry.flag}</span>
-                                <span className="text-xs sm:text-sm text-slate-600">{selectedCountry.dialCode}</span>
+                                <span className="text-xs sm:text-sm text-muted-foreground">{selectedCountry.dialCode}</span>
                                 <ChevronDown className={clsx(
-                                  "h-3 w-3 sm:h-4 sm:w-4 text-slate-400 transition-transform",
+                                  "h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform",
                                   isCountryDropdownOpen && "rotate-180"
                                 )} />
                               </button>
@@ -849,7 +849,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.15 }}
-                                    className="fixed z-[200] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden"
+                                    className="fixed z-[200] rounded-xl border border-border bg-card shadow-xl overflow-hidden"
                                     style={{
                                       top: dropdownPosition.top,
                                       left: dropdownPosition.left,
@@ -875,13 +875,13 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                             });
                                           }}
                                           className={clsx(
-                                            "w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50 transition-colors",
+                                            "w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-muted transition-colors",
                                             selectedCountryCode === country.code && "bg-primary/10"
                                           )}
                                         >
                                           <span className="text-xl">{country.flag}</span>
-                                          <span className="flex-1 text-sm font-medium text-slate-700">{country.name}</span>
-                                          <span className="text-sm text-slate-500">{country.dialCode}</span>
+                                          <span className="flex-1 text-sm font-medium text-foreground">{country.name}</span>
+                                          <span className="text-sm text-muted-foreground">{country.dialCode}</span>
                                         </button>
                                       ))}
                                     </div>
@@ -901,7 +901,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                               placeholder={selectedCountry.format.replace(/#/g, "0")}
                               className={clsx(
                                 "flex-1 min-w-0 rounded-xl border px-3 sm:px-4 py-3 text-base sm:text-lg transition-colors",
-                                errorMessage ? "border-red-400" : "border-slate-200",
+                                errorMessage ? "border-red-400" : "border-border",
                                 "focus:border-cta focus:ring-2 focus:ring-cta/30"
                               )}
                               aria-label={currentQuestion.title}
@@ -922,12 +922,12 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                                   "flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all shadow-sm",
                                   answers[currentQuestion.id] === option.value
                                     ? "border-cta bg-primary/10 shadow-md"
-                                    : "border-slate-200 hover:border-cta/70 hover:bg-slate-50",
+                                    : "border-border hover:border-cta/70 hover:bg-muted",
                                   errorMessage && !answers[currentQuestion.id] ? "border-red-400" : ""
                                 )}
                               >
                                 <div>
-                                  <p className="font-semibold text-slate-900">{option.label}</p>
+                                  <p className="font-semibold text-foreground">{option.label}</p>
                                 </div>
                                 {answers[currentQuestion.id] === option.value && (
                                   <span className="h-8 w-8 min-h-8 min-w-8 rounded-full bg-cta text-white flex items-center justify-center shrink-0">
@@ -948,7 +948,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                             transition={{ duration: 0.2 }}
                             className="mt-4 p-4 bg-primary/10 rounded-xl border border-primary/30"
                           >
-                            <label htmlFor={`conditional-${currentQuestion.conditionalField.id}`} className="text-sm font-semibold text-slate-700 block mb-2">
+                            <label htmlFor={`conditional-${currentQuestion.conditionalField.id}`} className="text-sm font-semibold text-foreground block mb-2">
                               {currentQuestion.conditionalField.title}
                             </label>
                             <input
@@ -960,7 +960,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                               placeholder={currentQuestion.conditionalField.placeholder}
                               className={clsx(
                                 "w-full rounded-lg border px-4 py-2 text-base transition-colors",
-                                errorMessage ? "border-red-400 bg-red-50" : "border-primary/40 bg-white",
+                                errorMessage ? "border-red-400 bg-red-50" : "border-primary/40 bg-card",
                                 "focus:border-cta focus:ring-2 focus:ring-cta/30"
                               )}
                             />
@@ -981,7 +981,7 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
                         type="button"
                         onClick={handleBack}
                         disabled={currentStep === 1}
-                        className="inline-flex items-center justify-center rounded-xl border border-slate-300 p-3 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="inline-flex items-center justify-center rounded-xl border border-border p-3 text-muted-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         aria-label="Go back"
                       >
                         <ArrowLeft className="h-5 w-5" />
@@ -1003,10 +1003,10 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
 
                 {view === "loading" && (
                   <div className="py-12 flex flex-col items-center justify-center gap-4">
-                    <div className="h-14 w-14 rounded-full border-4 border-slate-200 border-t-cta animate-spin" />
+                    <div className="h-14 w-14 rounded-full border-4 border-border border-t-cta animate-spin" />
                     <div className="text-center space-y-2">
-                      <p className="text-xl font-semibold text-slate-900">Preparing your estimate...</p>
-                      <p className="text-slate-500">We are reviewing your answers now.</p>
+                      <p className="text-xl font-semibold text-foreground">Preparing your estimate...</p>
+                      <p className="text-muted-foreground">We are reviewing your answers now.</p>
                     </div>
                   </div>
                 )}

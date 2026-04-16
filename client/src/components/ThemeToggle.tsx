@@ -48,7 +48,7 @@ export function ThemeToggle({ variant = 'icon', className = '' }: ThemeTogglePro
             }`}
           />
           <Sun className="absolute left-1 top-1 h-4 w-4 text-amber-500" />
-          <Moon className="absolute right-1 top-1 h-4 w-4 text-slate-400" />
+          <Moon className="absolute right-1 top-1 h-4 w-4 text-muted-foreground" />
         </div>
         <span className="text-sm text-muted-foreground">
           {resolvedTheme === 'light' ? 'Claro' : 'Escuro'}

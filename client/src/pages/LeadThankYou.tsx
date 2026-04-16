@@ -28,7 +28,7 @@ export default function LeadThankYou() {
   if (isLoading) {
     return (
       <div
-        className="w-full text-white overflow-hidden flex items-center pt-16"
+        className="w-full text-primary-foreground overflow-hidden flex items-center pt-16"
         style={{ background: heroGradient, minHeight: 'calc(100vh - 120px)' }}
       >
         <div className="max-w-5xl mx-auto px-4 py-8 w-full">
@@ -46,7 +46,7 @@ export default function LeadThankYou() {
   if (isError) {
     return (
       <div
-        className="w-full text-white overflow-hidden flex items-center pt-16"
+        className="w-full text-primary-foreground overflow-hidden flex items-center pt-16"
         style={{ background: heroGradient, minHeight: 'calc(100vh - 120px)' }}
       >
         <div className="max-w-5xl mx-auto px-4 py-8 w-full">
@@ -81,7 +81,7 @@ export default function LeadThankYou() {
               </div>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold leading-tight text-white">{headline}</h1>
-            <p className="mt-4 text-slate-200 text-lg leading-relaxed">
+            <p className="mt-4 text-primary-foreground/80 text-lg leading-relaxed">
               Your request was submitted successfully. A project specialist will review your details and contact you shortly.
             </p>
             <div className="mt-6 grid sm:grid-cols-2 gap-3">
@@ -104,7 +104,7 @@ export default function LeadThankYou() {
                 }}
               />
               <div className="relative space-y-4">
-                <p className="text-sm text-slate-200/90">What happens next</p>
+                <p className="text-sm text-primary-foreground/80">What happens next</p>
                 <div className="space-y-1 text-sm text-white/90">
                   <div className="p-3 rounded-xl bg-white/10 border border-white/10 flex items-center gap-3">
                     <span className="flex-shrink-0 w-7 h-7 rounded-full bg-cta/20 border border-cta/30 flex items-center justify-center text-white/70 font-bold text-sm">1</span>

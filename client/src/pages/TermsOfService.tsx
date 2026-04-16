@@ -32,7 +32,7 @@ export default function TermsOfService() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-muted to-background">
         <div className="bg-primary text-white pt-28 pb-16">
           <div className="container-custom">
             <Skeleton className="h-10 w-64 bg-white/20 mb-4" />
@@ -54,7 +54,7 @@ export default function TermsOfService() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28">
+      <div className="min-h-screen bg-gradient-to-b from-muted to-background pt-28">
         <div className="container-custom py-12">
           <ErrorState
             title="Failed to load Terms of Service"
@@ -67,7 +67,7 @@ export default function TermsOfService() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background">
       <div className="bg-primary text-white pt-28 pb-16">
         <div className="container-custom">
           <div className="flex items-center gap-3 mb-4">
@@ -180,23 +180,23 @@ export default function TermsOfService() {
 
           <Section icon={<Mail className="w-6 h-6" />} title="15. Contact">
             <p>If you have questions or concerns about these Terms of Service, contact us:</p>
-            <div className="mt-4 p-6 bg-gray-50 rounded-lg">
-              <p className="font-semibold text-gray-900">{companyName}</p>
+            <div className="mt-4 p-6 bg-muted rounded-lg">
+              <p className="font-semibold text-foreground">{companyName}</p>
               {companyEmail && (
-                <p className="text-gray-600 mt-2">
+                <p className="text-muted-foreground mt-2">
                   Email: <a href={`mailto:${companyEmail}`} className="text-primary hover:underline">{companyEmail}</a>
                 </p>
               )}
               {companyPhone && (
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Phone: <a href={`tel:${companyPhone}`} className="text-primary hover:underline">{companyPhone}</a>
                 </p>
               )}
               {companyAddress && (
-                <p className="text-gray-600">Address: {companyAddress}</p>
+                <p className="text-muted-foreground">Address: {companyAddress}</p>
               )}
             </div>
-            <p className="mt-4 text-gray-600">We aim to respond to inquiries within 30 days.</p>
+            <p className="mt-4 text-muted-foreground">We aim to respond to inquiries within 30 days.</p>
           </Section>
         </div>
       </div>
@@ -217,9 +217,9 @@ function Section({
     <section className="scroll-mt-20">
       <div className="flex items-center gap-3 mb-4">
         <div className="text-primary">{icon}</div>
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
       </div>
-      <div className="prose prose-gray max-w-none space-y-4 text-gray-600">
+      <div className="prose prose-gray max-w-none space-y-4 text-muted-foreground">
         {children}
       </div>
     </section>

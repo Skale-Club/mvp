@@ -360,7 +360,7 @@ export function CompanySettingsSection() {
               <div className="space-y-2">
                 <Label className="text-sm">Main Logo (Light Mode)</Label>
                 <div className="flex flex-col gap-3">
-                  <div className="h-32 rounded-lg border-2 border-dashed border-border bg-white flex items-center justify-center overflow-hidden relative group">
+                  <div className="h-32 rounded-lg border-2 border-dashed border-border bg-background flex items-center justify-center overflow-hidden relative group">
                     {settings.logoMain ? (
                       <img src={settings.logoMain} alt="Main Logo" className="max-h-full max-w-full object-contain p-2" />
                     ) : (
@@ -380,7 +380,7 @@ export function CompanySettingsSection() {
               <div className="space-y-2">
                 <Label className="text-sm">Dark Logo (Optional)</Label>
                 <div className="flex flex-col gap-3">
-                  <div className="h-32 rounded-lg border-2 border-dashed border-border bg-slate-900 dark:bg-slate-100 flex items-center justify-center overflow-hidden relative group">
+                  <div className="h-32 rounded-lg border-2 border-dashed border-border bg-foreground flex items-center justify-center overflow-hidden relative group">
                     {settings.logoDark ? (
                       <img src={settings.logoDark} alt="Dark Logo" className="max-h-full max-w-full object-contain p-2" />
                     ) : (
@@ -399,7 +399,7 @@ export function CompanySettingsSection() {
               <div className="space-y-2">
                 <Label className="text-sm">Favicon / App Icon</Label>
                 <div className="flex flex-col gap-3">
-                  <div className="h-24 w-24 rounded-lg border-2 border-dashed border-border bg-white flex items-center justify-center overflow-hidden relative group mx-auto">
+                  <div className="h-24 w-24 rounded-lg border-2 border-dashed border-border bg-background flex items-center justify-center overflow-hidden relative group mx-auto">
                     {settings.logoIcon ? (
                       <img src={settings.logoIcon} alt="Icon" className="max-h-full max-w-full object-contain p-2" />
                     ) : (

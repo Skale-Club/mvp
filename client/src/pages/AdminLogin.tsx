@@ -47,12 +47,12 @@ export default function AdminLogin() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <main className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <button
           type="button"
           onClick={() => { window.location.href = '/'; }}
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
           data-testid="link-back-home"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -60,7 +60,7 @@ export default function AdminLogin() {
         </button>
         <Card className="w-full shadow-xl border-0">
           <CardHeader className="text-center pb-6">
-            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-6 overflow-hidden bg-slate-100">
+            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center mb-6 overflow-hidden bg-muted">
               {companySettings?.logoIcon ? (
                 <img
                   src={companySettings.logoIcon}
@@ -73,14 +73,14 @@ export default function AdminLogin() {
                   }}
                 />
               ) : null}
-              <span className={`text-2xl font-bold text-slate-800 ${companySettings?.logoIcon ? 'hidden' : ''}`}>
+              <span className={`text-2xl font-bold text-foreground ${companySettings?.logoIcon ? 'hidden' : ''}`}>
                 {(companySettings?.companyName || 'SK').substring(0, 2).toUpperCase()}
               </span>
             </div>
-            <CardTitle className="text-2xl font-semibold text-slate-900">
+            <CardTitle className="text-2xl font-semibold text-foreground">
               {companySettings?.companyName || 'Skleanings'}
             </CardTitle>
-            <CardDescription className="text-slate-600 mt-2">
+            <CardDescription className="text-muted-foreground mt-2">
               Sign in to access the admin dashboard
             </CardDescription>
           </CardHeader>
@@ -93,32 +93,32 @@ export default function AdminLogin() {
 
             <form onSubmit={handleSupabaseLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-slate-700">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="admin@yourcompany.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:border-primary"
+                    className="pl-10 h-12 bg-muted border-border focus:bg-background focus:border-primary"
                     required
                     data-testid="input-email"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-slate-700">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
                 <div className="relative">
-                  <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:border-primary"
+                    className="pl-10 h-12 bg-muted border-border focus:bg-background focus:border-primary"
                     required
                     data-testid="input-password"
                   />
@@ -127,7 +127,7 @@ export default function AdminLogin() {
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium shadow-md"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-md"
                 disabled={emailSubmitting}
                 data-testid="button-login"
               >

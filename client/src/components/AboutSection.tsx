@@ -23,7 +23,7 @@ export function AboutSection({ content, aboutImageUrl }: AboutSectionProps) {
             {sectionContent?.heading || ""}
           </h2>
 
-          <p className="text-slate-600 text-lg mb-6 leading-relaxed">
+          <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
             {sectionContent?.description || 'We are specialists in our field, dedicated to delivering the best results for our clients. With years of experience, we provide high-quality services with commitment and excellence.'}
           </p>
 
@@ -34,7 +34,7 @@ export function AboutSection({ content, aboutImageUrl }: AboutSectionProps) {
                   <CheckCircle className="w-6 h-6 text-green-500 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-semibold text-foreground mb-1">{highlight.title}</h4>
-                    <p className="text-slate-600">{highlight.description}</p>
+                    <p className="text-muted-foreground">{highlight.description}</p>
                   </div>
                 </div>
               ))}
@@ -42,7 +42,7 @@ export function AboutSection({ content, aboutImageUrl }: AboutSectionProps) {
           )}
         </div>
 
-        <div className="order-1 lg:order-2 aspect-square max-h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-slate-100 relative">
+        <div className="order-1 lg:order-2 aspect-square max-h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-border relative">
           {aboutImageUrl || sectionContent?.defaultImageUrl ? (
             <img
               src={aboutImageUrl || sectionContent?.defaultImageUrl}

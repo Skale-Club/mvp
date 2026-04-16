@@ -79,14 +79,14 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
   }
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-background">
       <div className="container-custom mx-auto">
         <div className="flex items-center justify-between mb-12">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2" data-testid="text-blog-section-title">
               {sectionContent.title}
             </h2>
-            <p className="text-slate-600 text-lg">{sectionContent.subtitle}</p>
+            <p className="text-muted-foreground text-lg">{sectionContent.subtitle}</p>
           </div>
           <Link href="/blog" className="hidden md:flex items-center gap-2 text-primary font-semibold hover:underline" data-testid="link-view-all-blog">
             {sectionContent.viewAllText}
@@ -107,7 +107,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
               {posts.map(post => (
                 <CarouselItem key={post.id} className="basis-full">
                   <Link href={`/blog/${post.slug}`} className="group block" data-testid={`link-blog-card-${post.id}`}>
-                    <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div className="bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                       {post.featureImageUrl ? (
                         <div className="aspect-video overflow-hidden">
                           <img
@@ -124,7 +124,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                         </div>
                       )}
                       <div className="p-6 flex flex-col flex-1">
-                        <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                           <Calendar className="w-4 h-4" />
                           <span data-testid={`text-blog-home-date-${post.id}`}>
                             {post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : ''}
@@ -133,10 +133,10 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                         <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
                           {post.title}
                         </h3>
-                        <p className="text-slate-600 text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
+                        <p className="text-muted-foreground text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
                           {getExcerpt(post)}
                         </p>
-                        <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="mt-4 pt-4 border-t border-border">
                           <span className="text-primary font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
                             {sectionContent.readMoreText}
                             <ArrowRight className="w-4 h-4" />
@@ -156,7 +156,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                 type="button"
                 aria-label="Previous article"
                 onClick={() => api?.scrollPrev()}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-border hover:text-foreground"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -167,7 +167,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                     type="button"
                     aria-label={`Go to article ${index + 1}`}
                     onClick={() => api?.scrollTo(index)}
-                    className={`h-2.5 rounded-full transition-all ${selectedIndex === index ? 'w-7 bg-primary' : 'w-2.5 bg-slate-300'}`}
+                    className={`h-2.5 rounded-full transition-all ${selectedIndex === index ? 'w-7 bg-primary' : 'w-2.5 bg-muted-foreground/40'}`}
                   />
                 ))}
               </div>
@@ -175,7 +175,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                 type="button"
                 aria-label="Next article"
                 onClick={() => api?.scrollNext()}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition-colors hover:border-border hover:text-foreground"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -186,7 +186,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
         <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map(post => (
             <Link key={post.id} href={`/blog/${post.slug}`} className="group" data-testid={`link-blog-card-${post.id}`}>
-              <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+              <div className="bg-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                 {post.featureImageUrl ? (
                   <div className="aspect-video overflow-hidden">
                     <img
@@ -203,7 +203,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                   </div>
                 )}
                 <div className="p-6 flex flex-col flex-1">
-                  <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                     <Calendar className="w-4 h-4" />
                     <span data-testid={`text-blog-home-date-${post.id}`}>
                       {post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : ''}
@@ -212,10 +212,10 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
                   <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
                     {post.title}
                   </h3>
-                  <p className="text-slate-600 text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
+                  <p className="text-muted-foreground text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
                     {getExcerpt(post)}
                   </p>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-border">
                     <span className="text-primary font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
                       {sectionContent.readMoreText}
                       <ArrowRight className="w-4 h-4" />
@@ -228,7 +228,7 @@ function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
         </div>
 
         <div className="mt-10 text-center md:hidden">
-          <Link href="/blog" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors" data-testid="link-view-all-blog-mobile">
+          <Link href="/blog" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-colors" data-testid="link-view-all-blog-mobile">
             {sectionContent.viewAllText}
             <ArrowRight className="w-4 h-4" />
           </Link>
@@ -393,18 +393,18 @@ export default function Home() {
       {trustBadges.length > 0 && (
       <section className="relative z-20 -mt-8 sm:-mt-12 lg:-mt-16 bg-transparent">
         <div className="container-custom mx-auto relative">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100 overflow-hidden relative z-30">
+          <div className="bg-card rounded-2xl shadow-2xl border border-border grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border overflow-hidden relative z-30">
             {trustBadges.map((feature, i) => {
               const iconKey = (feature.icon || '').toLowerCase();
               const Icon = badgeIconMap[iconKey] || badgeIconMap.star || Star;
               return (
-                <div key={i} className="p-8 flex items-center gap-6 hover:bg-gray-50 transition-colors">
+                <div key={i} className="p-8 flex items-center gap-6 hover:bg-muted transition-colors">
                   <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground">{feature.title}</h3>
-                    <p className="text-sm text-slate-500">{feature.description}</p>
+                    <p className="text-sm text-muted-foreground">{feature.description}</p>
                   </div>
                 </div>
               );
@@ -427,17 +427,17 @@ export default function Home() {
       )}
       {/* Reviews Section */}
       {(reviewsUseWidget || (reviewsUseFallback && fallbackReviews.length > 0) || reviewsTitle || reviewsSubtitle) && (
-      <section className="pt-6 sm:pt-10 lg:pt-12 pb-0 bg-white mb-0 text-slate-800">
+      <section className="pt-6 sm:pt-10 lg:pt-12 pb-0 bg-background mb-0 text-foreground">
         <div className="w-full">
           {(reviewsTitle || reviewsSubtitle) ? (
             <div className="container-custom mx-auto mb-16 text-center">
               {reviewsTitle ? (
-                <h2 className="text-3xl md:text-5xl font-bold mb-4 text-slate-800">
+                <h2 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
                   {reviewsTitle}
                 </h2>
               ) : null}
               {reviewsSubtitle ? (
-                <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+                <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
                   {reviewsSubtitle}
                 </p>
               ) : null}
@@ -446,11 +446,11 @@ export default function Home() {
           {reviewsUseWidget && reviewsEmbedUrl ? (
             <div className="w-full px-0">
                 <div className="pb-0 bg-muted/40 -mt-6 sm:-mt-8 lg:-mt-10">
-                <iframe 
-                  className="lc_reviews_widget rounded-none" 
+                <iframe
+                  className="lc_reviews_widget rounded-none"
                   src={reviewsEmbedUrl}
-                  frameBorder='0' 
-                  scrolling='no' 
+                  frameBorder='0'
+                  scrolling='no'
                    style={{ minWidth: '100%', width: '100%', height: '488px', border: 'none', display: 'block', borderRadius: '0', background: 'transparent' }}
                   onLoad={() => {
                     const script = document.createElement('script');
@@ -470,7 +470,7 @@ export default function Home() {
       )}
       <FaqSection maxItems={8} />
       {(companySettings?.mapEmbedUrl || homepageContent.areasServedSection?.heading || homepageContent.areasServedSection?.description) && (
-      <section id="areas-served" className="bg-white py-20">
+      <section id="areas-served" className="bg-background py-20">
         <AreasServedMap
           mapEmbedUrl={companySettings?.mapEmbedUrl}
           content={areasServedSection}
@@ -486,21 +486,21 @@ function ServiceCard({ post }: { post: ServicePost }) {
   return (
     <Link
       href={getServicePostPath(post.id, post.slug)}
-      className="group block h-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+      className="group block h-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
       data-testid={`link-home-service-post-${post.id}`}
     >
       {post.featureImageUrl ? (
         <img src={post.featureImageUrl} alt={post.title} className="aspect-[4/3] w-full object-cover" loading="lazy" />
       ) : (
-        <div className="flex aspect-[4/3] items-center justify-center bg-slate-100">
-          <ImageIcon className="h-10 w-10 text-slate-400" />
+        <div className="flex aspect-[4/3] items-center justify-center bg-muted">
+          <ImageIcon className="h-10 w-10 text-muted-foreground" />
         </div>
       )}
       <div className="space-y-3 p-5">
-        <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors">
+        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
           {post.title}
         </h3>
-        <p className="line-clamp-2 text-sm text-slate-600">
+        <p className="line-clamp-2 text-sm text-muted-foreground">
           {post.excerpt || "Professional service tailored to your needs."}
         </p>
         <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
@@ -536,12 +536,12 @@ function ServicesCarouselSection({ posts }: { posts: ServicePost[] }) {
   if (featuredPosts.length === 0) return null;
 
   return (
-    <section className="bg-white py-20">
+    <section className="bg-background py-20">
       <div className="container-custom mx-auto">
         <div className="mb-10 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">Featured Services</h2>
-            <p className="mt-2 text-lg text-slate-600">Explore our most requested services and open each page for details.</p>
+            <p className="mt-2 text-lg text-muted-foreground">Explore our most requested services and open each page for details.</p>
           </div>
           <Link href="/services" className="hidden md:inline-flex items-center gap-2 text-primary font-semibold hover:underline">
             View all services
@@ -577,7 +577,7 @@ function ServicesCarouselSection({ posts }: { posts: ServicePost[] }) {
         )}
 
         <div className="mt-8 text-center md:hidden">
-          <Link href="/services" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-white hover:bg-primary/90">
+          <Link href="/services" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90">
             View all services
             <ArrowRight className="w-4 h-4" />
           </Link>
@@ -590,7 +590,7 @@ function ServicesCarouselSection({ posts }: { posts: ServicePost[] }) {
 function FallbackReviewCard({ review }: { review: FallbackReview }) {
   return (
     <article
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm h-full"
+      className="rounded-2xl border border-border bg-card p-6 shadow-sm h-full"
       data-testid={`card-fallback-review-${review.id}`}
     >
       <div className="flex items-center gap-1 mb-3">
@@ -598,13 +598,13 @@ function FallbackReviewCard({ review }: { review: FallbackReview }) {
           <Star key={`${review.id}-star-${index}`} className="h-4 w-4 text-amber-500 fill-amber-500" />
         ))}
       </div>
-      <p className="text-slate-700 leading-relaxed mb-4">"{review.content}"</p>
-      <p className="font-semibold text-slate-900">{review.authorName}</p>
+      <p className="text-foreground leading-relaxed mb-4">"{review.content}"</p>
+      <p className="font-semibold text-foreground">{review.authorName}</p>
       {review.authorMeta ? (
-        <p className="text-sm text-slate-500">{review.authorMeta}</p>
+        <p className="text-sm text-muted-foreground">{review.authorMeta}</p>
       ) : null}
       {review.sourceLabel ? (
-        <span className="inline-flex mt-3 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+        <span className="inline-flex mt-3 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
           {review.sourceLabel}
         </span>
       ) : null}
@@ -662,7 +662,7 @@ function ReviewsCarouselSection({ reviews }: { reviews: FallbackReview[] }) {
           type="button"
           aria-label="Previous review"
           onClick={() => api?.scrollPrev()}
-          className="inline-flex absolute left-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-slate-700 hover:text-slate-900"
+          className="inline-flex absolute left-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-foreground hover:text-foreground"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
@@ -670,7 +670,7 @@ function ReviewsCarouselSection({ reviews }: { reviews: FallbackReview[] }) {
           type="button"
           aria-label="Next review"
           onClick={() => api?.scrollNext()}
-          className="inline-flex absolute right-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-slate-700 hover:text-slate-900"
+          className="inline-flex absolute right-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-foreground hover:text-foreground"
         >
           <ChevronRight className="h-6 w-6" />
         </button>
@@ -688,7 +688,7 @@ function GalleryShowcaseSection({ images }: { images: GalleryImage[] }) {
         <div className="mb-10 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">Gallery Showcase</h2>
-            <p className="mt-2 text-lg text-slate-600">A quick preview of our latest project photos.</p>
+            <p className="mt-2 text-lg text-muted-foreground">A quick preview of our latest project photos.</p>
           </div>
           <Link href="/gallery" className="hidden md:inline-flex items-center gap-2 text-primary font-semibold hover:underline">
             View all photos
@@ -701,7 +701,7 @@ function GalleryShowcaseSection({ images }: { images: GalleryImage[] }) {
             <Link
               key={image.id}
               href="/gallery"
-              className="group overflow-hidden rounded-xl border border-white/60 bg-white shadow-sm"
+              className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm"
               data-testid={`link-home-gallery-${image.id}`}
             >
               <img
@@ -715,7 +715,7 @@ function GalleryShowcaseSection({ images }: { images: GalleryImage[] }) {
         </div>
 
         <div className="mt-8 text-center md:hidden">
-          <Link href="/gallery" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-white hover:bg-primary/90">
+          <Link href="/gallery" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90">
             View all photos
             <ArrowRight className="w-4 h-4" />
           </Link>

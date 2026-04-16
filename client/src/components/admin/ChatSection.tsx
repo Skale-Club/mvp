@@ -475,7 +475,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
     const label = status === 'closed' ? 'Archived' : status === 'open' ? 'Open' : status;
     const badgeClass = status === 'open'
       ? 'bg-blue-500/10 text-blue-200 border border-blue-400/50 rounded-full px-3 py-1 text-xs font-semibold'
-      : 'bg-slate-700/40 text-slate-300 border border-slate-500/50 rounded-full px-3 py-1 text-xs font-semibold';
+      : 'bg-muted text-muted-foreground border border-border rounded-full px-3 py-1 text-xs font-semibold';
     return <span className={badgeClass}>{label}</span>;
   };
 
@@ -522,7 +522,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
         description="Prioritize conversations, then open the settings drawer when needed."
       />
 
-      <Card className="shadow-sm border-0 bg-muted dark:bg-slate-800/70">
+      <Card className="shadow-sm border-0 bg-muted">
         <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <CardTitle>Conversations</CardTitle>
@@ -546,13 +546,13 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 min-w-[110px] border-0 bg-slate-200 hover:bg-slate-300 text-slate-950 font-semibold dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100"
+              className="h-9 min-w-[110px] border-0 bg-muted hover:bg-muted/80 text-foreground font-semibold"
               onClick={() => refetchConversations()}
               disabled={loadingConversations}
             >
               {loadingConversations ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Refresh'}
             </Button>
-            <div className="h-9 min-w-[110px] flex items-center justify-center bg-[#FFFF01] text-black font-bold rounded-md px-4 text-sm">
+            <div className="h-9 min-w-[110px] flex items-center justify-center bg-secondary text-secondary-foreground font-bold rounded-md px-4 text-sm">
               {paginatedConversations.length} shown
             </div>
             </div>
@@ -579,9 +579,9 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
             </div>
           ) : conversations && conversations.length > 0 ? (
             <>
-            <div className="overflow-auto rounded-lg bg-muted dark:bg-slate-800/70">
+            <div className="overflow-auto rounded-lg bg-muted">
               <table className="w-full text-sm">
-                <thead className="bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <thead className="bg-muted text-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left">Visitor</th>
                     <th className="px-4 py-3 text-left">Source</th>
@@ -591,9 +591,9 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                     <th className="px-4 py-3 text-center">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-card/70 dark:bg-slate-800/60 divide-y divide-border/60 dark:divide-slate-700/60">
+                <tbody className="bg-card/70 divide-y divide-border/60">
                   {paginatedConversations.map((conv) => (
-                    <tr key={conv.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-700/50">
+                    <tr key={conv.id} className="hover:bg-muted/50">
                       <td className="px-4 py-3">
                         <div className="font-medium">{conv.visitorName || 'Guest'}</div>
                         <div className="text-xs text-muted-foreground">
@@ -611,7 +611,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                       <td className="px-4 py-3">{statusBadge(conv.status)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-3">
-                      <Button size="sm" variant="ghost" className="min-w-[88px] h-8 justify-center text-sm font-semibold border-0 bg-slate-600 hover:bg-slate-700 text-white dark:bg-slate-600 dark:hover:bg-slate-500 dark:text-white" onClick={() => openConversation(conv)}>
+                      <Button size="sm" variant="ghost" className="min-w-[88px] h-8 justify-center text-sm font-semibold border-0 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => openConversation(conv)}>
                         View
                       </Button>
                         <div className="flex items-center gap-1">
@@ -621,7 +621,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                                 <Button
                                   size="icon"
                                   variant="ghost"
-                                  className="text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                                  className="text-muted-foreground hover:text-foreground"
                                   aria-label="Archive conversation"
                                   data-testid={`button-archive-conversation-${conv.id}`}
                                 >
@@ -649,7 +649,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                              className="text-muted-foreground hover:text-foreground"
                               onClick={() => statusMutation.mutate({ id: conv.id, status: 'open' })}
                               aria-label="Reopen conversation"
                               data-testid={`button-reopen-conversation-${conv.id}`}
@@ -662,7 +662,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="text-red-500"
+                                className="text-destructive"
                                 data-testid={`button-delete-conversation-${conv.id}`}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -739,7 +739,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
             )}
             </>
           ) : (
-            <div className="p-8 text-center bg-card/80 dark:bg-slate-900/70 rounded-lg">
+            <div className="p-8 text-center bg-card/80 rounded-lg">
               <p className="text-muted-foreground">
                 {conversations && conversations.length > 0
                   ? 'No conversations match this filter.'
@@ -752,7 +752,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
 
       {/* Calendar & Staff section removed - chat now uses dynamic form qualification */}
 
-      <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen} className="rounded-xl bg-card/80 dark:bg-slate-900/70 shadow-none border border-border/70 dark:border-slate-800/70">
+      <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen} className="rounded-xl bg-card/80 shadow-none border border-border/70">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
             <p className="font-semibold text-base">Widget & assistant settings</p>
@@ -765,9 +765,9 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
             </Button>
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent className="p-4 border-t border-border/70 dark:border-slate-800/70 space-y-6">
+        <CollapsibleContent className="p-4 border-t border-border/70 space-y-6">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-            <Card className="border-0 bg-muted dark:bg-slate-800/60 shadow-none">
+            <Card className="border-0 bg-muted shadow-none">
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -801,9 +801,9 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                 <p className="text-sm text-muted-foreground">Control assistant branding, behavior, and welcome message</p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3 bg-card rounded-lg border border-border/70 dark:bg-slate-900/80 dark:border-slate-800/70 p-4">
+                <div className="space-y-3 bg-card rounded-lg border border-border/70 p-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full overflow-hidden bg-white/80 dark:bg-slate-800 flex items-center justify-center border border-border/60 dark:border-slate-700/60">
+                    <div className="h-12 w-12 rounded-full overflow-hidden bg-background flex items-center justify-center border border-border/60">
                       {assistantAvatar ? (
                         <img src={assistantAvatar} alt={assistantName} className="h-full w-full object-cover" />
                       ) : (
@@ -972,7 +972,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                     </Button>
                   </div>
                   {settingsDraft.excludedUrlRules?.length === 0 && (
-                    <div className="text-sm text-muted-foreground bg-card/80 dark:bg-slate-900/70 border border-border/60 dark:border-slate-800/60 rounded-md p-3">
+                    <div className="text-sm text-muted-foreground bg-card/80 border border-border/60 rounded-md p-3">
                       No rules yet. Add paths like <code>/admin</code>, <code>/checkout</code>, or <code>/privacy</code>.
                     </div>
                   )}
@@ -1000,7 +1000,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-9 w-9 text-red-500"
+                          className="h-9 w-9 text-destructive"
                           onClick={() => removeRule(idx)}
                           data-testid={`button-remove-rule-${idx}`}
                         >
@@ -1033,7 +1033,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
           )}
 
           {/* Intake flow section removed - chat now follows dynamic Form Editor configuration */}
-          <Card className="border-0 bg-muted dark:bg-slate-800/60 shadow-none">
+          <Card className="border-0 bg-muted shadow-none">
             <CardHeader>
               <CardTitle>Lead Qualification</CardTitle>
               <p className="text-sm text-muted-foreground">The chat follows the same questions configured in the Form Editor.</p>
@@ -1046,7 +1046,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-muted dark:bg-slate-800/60 shadow-none">
+          <Card className="border-0 bg-muted shadow-none">
             <CardHeader>
               <CardTitle>Widget Tips</CardTitle>
             </CardHeader>
@@ -1078,17 +1078,17 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
       </Collapsible>
 
       <Dialog open={!!selectedConversation} onOpenChange={(open) => !open && setSelectedConversation(null)}>
-        <DialogContent className="w-[95vw] max-w-[640px] p-0 gap-0 overflow-hidden rounded-2xl border-0 bg-white dark:bg-[#0b1220] text-slate-900 dark:text-slate-100 shadow-2xl">
-          <DialogHeader className="border-0 bg-slate-50 dark:bg-[#0d1526] px-6 py-4">
+        <DialogContent className="w-[95vw] max-w-[640px] p-0 gap-0 overflow-hidden rounded-2xl border-0 bg-card text-card-foreground shadow-2xl">
+          <DialogHeader className="border-0 bg-muted px-6 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <DialogTitle className="text-lg">Conversation</DialogTitle>
                 {selectedConversation && (
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span>{visitorName}</span>
                     {statusBadge(selectedConversation.status)}
                     {selectedConversation.firstPageUrl && (
-                      <span className="rounded-full bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
                         {selectedConversation.firstPageUrl}
                       </span>
                     )}
@@ -1096,7 +1096,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                 )}
               </div>
               {selectedConversation && conversationLastUpdated && (
-                <div className="text-xs text-slate-500 dark:text-slate-400">
+                <div className="text-xs text-muted-foreground">
                   Updated {format(new Date(conversationLastUpdated), 'PP p')}
                 </div>
               )}
@@ -1104,11 +1104,11 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
           </DialogHeader>
 
           {isMessagesLoading ? (
-            <div className="flex justify-center py-12 bg-slate-200 dark:bg-[#0a1222]">
+            <div className="flex justify-center py-12 bg-muted/70">
               <Loader2 className="w-5 h-5 animate-spin text-blue-500 dark:text-blue-400" />
             </div>
           ) : (
-            <div className="max-h-[450px] overflow-auto bg-slate-200 dark:bg-[#0a1222] px-6 py-6 space-y-6">
+            <div className="max-h-[450px] overflow-auto bg-muted/70 px-6 py-6 space-y-6">
               {messages.map((msg) => {
                 const isAssistant = msg.role === 'assistant';
                 const nameLabel = isAssistant ? assistantName : visitorName;
@@ -1118,11 +1118,11 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                     className={clsx('flex items-end gap-3', isAssistant ? 'justify-start' : 'justify-end')}
                   >
                     {isAssistant && (
-                      <div className="h-9 w-9 rounded-full bg-white dark:bg-[#0b1220] border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shadow-sm">
+                      <div className="h-9 w-9 rounded-full bg-card border border-border overflow-hidden flex items-center justify-center shadow-sm">
                         {assistantAvatar ? (
                           <img src={assistantAvatar} alt={assistantName} className="h-full w-full object-cover" />
                         ) : (
-                          <MessageSquare className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
                         )}
                       </div>
                     )}
@@ -1131,47 +1131,47 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                         className={clsx(
                           'rounded-2xl px-4 py-3 text-sm shadow-sm',
                           isAssistant
-                            ? 'bg-white dark:bg-[#111a2e] text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-800/80'
-                            : 'bg-[#3b82f6] text-white'
+                            ? 'bg-card text-card-foreground border border-border/60'
+                            : 'bg-primary text-primary-foreground'
                         )}
                       >
                         <div className="whitespace-pre-wrap leading-relaxed">{renderMarkdown(msg.content)}</div>
                       </div>
-                      <div className={clsx('mt-1 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400', !isAssistant && 'justify-end')}>
+                      <div className={clsx('mt-1 flex items-center gap-2 text-[11px] text-muted-foreground', !isAssistant && 'justify-end')}>
                         <span className="font-medium">{nameLabel}</span>
                         <span>•</span>
                         <span>{format(new Date(msg.createdAt), 'PP p')}</span>
                       </div>
                       {msg.metadata?.pageUrl && (
-                        <div className={clsx('mt-1 text-[11px] text-slate-500 dark:text-slate-400', !isAssistant && 'text-right')}>
+                        <div className={clsx('mt-1 text-[11px] text-muted-foreground', !isAssistant && 'text-right')}>
                           Page: {msg.metadata.pageUrl}
                         </div>
                       )}
                     </div>
                     {!isAssistant && (
-                      <div className="h-9 w-9 rounded-full bg-[#3b82f6] text-white flex items-center justify-center shadow-sm">
+                      <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
                         <User className="w-4 h-4" />
                       </div>
                     )}
                   </div>
                 );
               })}
-              {messages.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400 text-center">No messages yet.</p>}
+              {messages.length === 0 && <p className="text-sm text-muted-foreground text-center">No messages yet.</p>}
               <div ref={messagesEndRef} />
             </div>
           )}
 
           {selectedConversation && (
-            <div className="border-0 bg-slate-50 dark:bg-[#0d1526] px-6 py-4">
+            <div className="border-0 bg-muted px-6 py-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 rounded-full bg-slate-200 dark:bg-slate-800/70 px-4 py-2 text-xs text-slate-600 dark:text-slate-300">
+                <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-xs text-muted-foreground">
                   <MessageSquare className="w-4 h-4" />
                   <span>Read-only transcript in admin.</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
-                    className="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100"
+                    className="bg-muted hover:bg-muted/80 text-foreground"
                     onClick={() =>
                       statusMutation.mutate({
                         id: selectedConversation.id,
@@ -1183,7 +1183,7 @@ You: "Excellent, John! A specialist will contact you within 24 hours!"`;
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300">
+                      <Button variant="ghost" className="text-destructive hover:text-destructive/80">
                         Delete
                       </Button>
                     </AlertDialogTrigger>
@@ -1224,11 +1224,11 @@ function ObjectiveRow({ objective, onToggle }: { objective: IntakeObjective; onT
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 rounded-lg border bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:bg-slate-800 dark:border-slate-700"
+      className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
     >
       <button
         type="button"
-        className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-slate-200 hover:bg-slate-50 text-slate-500 dark:border-slate-600 dark:hover:bg-slate-700 dark:text-slate-400"
+        className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-border hover:bg-muted text-muted-foreground"
         {...attributes}
         {...listeners}
         aria-label="Drag to reorder"
@@ -1236,7 +1236,7 @@ function ObjectiveRow({ objective, onToggle }: { objective: IntakeObjective; onT
         <GripVertical className="h-4 w-4" />
       </button>
       <div className="flex-1">
-        <p className="text-sm font-medium dark:text-slate-200">{objective.label}</p>
+        <p className="text-sm font-medium">{objective.label}</p>
         <p className="text-xs text-muted-foreground">{objective.description}</p>
       </div>
       <Switch checked={objective.enabled} onCheckedChange={(checked) => onToggle(objective.id, checked)} />

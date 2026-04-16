@@ -21,7 +21,7 @@ export function parseInlineMarkdown(text: string, keyPrefix: string): React.Reac
     } else if (match[4]) {
       // `code`
       result.push(
-        <code key={`${keyPrefix}-c-${match.index}`} className="bg-slate-100 px-1 py-0.5 rounded text-xs font-mono">
+        <code key={`${keyPrefix}-c-${match.index}`} className="bg-muted px-1 py-0.5 rounded text-xs font-mono">
           {match[4]}
         </code>
       );

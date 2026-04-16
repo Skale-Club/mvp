@@ -302,9 +302,9 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
     return (
       <div
         key={`${numberLabel}-${step.title}-${index}`}
-        className="group relative overflow-visible rounded-3xl bg-white/90 border border-slate-100 shadow-[0_24px_60px_-60px_rgba(15,23,42,0.45)] hover:-translate-y-2 hover:shadow-[0_28px_70px_-55px_rgba(23,37,84,0.4)] transition-all duration-300 backdrop-blur flex-shrink-0 w-full md:w-[88%] sm:w-[70%] md:w-[52%] lg:w-[36%] xl:w-[30%]"
+        className="group relative overflow-visible rounded-3xl bg-card/90 border border-border shadow-[0_24px_60px_-60px_rgba(15,23,42,0.45)] hover:-translate-y-2 hover:shadow-[0_28px_70px_-55px_rgba(23,37,84,0.4)] transition-all duration-300 backdrop-blur flex-shrink-0 w-full md:w-[88%] sm:w-[70%] md:w-[52%] lg:w-[36%] xl:w-[30%]"
       >
-        <div className="absolute right-4 top-3 text-6xl font-black text-slate-100/80 pointer-events-none">
+        <div className="absolute right-4 top-3 text-6xl font-black text-muted/80 pointer-events-none">
           {numberLabel}
         </div>
         <div className="relative z-10 p-6 space-y-5">
@@ -314,19 +314,19 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
                 <Icon className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <p className="text-[11px] uppercase tracking-[0.12em] text-slate-500 font-semibold">{stepLabel} {numberLabel}</p>
-                <h3 className="text-xl font-bold text-slate-900 leading-tight">{step.title}</h3>
+                <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-semibold">{stepLabel} {numberLabel}</p>
+                <h3 className="text-xl font-bold text-foreground leading-tight">{step.title}</h3>
               </div>
             </div>
           </div>
           <div className="space-y-px">
-            <div className="rounded-t-2xl border border-slate-100 bg-slate-50/80 p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500 font-semibold">{whatWeDoLabel}</p>
-              <p className="text-slate-700 leading-relaxed mt-2 text-sm">{step.whatWeDo}</p>
+            <div className="rounded-t-2xl border border-border bg-muted/80 p-4">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-semibold">{whatWeDoLabel}</p>
+              <p className="text-muted-foreground leading-relaxed mt-2 text-sm">{step.whatWeDo}</p>
             </div>
             <div className="rounded-b-2xl border border-primary/20 bg-primary/5 p-4">
               <p className="text-[11px] uppercase tracking-[0.14em] text-primary font-semibold">{outcomeLabel}</p>
-              <p className="text-slate-800 leading-relaxed mt-2 text-sm font-semibold">{step.outcome}</p>
+              <p className="text-foreground leading-relaxed mt-2 text-sm font-semibold">{step.outcome}</p>
             </div>
           </div>
         </div>
@@ -346,15 +346,15 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
       <div className="relative z-10 space-y-6 md:space-y-8 pb-4 md:pb-8">
         <div className="container-custom mx-auto px-4 sm:px-6 md:px-10">
           <div className="max-w-4xl space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 border border-slate-200 rounded-full shadow-sm text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-card/70 border border-border rounded-full shadow-sm text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
               <span>{tagLabel}</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
               {section.title || 'How It Works'}
             </h2>
             {section.subtitle && (
-              <p className="text-lg md:text-xl text-slate-600 leading-relaxed">
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
                 {section.subtitle}
               </p>
             )}
@@ -386,32 +386,32 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
         </div>
 
         <div className="container-custom mx-auto px-4 sm:px-6 md:px-10 grid gap-6 lg:grid-cols-[2fr_1fr] items-stretch -mt-6 md:-mt-10">
-          <div className="rounded-3xl bg-white/90 border border-slate-100 shadow-[0_24px_70px_-50px_rgba(15,23,42,0.45)] px-8 py-8 space-y-4 h-full">
+          <div className="rounded-3xl bg-card/90 border border-border shadow-[0_24px_70px_-50px_rgba(15,23,42,0.45)] px-8 py-8 space-y-4 h-full">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 min-w-[44px] flex-shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-lg font-bold text-slate-900">{practicalTitle}</p>
-                <p className="text-sm text-slate-500">How the work happens on a daily basis</p>
+                <p className="text-lg font-bold text-foreground">{practicalTitle}</p>
+                <p className="text-sm text-muted-foreground">How the work happens on a daily basis</p>
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               {practicalBullets.map((bullet, idx) => (
                 <div
                   key={`${bullet}-${idx}`}
-                  className="p-4 rounded-2xl bg-slate-50/90 border border-slate-100 shadow-sm"
+                  className="p-4 rounded-2xl bg-muted/90 border border-border shadow-sm"
                 >
-                  <p className="text-sm text-slate-700 leading-relaxed">{bullet}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{bullet}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white/95 border border-slate-100 shadow-[0_24px_70px_-50px_rgba(15,23,42,0.45)] px-8 py-8 flex flex-col gap-4 justify-center h-full">
+          <div className="rounded-3xl bg-card/95 border border-border shadow-[0_24px_70px_-50px_rgba(15,23,42,0.45)] px-8 py-8 flex flex-col gap-4 justify-center h-full">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-700 uppercase tracking-[0.12em]">{nextStepLabel}</p>
-              <p className="text-xl font-bold text-slate-900 leading-tight">{nextStepText}</p>
+              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-[0.12em]">{nextStepLabel}</p>
+              <p className="text-xl font-bold text-foreground leading-tight">{nextStepText}</p>
             </div>
             <a
               href={ctaHref}
@@ -422,7 +422,7 @@ export function ConsultingStepsSection({ section, onCtaClick }: Props) {
               {ctaLabel}
               <ArrowRight className="w-4 h-4 flex-shrink-0" />
             </a>
-            {helperText && <p className="text-sm text-slate-600 leading-relaxed">{helperText}</p>}
+            {helperText && <p className="text-sm text-muted-foreground leading-relaxed">{helperText}</p>}
           </div>
         </div>
       </div>

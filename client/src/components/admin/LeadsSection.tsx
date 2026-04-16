@@ -343,9 +343,9 @@ export function LeadsSection() {
       case 'COLD':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'DISQUALIFIED':
-        return 'bg-slate-100 text-slate-600 border-slate-200';
+        return 'bg-muted text-muted-foreground border-border';
       default:
-        return 'bg-slate-100 text-slate-600 border-slate-200';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -943,9 +943,9 @@ function FormEditorContent() {
           <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">COLD</p>
           <p className="text-lg font-bold text-blue-700 dark:text-blue-300">≥ {config.thresholds.cold} pts</p>
         </div>
-        <div className="p-3 rounded-xl border bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">DISQUALIFIED</p>
-          <p className="text-lg font-bold text-slate-600 dark:text-slate-300">&lt; {config.thresholds.cold} pts</p>
+        <div className="p-3 rounded-xl border bg-muted border-border">
+          <p className="text-xs text-muted-foreground font-semibold">DISQUALIFIED</p>
+          <p className="text-lg font-bold text-foreground">&lt; {config.thresholds.cold} pts</p>
         </div>
       </div>
 

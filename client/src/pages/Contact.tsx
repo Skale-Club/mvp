@@ -68,7 +68,7 @@ export default function Contact() {
         <div className="container-custom mx-auto">
           <div className="max-w-3xl mb-16">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">Thank You!</h1>
-            <p className="text-xl text-slate-600 leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed">
               Your message has been sent. We'll get back to you as soon as possible.
             </p>
           </div>
@@ -85,14 +85,14 @@ export default function Contact() {
       <div className="container-custom mx-auto">
         <div className="max-w-3xl mb-16">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">Contact Us</h1>
-          <p className="text-xl text-slate-600 leading-relaxed">
+          <p className="text-xl text-muted-foreground leading-relaxed">
             Have questions about our services or need a custom quote? We're here to help. Reach out to us today.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+            <form onSubmit={handleSubmit} className="space-y-6 bg-card p-8 rounded-3xl shadow-sm border border-border">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium" htmlFor="name">Full Name</label>
@@ -167,7 +167,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <p className="font-medium">Call Us</p>
-                    <p className="text-slate-600">{phone || "Contact us for phone"}</p>
+                    <p className="text-muted-foreground">{phone || "Contact us for phone"}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -176,7 +176,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <p className="font-medium">Email Us</p>
-                    <p className="text-slate-600">{email || "Contact us for email"}</p>
+                    <p className="text-muted-foreground">{email || "Contact us for email"}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -185,7 +185,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <p className="font-medium">Visit Us</p>
-                    <p className="text-slate-600">{address || "Contact us for address"}</p>
+                    <p className="text-muted-foreground">{address || "Contact us for address"}</p>
                   </div>
                 </div>
               </div>

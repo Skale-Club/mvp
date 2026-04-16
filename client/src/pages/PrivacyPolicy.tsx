@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-muted to-background">
         <div className="bg-primary text-white pt-28 pb-16">
           <div className="container-custom">
             <Skeleton className="h-10 w-64 bg-white/20 mb-4" />
@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
 
   if (isError) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28">
+      <div className="min-h-screen bg-gradient-to-b from-muted to-background pt-28">
         <div className="container-custom py-12">
           <ErrorState
             title="Failed to load Privacy Policy"
@@ -51,7 +51,7 @@ export default function PrivacyPolicy() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-muted to-background">
       {/* Header */}
       <div className="bg-primary text-white pt-28 pb-16">
         <div className="container-custom">
@@ -92,7 +92,7 @@ export default function PrivacyPolicy() {
           >
             <p>We collect information that you provide directly to us and information collected automatically when you use our services.</p>
 
-            <h4 className="font-semibold text-gray-900 mt-6 mb-3">Personal Information You Provide</h4>
+            <h4 className="font-semibold text-foreground mt-6 mb-3">Personal Information You Provide</h4>
             <ul className="list-disc space-y-2">
               <li><strong>Contact Information:</strong> Name, email address, phone number, and mailing address</li>
               <li><strong>Booking Details:</strong> Service preferences, appointment dates and times, property information</li>
@@ -101,7 +101,7 @@ export default function PrivacyPolicy() {
               <li><strong>Account Information:</strong> Username, password, and profile preferences</li>
             </ul>
 
-            <h4 className="font-semibold text-gray-900 mt-6 mb-3">Information Collected Automatically</h4>
+            <h4 className="font-semibold text-foreground mt-6 mb-3">Information Collected Automatically</h4>
             <ul className="list-disc space-y-2">
               <li><strong>Device Information:</strong> IP address, browser type, operating system, and device identifiers</li>
               <li><strong>Usage Data:</strong> Pages visited, time spent on pages, click patterns, and referring URLs</li>
@@ -168,7 +168,7 @@ export default function PrivacyPolicy() {
           >
             <p>We use cookies and similar tracking technologies to enhance your experience on our website:</p>
 
-            <h4 className="font-semibold text-gray-900 mt-6 mb-3">Types of Cookies We Use</h4>
+            <h4 className="font-semibold text-foreground mt-6 mb-3">Types of Cookies We Use</h4>
             <ul className="list-disc space-y-2">
               <li><strong>Essential Cookies:</strong> Required for the website to function properly (e.g., session management, lead forms)</li>
               <li><strong>Analytics Cookies:</strong> Help us understand how visitors interact with our website (e.g., Google Analytics)</li>
@@ -251,23 +251,23 @@ export default function PrivacyPolicy() {
             <p>
               If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
             </p>
-            <div className="mt-4 p-6 bg-gray-50 rounded-lg">
-              <p className="font-semibold text-gray-900">{companyName}</p>
+            <div className="mt-4 p-6 bg-muted rounded-lg">
+              <p className="font-semibold text-foreground">{companyName}</p>
               {companyEmail && (
-                <p className="text-gray-600 mt-2">
+                <p className="text-muted-foreground mt-2">
                   Email: <a href={`mailto:${companyEmail}`} className="text-primary hover:underline">{companyEmail}</a>
                 </p>
               )}
               {companyPhone && (
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Phone: <a href={`tel:${companyPhone}`} className="text-primary hover:underline">{companyPhone}</a>
                 </p>
               )}
               {companyAddress && (
-                <p className="text-gray-600">Address: {companyAddress}</p>
+                <p className="text-muted-foreground">Address: {companyAddress}</p>
               )}
             </div>
-            <p className="mt-4 text-gray-600">
+            <p className="mt-4 text-muted-foreground">
               We will respond to your inquiry within 30 days.
             </p>
           </Section>
@@ -291,9 +291,9 @@ function Section({
     <section className="scroll-mt-20">
       <div className="flex items-center gap-3 mb-4">
         <div className="text-primary">{icon}</div>
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
       </div>
-      <div className="prose prose-gray max-w-none space-y-4 text-gray-600">
+      <div className="prose prose-gray max-w-none space-y-4 text-muted-foreground">
         {children}
       </div>
     </section>

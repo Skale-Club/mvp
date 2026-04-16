@@ -100,7 +100,7 @@ export default function Blog() {
             {[...Array(6)].map((_, i) => (
               <Card key={i} className="overflow-hidden border-0">
                 <Skeleton className="aspect-video" />
-                <CardContent className="p-4 space-y-3 bg-slate-50">
+                <CardContent className="p-4 space-y-3 bg-muted">
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-2/3" />
@@ -138,7 +138,7 @@ export default function Blog() {
                         <FileText className="w-12 h-12 text-muted-foreground" />
                       </div>
                     )}
-                    <CardContent className="p-4 flex-1 flex flex-col bg-slate-50">
+                    <CardContent className="p-4 flex-1 flex flex-col bg-muted">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                         <Calendar className="w-4 h-4" />
                         <span data-testid={`text-blog-date-${post.id}`}>
@@ -172,7 +172,7 @@ export default function Blog() {
                 {[...Array(3)].map((_, i) => (
                   <Card key={`loading-more-${i}`} className="overflow-hidden border-0">
                     <Skeleton className="aspect-video" />
-                    <CardContent className="p-4 space-y-3 bg-slate-50">
+                    <CardContent className="p-4 space-y-3 bg-muted">
                       <Skeleton className="h-6 w-3/4" />
                       <Skeleton className="h-4 w-full" />
                       <Skeleton className="h-4 w-2/3" />

@@ -40,7 +40,7 @@ export function FaqSection({ maxItems }: FaqSectionProps = {}) {
       <div className="container-custom mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
-          <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             Find answers to common questions about our services.
           </p>
         </div>
@@ -51,7 +51,7 @@ export function FaqSection({ maxItems }: FaqSectionProps = {}) {
               <AccordionItem 
                 key={faq.id} 
                 value={`faq-${faq.id}`}
-                className="border-b border-slate-200"
+                className="border-b border-border"
                 data-testid={`faq-accordion-${faq.id}`}
               >
                 <AccordionTrigger 
@@ -60,7 +60,7 @@ export function FaqSection({ maxItems }: FaqSectionProps = {}) {
                 >
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-slate-600 pb-5 text-base whitespace-pre-wrap">
+                <AccordionContent className="text-muted-foreground pb-5 text-base whitespace-pre-wrap">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

@@ -414,7 +414,7 @@ export function DashboardSection({ onNavigate }: { onNavigate: (section: AdminSe
                   <p className="text-sm font-medium">{integration.label}</p>
                   <p className="text-xs text-muted-foreground">{integration.detail}</p>
                 </div>
-                <span className={clsx('h-2.5 w-2.5 rounded-full', integration.active ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600')} />
+                <span className={clsx('h-2.5 w-2.5 rounded-full', integration.active ? 'bg-green-500' : 'bg-muted-foreground/40')} />
               </div>
             ))}
           </div>

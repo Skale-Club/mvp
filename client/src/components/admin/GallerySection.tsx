@@ -1052,7 +1052,7 @@ export function GallerySection() {
                     {getUploadStatusLabel(item.status)}
                   </Badge>
                 </div>
-                <Progress value={item.progress} className="h-2 bg-sky-100 dark:bg-slate-700" />
+                <Progress value={item.progress} className="h-2 bg-muted" />
                 <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span>{item.progress}%</span>
                   {item.error ? <span className="truncate text-destructive">{item.error}</span> : null}

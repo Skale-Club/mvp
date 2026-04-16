@@ -503,7 +503,7 @@ export function ServicePostsSection() {
               ) : null}
             </div>
             {createFocusScore ? (
-              <div className="h-[3px] bg-slate-200 dark:bg-slate-700">
+              <div className="h-[3px] bg-muted">
                 <div className={clsx("h-full transition-all", createFocusScore.barColor)} style={{ width: `${createFocusScore.score}%` }} />
               </div>
             ) : null}
