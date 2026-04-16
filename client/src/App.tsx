@@ -4,7 +4,7 @@ import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
-import { ThemeProvider } from "@/context/ThemeContext";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useSEO } from "@/hooks/use-seo";
@@ -131,6 +131,7 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['/api/company-settings'],
   });
   const [location] = useLocation();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (settings) {
@@ -154,11 +155,17 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     const isAdminRoute = location.startsWith('/admin');
 
     if (isAdminRoute) {
-      const adminBackground = normalizeHexColor(settings?.adminBackgroundColor, DEFAULT_WEBSITE_COLORS.adminBackgroundColor);
-      const adminSidebar = normalizeHexColor(settings?.adminSidebarColor, DEFAULT_WEBSITE_COLORS.adminSidebarColor);
-      root.style.setProperty("--background", hexToHslToken(adminBackground));
-      root.style.setProperty("--section", hexToHslToken(adminBackground));
-      root.style.setProperty("--sidebar", hexToHslToken(adminSidebar));
+      if (resolvedTheme === 'dark') {
+        const adminBackground = normalizeHexColor(settings?.adminBackgroundColor, DEFAULT_WEBSITE_COLORS.adminBackgroundColor);
+        const adminSidebar = normalizeHexColor(settings?.adminSidebarColor, DEFAULT_WEBSITE_COLORS.adminSidebarColor);
+        root.style.setProperty("--background", hexToHslToken(adminBackground));
+        root.style.setProperty("--section", hexToHslToken(adminBackground));
+        root.style.setProperty("--sidebar", hexToHslToken(adminSidebar));
+      } else {
+        root.style.removeProperty("--background");
+        root.style.removeProperty("--section");
+        root.style.removeProperty("--sidebar");
+      }
       return;
     }
 
@@ -188,7 +195,7 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--website-footer-bg-hsl", hexToHslToken(footerBg));
     root.style.removeProperty("--section");
     root.style.removeProperty("--sidebar");
-  }, [location, settings]);
+  }, [location, settings, resolvedTheme]);
 
   return <>{children}</>;
 }
