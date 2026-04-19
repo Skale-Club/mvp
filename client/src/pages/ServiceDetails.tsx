@@ -90,6 +90,7 @@ function extractIncludedServices(content?: string | null): string[] {
 }
 
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { ServiceCard } from "@/components/sections/ServiceCard";
 
 export default function ServiceDetails() {
   const params = useParams<{ slug: string }>();
@@ -352,37 +353,11 @@ export default function ServiceDetails() {
             </Link>
           </div>
           {related.length > 3 ? (
-            <Carousel
-              opts={{
-                align: "start",
-              }}
-              className="w-full"
-            >
+            <Carousel opts={{ align: "start" }} className="w-full">
               <CarouselContent>
                 {related.map((item) => (
                   <CarouselItem key={item.id} className="sm:basis-1/2 lg:basis-1/4">
-                    <Link href={getServicePostPath(item.id, item.slug)} className="group block h-full overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
-                      <div className="aspect-[4/3] overflow-hidden bg-muted">
-                        {item.featureImageUrl ? (
-                          <img
-                            src={item.featureImageUrl}
-                            alt={item.title}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        <h3 className="mb-2 font-bold text-foreground group-hover:text-primary">{item.title}</h3>
-                        {item.excerpt && (
-                          <p className="line-clamp-2 text-sm text-muted-foreground">{item.excerpt}</p>
-                        )}
-                      </div>
-                    </Link>
+                    <ServiceCard post={item} />
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -393,27 +368,7 @@ export default function ServiceDetails() {
             <div className="flex flex-wrap justify-center gap-6">
               {related.map((item) => (
                 <div key={item.id} className="w-full max-w-sm sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]">
-                  <Link href={getServicePostPath(item.id, item.slug)} className="group block h-full overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
-                    <div className="aspect-[4/3] overflow-hidden bg-muted">
-                      {item.featureImageUrl ? (
-                        <img
-                          src={item.featureImageUrl}
-                          alt={item.title}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-5">
-                      <h3 className="mb-2 font-bold text-foreground group-hover:text-primary">{item.title}</h3>
-                      {item.excerpt && (
-                        <p className="line-clamp-2 text-sm text-muted-foreground">{item.excerpt}</p>
-                      )}
-                    </div>
-                  </Link>
+                  <ServiceCard post={item} />
                 </div>
               ))}
             </div>

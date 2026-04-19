@@ -3,11 +3,11 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, Calendar, Search } from 'lucide-react';
+import { FileText, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { format } from 'date-fns';
 import type { BlogPost } from '@shared/schema';
 import { ErrorState } from "@/components/ui/error-state";
+import { BlogPostCard } from "@/components/sections/BlogPostCard";
 
 const POSTS_PER_PAGE = 9;
 
@@ -49,16 +49,10 @@ export default function Blog() {
 
   const posts = data?.pages.flat() ?? [];
 
-  const filteredPosts = posts?.filter(post => 
+  const filteredPosts = posts?.filter(post =>
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getExcerpt = (post: BlogPost) => {
-    if (post.excerpt) return post.excerpt;
-    const text = post.content.replace(/<[^>]*>/g, '');
-    return text.length > 150 ? text.slice(0, 150) + '...' : text;
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,53 +112,7 @@ export default function Blog() {
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredPosts.map(post => (
-                <Link key={post.id} href={`/blog/${post.slug}`}>
-                  <Card 
-                    className="overflow-hidden hover-elevate cursor-pointer h-full flex flex-col border-0"
-                    data-testid={`card-blog-${post.id}`}
-                  >
-                    {post.featureImageUrl ? (
-                      <div className="aspect-video overflow-hidden">
-                        <img
-                          src={post.featureImageUrl}
-                          alt={post.title}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.025]"
-                          data-testid={`img-blog-${post.id}`}
-                          loading="lazy"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-video bg-muted flex items-center justify-center">
-                        <FileText className="w-12 h-12 text-muted-foreground" />
-                      </div>
-                    )}
-                    <CardContent className="p-4 flex-1 flex flex-col bg-slate-50">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Calendar className="w-4 h-4" />
-                        <span data-testid={`text-blog-date-${post.id}`}>
-                          {post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : 'Draft'}
-                        </span>
-                      </div>
-                      <h2 
-                        className="text-lg font-semibold text-foreground mb-2 line-clamp-2"
-                        data-testid={`text-blog-title-${post.id}`}
-                      >
-                        {post.title}
-                      </h2>
-                      <p 
-                        className="text-sm text-muted-foreground line-clamp-3 flex-1"
-                        data-testid={`text-blog-excerpt-${post.id}`}
-                      >
-                        {getExcerpt(post)}
-                      </p>
-                      <div className="mt-4">
-                        <span className="text-primary font-medium text-sm hover:underline">
-                          Read More
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <BlogPostCard key={post.id} post={post} />
               ))}
             </div>
             {isFetchingNextPage && (
