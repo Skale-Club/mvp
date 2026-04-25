@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: executing
-last_updated: "2026-04-25T20:55:38.202Z"
+last_updated: "2026-04-25T21:04:00Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
-  percent: 100
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 04 (server-routes-lead-flow-integration) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-04-25 -- Phase 04-01 schema + storage signature prerequisites complete
+Last activity: 2026-04-25 -- Phase 04-02 attribution routes + analytics/hit visitorId extension complete
 
-Progress: [██████░░░░] 60% (3/5 plans complete)
+Progress: [████████░░] 80% (4/5 plans complete)
 
 ## Performance Metrics
 
@@ -52,6 +52,14 @@ Progress: [██████░░░░] 60% (3/5 plans complete)
 | Phase 04 P01 | 15 | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 04 Plan 02)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| attribution.ts silences all non-Zod errors with 200 {} — attribution never blocks the client | 04-02 | D-06/D-09: public attribution endpoints cannot surface 500 to client |
+| forceStore bypass in /api/analytics/hit stores hits regardless of analytics destination config | 04-02 | CONV-05: page_view rows accumulate for journey view even when GA4/Facebook/GHL disabled |
+| conversion endpoint denormalizes ft_*/lt_* from visitor_sessions at insert time | 04-02 | Dashboard aggregates on attribution_conversions without needing a visitor_sessions join |
 
 ### Decisions (Phase 04 Plan 01)
 
