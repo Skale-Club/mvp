@@ -82,7 +82,10 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   2. When no UTM params are present, `document.referrer` is classified into Organic Search, Social, Referral, Direct, or Unknown — and the classification is stored in `visitor_sessions.ft_source`
   3. `localStorage` key `mvp_vid` persists across page reloads and browser restarts, is distinct from `formLeads.sessionId`, and the same visitorId is sent with every session ping
   4. Submitting the lead form passes `visitorId` in the payload so the server can link the lead record to the visitor session (verifiable by checking `form_leads.visitor_id` is populated after a test submission)
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 05-01-PLAN.md — Foundation: client/src/lib/attribution.ts utility module + client/src/hooks/use-attribution.ts hook (mvp_vid persistence, UTM capture, referrer classification, sendBeacon helpers)
+- [ ] 05-02-PLAN.md — Wire useAttribution into App.tsx (single root call + reportAttributionPageView in [location] effect) and inject visitorId into the LeadFormModal payload before /api/form-leads/progress POST
+- [ ] 05-03-PLAN.md — Wire conversion events: fireConversionEvent('phone_click') on every Navbar tel: link and fireConversionEvent('booking_started') on every setIsFormOpen(true) callsite (StickyBottomBar, Home, ServiceDetails, BlogPost)
 
 ### Phase 6: Marketing Admin Dashboard
 **Goal**: The admin panel has a fully functional "Marketing" section with four data tabs, global filters, business-first language throughout, and useful empty states that coach the user when no data exists
@@ -120,6 +123,6 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete    | 2026-04-25 |
-| 5. Client UTM Capture Hook | v1.2 | 0/? | Not started | - |
+| 5. Client UTM Capture Hook | v1.2 | 0/3 | Not started | - |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |
