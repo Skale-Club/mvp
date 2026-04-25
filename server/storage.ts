@@ -508,7 +508,7 @@ export interface IStorage {
   createAttributionConversion(conversion: InsertAttributionConversion): Promise<AttributionConversion>;
   // Stamps form_leads.visitor_id on an existing lead row. Phase 4 will extend this
   // to also write first/last-touch attribution columns by joining visitor_sessions.
-  linkLeadToVisitor(leadId: number, visitorId: string): Promise<void>;
+  linkLeadToVisitor(leadId: number, visitorId: string): Promise<number | null>;
 
   // === Marketing queries (Phase 4 implements full SQL) ===
   getMarketingOverview(filters?: MarketingFilters): Promise<MarketingOverview>;
@@ -1659,19 +1659,30 @@ export class DatabaseStorage implements IStorage {
    * looks up the visitor_sessions row by UUID to obtain its integer PK, then
    * updates form_leads.visitor_id with that integer FK.
    *
-   * Returns void (caller already has the lead id). Failures should NOT block
-   * the lead-create critical path — the Phase 4 caller wraps this in try/catch.
+   * Stamp form_leads.visitor_id on an existing lead AND return the resolved
+   * visitor_sessions.id integer PK so callers (e.g. the lead-flow attribution
+   * IIFE) can pass it directly to createAttributionConversion without a
+   * second DB round-trip.
+   *
+   * `visitorId` is the UUID string from localStorage (mvp_vid). This method
+   * looks up the visitor_sessions row by UUID. If found, it updates
+   * form_leads.visitor_id with the integer FK and returns that integer.
+   * If no row matches, returns null (no update performed).
+   *
+   * Failures should NOT block the lead-create critical path — callers wrap
+   * this in try/catch within a fire-and-forget IIFE.
    */
-  async linkLeadToVisitor(leadId: number, visitorId: string): Promise<void> {
+  async linkLeadToVisitor(leadId: number, visitorId: string): Promise<number | null> {
     const [session] = await db
       .select({ id: visitorSessions.id })
       .from(visitorSessions)
       .where(eq(visitorSessions.visitorId, visitorId));
-    if (!session) return;
+    if (!session) return null;
     await db
       .update(formLeads)
       .set({ visitorId: session.id })
       .where(eq(formLeads.id, leadId));
+    return session.id;
   }
 
   // === Marketing queries (stubs — Phase 4 implements full SQL) ===
