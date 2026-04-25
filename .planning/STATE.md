@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
-status: completed
-last_updated: "2026-04-25T21:23:22.959Z"
-last_activity: 2026-04-25
+status: executing
+last_updated: "2026-04-25T22:30:00.000Z"
+last_activity: 2026-04-25 -- Phase 05 Plan 01 complete (attribution.ts + useAttribution hook)
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 80
+  total_plans: 8
+  completed_plans: 6
+  percent: 85
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Production service-business site for MVP + forkable base template for other clients.
-**Current focus:** Phase 04 — server-routes-lead-flow-integration
+**Current focus:** Phase 05 — client-utm-capture-hook
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
-Status: Phase complete — ready for Phase 05
-Last activity: 2026-04-25
+Phase: 05 (client-utm-capture-hook) — EXECUTING
+Plan: 2 of 3 (plan 01 complete)
+Status: Executing Phase 05
+Last activity: 2026-04-25 -- Phase 05 Plan 01 complete (attribution.ts + useAttribution hook)
 
-Progress: [████████░░] 80% (4/5 plans complete)
+Progress: [█████████░] 85% (6/8 plans complete)
 
 ## Performance Metrics
 
@@ -52,6 +52,15 @@ Progress: [████████░░] 80% (4/5 plans complete)
 | Phase 04 P01 | 15 | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 05 Plan 01)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| SEARCH_HOSTS / SOCIAL_HOSTS exported as module constants | 05-01 | Tests and maintenance can verify the lists without duplicating them |
+| MVP_VID_KEY not re-imported into the hook | 05-01 | Literal 'mvp_vid' appears exactly once in the codebase (attribution.ts:25) |
+| Effect B dependency array is [location, visitorId] | 05-01 | Effect B re-runs when visitorId becomes non-null so no first navigation is missed |
+| stripUndefined inline in hook (not in attribution.ts) | 05-01 | Keeps attribution.ts as pure data-posting utilities; schema filtering is hook glue |
 
 ### Decisions (Phase 04 Plan 03)
 
