@@ -1,7 +1,8 @@
 ---
 phase: 6
 slug: marketing-admin-dashboard
-status: draft
+status: approved
+reviewed_at: 2026-04-25T00:00:00Z
 shadcn_initialized: true
 preset: new-york / neutral / css-variables
 created: 2026-04-25
