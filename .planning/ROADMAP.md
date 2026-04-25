@@ -36,7 +36,7 @@
 Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 
 - [x] **Phase 3: Attribution Schema + Storage** - New DB tables, IStorage methods, and RLS policies that form the attribution foundation (completed 2026-04-25)
-- [ ] **Phase 4: Server Routes + Lead Flow Integration** - Attribution API endpoints and non-blocking injection into the existing lead submit path
+- [x] **Phase 4: Server Routes + Lead Flow Integration** - Attribution API endpoints and non-blocking injection into the existing lead submit path (completed 2026-04-25)
 - [ ] **Phase 5: Client UTM Capture Hook** - useAttribution hook at App root, visitorId persistence, page view events, and form payload enrichment
 - [ ] **Phase 6: Marketing Admin Dashboard** - MarketingSection.tsx with Overview, Sources, Campaigns, and Conversions tabs plus global filters
 - [ ] **Phase 7: Visitor Journey + Lead Attribution Panel** - Journey tab for per-visitor page sequences and attribution panel in the existing Lead detail drawer
@@ -69,8 +69,8 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   5. `shared/routes.ts` and `shared/schema.ts` define the new attribution types consumed by both server and client with no TypeScript errors (`npm run check` passes)
 **Plans**: 3 plans
 - [x] 04-01-PLAN.md — Schema prep: visitorId on formLeadProgressSchema + analytics_event_hits.visitor_id column + linkLeadToVisitor returns Promise<number | null> + db:push
-- [ ] 04-02-PLAN.md — New POST /api/attribution/session and /api/attribution/conversion (public, in server/routes/attribution.ts) and extend /api/analytics/hit to persist visitorId
-- [ ] 04-03-PLAN.md — Lead-flow attribution IIFE (ATTR-03/ATTR-04/CONV-01) + replace 5 marketing query stubs with real SQL + new admin /api/admin/marketing/* endpoints
+- [x] 04-02-PLAN.md — New POST /api/attribution/session and /api/attribution/conversion (public, in server/routes/attribution.ts) and extend /api/analytics/hit to persist visitorId
+- [x] 04-03-PLAN.md — Lead-flow attribution IIFE (ATTR-03/ATTR-04/CONV-01) + replace 5 marketing query stubs with real SQL + new admin /api/admin/marketing/* endpoints
 **UI hint**: no
 
 ### Phase 5: Client UTM Capture Hook
@@ -119,7 +119,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 1. Notification Infrastructure | v1.1 | — | Complete | 2026-04-16 |
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
-| 4. Server Routes + Lead Flow Integration | v1.2 | 1/3 | In Progress|  |
+| 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete   | 2026-04-25 |
 | 5. Client UTM Capture Hook | v1.2 | 0/? | Not started | - |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |
