@@ -442,7 +442,7 @@ export interface IStorage {
   getFormLeadBySession(sessionId: string): Promise<FormLead | undefined>;
   getFormLeadByConversationId(conversationId: string): Promise<FormLead | undefined>;
   listFormLeads(filters?: { status?: LeadStatus; classificacao?: LeadClassification; formCompleto?: boolean; completionStatus?: 'completo' | 'em_progresso' | 'abandonado'; search?: string }): Promise<FormLead[]>;
-  updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "notificacaoAbandonoEnviada" | "ghlContactId" | "ghlSyncStatus">>): Promise<FormLead | undefined>;
+  updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "notificacaoAbandonoEnviada" | "ghlContactId" | "ghlSyncStatus" | "firstTouchSource" | "firstTouchMedium" | "firstTouchCampaign" | "lastTouchSource" | "lastTouchMedium" | "lastTouchCampaign" | "sourceChannel" | "utmContent" | "utmTerm">>): Promise<FormLead | undefined>;
   getFormLeadByEmail(email: string): Promise<FormLead | undefined>;
   deleteFormLead(id: number): Promise<boolean>;
 
@@ -1198,7 +1198,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(formLeads).orderBy(desc(formLeads.createdAt));
   }
 
-  async updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "notificacaoAbandonoEnviada" | "ghlContactId" | "ghlSyncStatus">>): Promise<FormLead | undefined> {
+  async updateFormLead(id: number, updates: Partial<Pick<FormLead, "status" | "observacoes" | "notificacaoEnviada" | "notificacaoAbandonoEnviada" | "ghlContactId" | "ghlSyncStatus" | "firstTouchSource" | "firstTouchMedium" | "firstTouchCampaign" | "lastTouchSource" | "lastTouchMedium" | "lastTouchCampaign" | "sourceChannel" | "utmContent" | "utmTerm">>): Promise<FormLead | undefined> {
     await ensureFormLeadGhlColumns();
     const [existing] = await db.select().from(formLeads).where(eq(formLeads.id, id));
     if (!existing) return undefined;

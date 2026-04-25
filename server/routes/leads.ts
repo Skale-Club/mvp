@@ -1,7 +1,9 @@
 import type { Express } from "express";
 import { storage } from "../storage.js";
+import { db } from "../db.js";
 import { z } from "zod";
-import { formLeadProgressSchema, type LeadStatus, type LeadClassification } from "#shared/schema.js";
+import { formLeadProgressSchema, type LeadStatus, type LeadClassification, visitorSessions } from "#shared/schema.js";
+import { eq } from "drizzle-orm";
 import { safeErrorMessage } from "./errorUtils.js";
 import { DEFAULT_FORM_CONFIG, calculateMaxScore, getSortedQuestions } from "#shared/form.js";
 import type { FormConfig } from "#shared/schema.js";
@@ -282,6 +284,51 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
           }
         })();
       }
+
+      if (lead.formCompleto && parsed.visitorId) {
+        (async () => {
+          try {
+            const sessionId = await storage.linkLeadToVisitor(lead.id, parsed.visitorId!);
+            if (sessionId === null) {
+              console.warn('Attribution skipped: no visitor_sessions row for visitorId', parsed.visitorId);
+              return;
+            }
+            const [vs] = await db
+              .select()
+              .from(visitorSessions)
+              .where(eq(visitorSessions.id, sessionId));
+            if (!vs) return;
+
+            await storage.updateFormLead(lead.id, {
+              firstTouchSource: vs.ftSource ?? null,
+              firstTouchMedium: vs.ftMedium ?? null,
+              firstTouchCampaign: vs.ftCampaign ?? null,
+              lastTouchSource: vs.ltSource ?? null,
+              lastTouchMedium: vs.ltMedium ?? null,
+              lastTouchCampaign: vs.ltCampaign ?? null,
+              sourceChannel: vs.ftSourceChannel ?? null,
+              utmContent: vs.ftContent ?? null,
+              utmTerm: vs.ftTerm ?? null,
+            });
+
+            await storage.createAttributionConversion({
+              visitorId: sessionId,
+              conversionType: 'lead_created' as 'lead_created',
+              leadId: lead.id,
+              pagePath: parsed.urlOrigem ?? null,
+              ftSource: vs.ftSource ?? null,
+              ftMedium: vs.ftMedium ?? null,
+              ftCampaign: vs.ftCampaign ?? null,
+              ltSource: vs.ltSource ?? null,
+              ltMedium: vs.ltMedium ?? null,
+              ltCampaign: vs.ltCampaign ?? null,
+            });
+          } catch (attrError) {
+            console.error('Attribution injection error (non-blocking):', attrError);
+          }
+        })();
+      }
+
       res.json(lead);
     } catch (err: any) {
       if (err instanceof z.ZodError) {
