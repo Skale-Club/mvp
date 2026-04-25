@@ -18,6 +18,8 @@ import {
   reviewsSettings,
   reviewItems,
   notificationLogs,
+  visitorSessions,
+  attributionConversions,
   type CompanySettings,
   type ChatSettings,
   type ChatIntegrations,
@@ -54,8 +56,19 @@ import {
   type InsertReviewItem,
   type NotificationLog,
   type InsertNotificationLog,
+  type VisitorSession,
+  type InsertVisitorSession,
+  type AttributionConversion,
+  type InsertAttributionConversion,
 } from "#shared/schema.js";
 import { eq, and, or, ilike, gte, lte, lt, inArray, desc, asc, sql, ne } from "drizzle-orm";
+import type {
+  MarketingFilters,
+  MarketingOverview,
+  MarketingBySource,
+  MarketingByCampaign,
+  VisitorJourney,
+} from "#shared/marketing-types.js";
 
 const shouldRunRuntimeSchemaGuards =
   process.env.ENABLE_RUNTIME_SCHEMA_INIT === "true" ||
@@ -486,6 +499,23 @@ export interface IStorage {
   updateReviewItem(id: number, item: Partial<InsertReviewItem>): Promise<ReviewItem>;
   reorderReviewItems(itemIds: number[]): Promise<void>;
   deleteReviewItem(id: number): Promise<void>;
+
+  // === Attribution (v1.2) ===
+  // Visitor session upsert — first-touch columns are written once on insert and
+  // NEVER updated by this method. See implementation for the explicit set clause.
+  upsertVisitorSession(session: InsertVisitorSession): Promise<VisitorSession>;
+  // Conversion event insert (lead_created, phone_click, form_submitted, booking_started)
+  createAttributionConversion(conversion: InsertAttributionConversion): Promise<AttributionConversion>;
+  // Stamps form_leads.visitor_id on an existing lead row. Phase 4 will extend this
+  // to also write first/last-touch attribution columns by joining visitor_sessions.
+  linkLeadToVisitor(leadId: number, visitorId: string): Promise<void>;
+
+  // === Marketing queries (Phase 4 implements full SQL) ===
+  getMarketingOverview(filters?: MarketingFilters): Promise<MarketingOverview>;
+  getMarketingBySource(filters?: MarketingFilters): Promise<MarketingBySource[]>;
+  getMarketingByCampaign(filters?: MarketingFilters): Promise<MarketingByCampaign[]>;
+  getMarketingConversions(filters?: MarketingFilters): Promise<AttributionConversion[]>;
+  getVisitorJourney(visitorId: string): Promise<VisitorJourney | undefined>;
 
 }
 
@@ -1550,6 +1580,142 @@ export class DatabaseStorage implements IStorage {
   async deleteReviewItem(id: number): Promise<void> {
     await ensureReviewsSchema();
     await db.delete(reviewItems).where(eq(reviewItems.id, id));
+  }
+
+  // === Attribution (v1.2) ===
+
+  /**
+   * Upsert a visitor session by visitorId.
+   *
+   * CRITICAL INVARIANT (D-13, ATTR-01): the ON CONFLICT set clause must include
+   * ONLY last-touch columns, device_type, last_seen_at, and converted. NEVER
+   * include ft_* columns or first_seen_at — those are first-touch and immutable.
+   *
+   * The `converted` flag is monotonic: once true, never reverts to false (open
+   * question 3 in RESEARCH.md). Implemented via GREATEST so a later upsert that
+   * forgets to pass converted=true does not erase the conversion bit.
+   *
+   * `excluded.*` references use SNAKE_CASE column names (Pitfall 3 in RESEARCH).
+   */
+  async upsertVisitorSession(session: InsertVisitorSession): Promise<VisitorSession> {
+    const [row] = await db
+      .insert(visitorSessions)
+      .values(session)
+      .onConflictDoUpdate({
+        target: visitorSessions.visitorId,
+        set: {
+          // Last-touch (mutable on every visit)
+          ltSource: sql`excluded.lt_source`,
+          ltMedium: sql`excluded.lt_medium`,
+          ltCampaign: sql`excluded.lt_campaign`,
+          ltTerm: sql`excluded.lt_term`,
+          ltContent: sql`excluded.lt_content`,
+          ltId: sql`excluded.lt_id`,
+          ltLandingPage: sql`excluded.lt_landing_page`,
+          ltReferrer: sql`excluded.lt_referrer`,
+          ltSourceChannel: sql`excluded.lt_source_channel`,
+          // Metadata
+          deviceType: sql`excluded.device_type`,
+          lastSeenAt: sql`excluded.last_seen_at`,
+          // Monotonic converted flag — once true, never false
+          converted: sql`GREATEST(visitor_sessions.converted::int, excluded.converted::int)::boolean`,
+          // Intentionally OMITTED: ftSource, ftMedium, ftCampaign, ftTerm, ftContent,
+          // ftId, ftLandingPage, ftReferrer, ftSourceChannel, firstSeenAt
+          // These are first-touch and must remain whatever was written on initial INSERT.
+        },
+      })
+      .returning();
+    return row;
+  }
+
+  /**
+   * Insert a conversion event row. Conversions are append-only — never updated.
+   *
+   * Note: conversionType uses $type<> annotation (not pgEnum) per the decision in
+   * Plan 01 (drizzle-zod cannot infer $type<>). The explicit spread with type
+   * assertion satisfies Drizzle's column type expectation at the SQL level;
+   * server-side enum validation is deferred to Phase 4 route handlers.
+   */
+  async createAttributionConversion(
+    conversion: InsertAttributionConversion,
+  ): Promise<AttributionConversion> {
+    const [row] = await db
+      .insert(attributionConversions)
+      .values({
+        ...conversion,
+        conversionType: conversion.conversionType as 'lead_created' | 'phone_click' | 'form_submitted' | 'booking_started',
+      })
+      .returning();
+    return row;
+  }
+
+  /**
+   * Stamp form_leads.visitor_id on an existing lead. Phase 3 only writes the
+   * visitor_id FK (integer PK of visitor_sessions) — Phase 4 will extend this
+   * to also stamp first/last-touch attribution columns by reading the
+   * visitor_sessions row.
+   *
+   * `visitorId` is the UUID string from localStorage (mvp_vid). This method
+   * looks up the visitor_sessions row by UUID to obtain its integer PK, then
+   * updates form_leads.visitor_id with that integer FK.
+   *
+   * Returns void (caller already has the lead id). Failures should NOT block
+   * the lead-create critical path — the Phase 4 caller wraps this in try/catch.
+   */
+  async linkLeadToVisitor(leadId: number, visitorId: string): Promise<void> {
+    const [session] = await db
+      .select({ id: visitorSessions.id })
+      .from(visitorSessions)
+      .where(eq(visitorSessions.visitorId, visitorId));
+    if (!session) return;
+    await db
+      .update(formLeads)
+      .set({ visitorId: session.id })
+      .where(eq(formLeads.id, leadId));
+  }
+
+  // === Marketing queries (stubs — Phase 4 implements full SQL) ===
+  // Each method returns a valid zero-state of its declared type so the IStorage
+  // contract is honored even before SQL exists. Phase 4 replaces the bodies with
+  // GROUP BY aggregations against attribution_conversions / visitor_sessions.
+
+  async getMarketingOverview(_filters?: MarketingFilters): Promise<MarketingOverview> {
+    // Phase 4: SELECT count(*) over visitor_sessions in window, count(*) over
+    // attribution_conversions where conversion_type='lead_created', etc.
+    return {
+      totalVisits: 0,
+      totalLeads: 0,
+      conversionRate: 0,
+      topSource: null,
+      topCampaign: null,
+      topLandingPage: null,
+      timeSeries: [],
+    };
+  }
+
+  async getMarketingBySource(_filters?: MarketingFilters): Promise<MarketingBySource[]> {
+    // Phase 4: GROUP BY visitor_sessions.ft_source_channel; left join form_leads
+    // for hot/warm/cold counts via classificacao.
+    return [];
+  }
+
+  async getMarketingByCampaign(_filters?: MarketingFilters): Promise<MarketingByCampaign[]> {
+    // Phase 4: GROUP BY visitor_sessions.ft_campaign; aggregate top landing pages
+    // via array_agg DISTINCT ft_landing_page LIMIT 3.
+    return [];
+  }
+
+  async getMarketingConversions(_filters?: MarketingFilters): Promise<AttributionConversion[]> {
+    // Phase 4: SELECT * FROM attribution_conversions WHERE converted_at BETWEEN
+    // filters.from AND filters.to ORDER BY converted_at DESC LIMIT 500.
+    return [];
+  }
+
+  async getVisitorJourney(_visitorId: string): Promise<VisitorJourney | undefined> {
+    // Phase 4: SELECT visitor_sessions WHERE visitor_id = $1; SELECT
+    // attribution_conversions WHERE visitor_id = $1 ORDER BY converted_at.
+    // Phase 7 may also include analytics_event_hits sequence here.
+    return undefined;
   }
 
 }
