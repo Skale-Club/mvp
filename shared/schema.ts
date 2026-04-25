@@ -366,6 +366,21 @@ export const insertNotificationLogSchema = createInsertSchema(notificationLogs).
   sentAt: true,
 });
 
+export const insertVisitorSessionSchema = createInsertSchema(visitorSessions).omit({
+  id: true,
+  firstSeenAt: true,
+  lastSeenAt: true,
+});
+export type VisitorSession = typeof visitorSessions.$inferSelect;
+export type InsertVisitorSession = typeof insertVisitorSessionSchema._input;
+
+export const insertAttributionConversionSchema = createInsertSchema(attributionConversions).omit({
+  id: true,
+  convertedAt: true,
+});
+export type AttributionConversion = typeof attributionConversions.$inferSelect;
+export type InsertAttributionConversion = typeof insertAttributionConversionSchema._input;
+
 const leadClassificationValues = leadClassificationEnum.enumValues as [string, ...string[]];
 const leadStatusValues = leadStatusEnum.enumValues as [string, ...string[]];
 
