@@ -13,13 +13,13 @@
 - [ ] **SESSION-01**: System captures UTM parameters (source, medium, campaign, term, content, id) on every page load, normalizes them (lowercase + trim), and stores them server-side per visitor session
 - [ ] **SESSION-02**: System auto-classifies non-UTM traffic from `document.referrer` into: Organic Search (Google, Bing, Yahoo, DuckDuckGo), Social (Facebook, Instagram, YouTube, TikTok, LinkedIn, X/Twitter), Referral (any other external domain), Direct (no referrer), or Unknown
 - [ ] **SESSION-03**: Anonymous visitor ID (`mvp_vid`) persists in localStorage across page navigations and browser restarts — distinct from the existing per-form `sessionId`
-- [ ] **SESSION-04**: Visitor session records: landing page pathname, device type (mobile/tablet/desktop), and first/last seen timestamps
-- [ ] **SESSION-05**: Visitor session creation uses DB upsert — first-touch columns (ft_source, ft_medium, ft_campaign, ft_landing_page) are set once and never modified on subsequent visits
+- [x] **SESSION-04**: Visitor session records: landing page pathname, device type (mobile/tablet/desktop), and first/last seen timestamps
+- [x] **SESSION-05**: Visitor session creation uses DB upsert — first-touch columns (ft_source, ft_medium, ft_campaign, ft_landing_page) are set once and never modified on subsequent visits
 
 ### Attribution (First-Touch / Last-Touch)
 
-- [ ] **ATTR-01**: First-touch attribution (source, medium, campaign, landing page) is captured on the visitor's very first page load and preserved immutably
-- [ ] **ATTR-02**: Last-touch attribution (source, medium, campaign, landing page) is updated on every subsequent visit so the most recent meaningful source is always current
+- [x] **ATTR-01**: First-touch attribution (source, medium, campaign, landing page) is captured on the visitor's very first page load and preserved immutably
+- [x] **ATTR-02**: Last-touch attribution (source, medium, campaign, landing page) is updated on every subsequent visit so the most recent meaningful source is always current
 - [ ] **ATTR-03**: When a lead is created, the system links the visitor session to the `form_leads` record via `sessionId` and stamps first-touch and last-touch fields on the lead
 - [ ] **ATTR-04**: `form_leads` is extended with: `utmContent`, `utmTerm`, `sourceChannel`, `firstTouchSource`, `firstTouchMedium`, `firstTouchCampaign`, `lastTouchSource`, `lastTouchMedium`, `lastTouchCampaign`
 
@@ -94,10 +94,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SESSION-04 | Phase 3 | Pending |
-| SESSION-05 | Phase 3 | Pending |
-| ATTR-01 | Phase 3 | Pending |
-| ATTR-02 | Phase 3 | Pending |
+| SESSION-04 | Phase 3 | Complete (03-01) |
+| SESSION-05 | Phase 3 | Complete (03-01) |
+| ATTR-01 | Phase 3 | Complete (03-01) |
+| ATTR-02 | Phase 3 | Complete (03-01) |
 | ATTR-03 | Phase 4 | Pending |
 | ATTR-04 | Phase 3 | Pending |
 | CONV-01 | Phase 4 | Pending |

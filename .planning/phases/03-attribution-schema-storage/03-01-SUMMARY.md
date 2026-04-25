@@ -31,9 +31,9 @@ decisions:
   - "conversionType uses text with $type<union>() annotation rather than pgEnum — drizzle-zod cannot infer $type<>() annotations; server-side enum validation deferred to Phase 4 route layer"
   - "db:push deferred to developer environment — DATABASE_URL not available in parallel agent context"
 metrics:
-  duration_minutes: 4
+  duration_minutes: 30
   completed_date: "2026-04-25"
-  tasks_completed: 3
+  tasks_completed: 4
   tasks_total: 4
   files_modified: 1
 ---
@@ -113,19 +113,17 @@ None.
 - **Impact:** The DDL has NOT been applied to the live Postgres database yet. The schema TypeScript is complete and type-checks successfully.
 - **Required action:** Developer must run `npm run db:push` from their local environment (or CI) where `DATABASE_URL` is set before Task 4 RLS policies can be applied.
 
-## Task 4 — AWAITING CHECKPOINT
+## Task 4 — COMPLETE (human-verified)
 
-Task 4 is `type="checkpoint:human-verify"` — requires manual Supabase steps:
+Task 4 checkpoint was verified by the developer. Applied via `supabase db query --linked` (DATABASE_URL not available locally; Supabase CLI used as alternative to `db:push`):
 
-1. Run `npm run db:push` from the developer environment (with DATABASE_URL set) to apply DDL.
-2. Verify tables in Supabase Table Editor.
-3. Apply RLS SQL block in Supabase SQL Editor (6 CREATE POLICY + 2 ALTER TABLE statements).
-4. Confirm policies via `pg_policies` query.
-5. (Optional) Run smoke-test upsert to confirm first-touch preservation.
+1. Tables created directly in Supabase — `visitor_sessions` (24 columns confirmed) and `attribution_conversions` (14 columns confirmed) via information_schema query.
+2. `form_leads` extended with 10 new attribution columns confirmed.
+3. RLS policies applied — 5 policies confirmed via `pg_policies` query:
+   - `visitor_sessions`: anon INSERT, authenticated SELECT, authenticated UPDATE
+   - `attribution_conversions`: anon INSERT, authenticated SELECT
 
-See Task 4 `<how-to-verify>` in the PLAN.md for the exact SQL blocks.
-
-## RLS Policies to Apply (post db:push)
+## RLS Policies Applied
 
 ```sql
 -- visitor_sessions
@@ -145,7 +143,7 @@ CREATE POLICY "authenticated can select conversions" ON attribution_conversions
   FOR SELECT TO authenticated USING (true);
 ```
 
-Expected: 5 policies total (3 on visitor_sessions, 2 on attribution_conversions).
+Result: 5 policies across 2 tables — confirmed via pg_policies.
 
 ## FK Targets — Both Use Serial PK
 
@@ -176,5 +174,5 @@ None — this plan is schema-only, no data sources or UI components.
 - [x] `shared/schema.ts` contains all 4 type exports
 - [x] `npm run check` exits 0
 - [x] Commits fb64693, 97d0542, 3eb1291 verified in git log
-- [ ] `npm run db:push` — PENDING (requires DATABASE_URL in developer environment)
-- [ ] Task 4 RLS policies — PENDING checkpoint human-verify
+- [x] DDL applied to live Postgres via `supabase db query --linked` (Task 4 human-verified)
+- [x] RLS policies applied — 5 policies confirmed via pg_policies (Task 4 human-verified)
