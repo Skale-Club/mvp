@@ -54,7 +54,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   4. RLS policies are applied manually after `db:push` — public INSERT allowed, authenticated SELECT/UPDATE for admin (verified in Supabase Authentication > Policies)
   5. IStorage attribution methods are defined and implemented: `upsertVisitorSession`, `createAttributionConversion`, `linkLeadToVisitor`, and the five marketing query methods
 **Plans**: 2 plans
-- [ ] 03-01-PLAN.md — Schema additions: visitor_sessions table, attribution_conversions table, form_leads attribution columns, db:push, manual RLS
+- [x] 03-01-PLAN.md — Schema additions: visitor_sessions table, attribution_conversions table, form_leads attribution columns, db:push, manual RLS
 - [ ] 03-02-PLAN.md — IStorage interface methods + DatabaseStorage implementations (upsertVisitorSession with first-touch preservation, createAttributionConversion, linkLeadToVisitor, 5 marketing query stubs) + shared/marketing-types.ts
 
 ### Phase 4: Server Routes + Lead Flow Integration
@@ -115,7 +115,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 |-------|-----------|----------------|--------|-----------|
 | 1. Notification Infrastructure | v1.1 | — | Complete | 2026-04-16 |
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
-| 3. Attribution Schema + Storage | v1.2 | 0/2 | Planned | - |
+| 3. Attribution Schema + Storage | v1.2 | 1/2 | In Progress|  |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 0/? | Not started | - |
 | 5. Client UTM Capture Hook | v1.2 | 0/? | Not started | - |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
