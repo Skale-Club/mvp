@@ -38,9 +38,10 @@ Delivers a complete service-business website (service catalog, booking, leads, a
 
 ### Active (v1.2)
 
+- ✓ Attribution data model in DB — `visitor_sessions` + `attribution_conversions` tables, 10 new columns on `form_leads`, RLS applied, IStorage methods implemented — Phase 3
 - [ ] UTM parameter capture on page load and stored server-side per session
 - [ ] Automatic traffic source classification without UTM (organic, social, referral, direct, unknown)
-- [ ] First-touch and last-touch attribution per visitor and per lead
+- [ ] First-touch and last-touch attribution per visitor and per lead (server routes + lead flow wiring)
 - [ ] Conversion event tracking tied to attribution
 - [ ] Admin Marketing section with overview, campaign, source, conversions, and journey views
 - [ ] Filters by date, source, medium, campaign, landing page, conversion type, device
@@ -101,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-25 after v1.2 milestone start*
+*Last updated: 2026-04-25 after Phase 3 complete (attribution schema + storage)*
