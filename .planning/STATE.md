@@ -1,3 +1,18 @@
+---
+gsd_state_version: 1.0
+milestone: v1.2
+milestone_name: Marketing Attribution
+status: executing
+last_updated: "2026-04-25T14:56:00Z"
+last_activity: 2026-04-25 -- 03-01 tasks 1-3 complete; awaiting Task 4 human-verify checkpoint (db:push + RLS)
+progress:
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 0
+  percent: 0
+---
+
 # Project State
 
 ## Project Reference
@@ -5,20 +20,21 @@
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Production service-business site for MVP + forkable base template for other clients.
-**Current focus:** v1.2 Marketing Attribution — Phase 3 (Attribution Schema + Storage)
+**Current focus:** Phase 03 — attribution-schema-storage
 
 ## Current Position
 
-Phase: 3 of 7 (Attribution Schema + Storage)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-04-25 — v1.2 roadmap created (Phases 3-7 defined)
+Phase: 03 (attribution-schema-storage) — EXECUTING
+Plan: 1 of 2 (at checkpoint)
+Status: 03-01 tasks 1-3 complete — awaiting Task 4 human-verify (db:push + RLS in Supabase)
+Last activity: 2026-04-25 -- 03-01 tasks 1-3 complete; awaiting Task 4 human-verify checkpoint (db:push + RLS)
 
 Progress: [░░░░░░░░░░] 0% (v1.2)
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed (v1.2): 0
 - Average duration: —
 - Total execution time: —
@@ -34,6 +50,13 @@ Progress: [░░░░░░░░░░] 0% (v1.2)
 *Updated after each plan completion*
 
 ## Accumulated Context
+
+### Decisions (Phase 03 Plan 01)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| FK columns for visitor_sessions references use integer (not uuid) targeting serial PK | 03-01 | Avoids PostgreSQL type mismatch; matches notificationLogs.leadId convention |
+| conversionType uses text + $type<> annotation, not pgEnum | 03-01 | drizzle-zod cannot infer $type<>(); server enum validation deferred to Phase 4 routes |
 
 ### Decisions (Carried from v1.1)
 
