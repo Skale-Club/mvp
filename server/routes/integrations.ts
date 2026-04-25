@@ -26,6 +26,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
     eventName: z.string().trim().min(1),
     pagePath: z.string().trim().max(600).optional(),
     sessionId: z.string().trim().max(120).optional(),
+    visitorId: z.string().uuid().optional(),  // mvp_vid UUID — enables visitor-correlated page_view rows
   });
 
   const analyticsHealthQuerySchema = z.object({
@@ -647,7 +648,8 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
       } satisfies Record<AnalyticsChannel, boolean>;
 
       const hasActiveDestination = Object.values(channels).some(Boolean);
-      if (!hasActiveDestination && process.env.ENABLE_ANALYTICS_EVENT_STORAGE !== 'true') {
+      const forceStore = !!payload.visitorId; // visitor-correlated hits always stored for journey view
+      if (!hasActiveDestination && !forceStore && process.env.ENABLE_ANALYTICS_EVENT_STORAGE !== 'true') {
         return res.status(202).json({ accepted: true, stored: false });
       }
 
@@ -656,6 +658,7 @@ export function registerIntegrationRoutes(app: Express, requireAdmin: any) {
         channels,
         pagePath: payload.pagePath,
         sessionId: payload.sessionId,
+        visitorId: payload.visitorId,
       });
 
       return res.status(204).end();
