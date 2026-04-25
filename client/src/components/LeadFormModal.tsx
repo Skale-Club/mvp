@@ -5,6 +5,7 @@ import { AlertCircle, ArrowLeft, ArrowRight, Check, ChevronDown, Loader2, X } fr
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import { trackEvent } from "@/lib/analytics";
+import { getStoredVisitorId } from "@/lib/attribution";
 import { DEFAULT_FORM_CONFIG, calculateFormScoresWithConfig, classifyLead, getSortedQuestions, KNOWN_FIELD_IDS } from "@shared/form";
 import type { LeadClassification, FormLead, FormConfig, FormQuestion } from "@shared/schema";
 
@@ -476,6 +477,14 @@ export function LeadFormModal({ open, onClose }: LeadFormModalProps) {
         answeredStep: questionNumber,
         pending: pendingSync,
       });
+      // Attach the persisted visitor ID so the server can link this lead to its visitor_sessions row.
+      // Per D-13/D-14: visitorId is optional; if useAttribution hasn't resolved or localStorage is unavailable,
+      // we send the form without it — server treats `visitorId` as optional in formLeadProgressSchema.
+      const storedVisitorId = getStoredVisitorId();
+      if (storedVisitorId) {
+        payload.visitorId = storedVisitorId;
+      }
+
       // The backend requires a name before creating the first lead record.
       // Keep early-step progress locally and sync once the user reaches the name step.
       if (!effectiveAnswers.nome?.trim()) {
