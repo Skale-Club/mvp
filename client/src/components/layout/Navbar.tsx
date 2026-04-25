@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { CompanySettings } from "@shared/schema";
 import { DEFAULT_ADMIN_PATH } from "@/components/admin/shared/routes";
 import { trackEvent } from "@/lib/analytics";
+import { fireConversionEvent } from "@/lib/attribution";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -96,7 +97,10 @@ export function Navbar() {
             {displayPhone && (
               <a
                 href={`tel:${telPhone}`}
-                onClick={() => trackEvent("contact_click", { location: "header", label: "phone" })}
+                onClick={() => {
+                  trackEvent("contact_click", { location: "header", label: "phone" });
+                  fireConversionEvent("phone_click");
+                }}
                 className="px-4 py-2 bg-[var(--website-cta-bg)] hover:bg-[var(--website-cta-hover)] text-white font-bold rounded-full hover-elevate transition-all text-sm flex items-center gap-2"
               >
                 <Phone className="w-4 h-4 fill-current" />
