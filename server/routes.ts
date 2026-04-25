@@ -13,6 +13,7 @@ import { registerNotificationRoutes } from "./routes/notifications.js";
 import { registerReviewsRoutes } from "./routes/reviews.js";
 import { registerServiceRoutes } from "./routes/services.js";
 import { registerAttributionRoutes } from "./routes/attribution.js";
+import { registerMarketingRoutes } from "./routes/marketing.js";
 
 /**
  * Admin authentication middleware - Supabase Auth
@@ -56,6 +57,7 @@ export async function registerRoutes(
   registerIntegrationRoutes(app, requireAdmin);
   registerUserRoutes(app, requireAdmin);
   registerAttributionRoutes(app);
+  registerMarketingRoutes(app, requireAdmin);
 
   return httpServer;
 }
