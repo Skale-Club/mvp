@@ -85,7 +85,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 **Plans**: 3 plans
 - [x] 05-01-PLAN.md — Foundation: client/src/lib/attribution.ts utility module + client/src/hooks/use-attribution.ts hook (mvp_vid persistence, UTM capture, referrer classification, sendBeacon helpers)
 - [ ] 05-02-PLAN.md — Wire useAttribution into App.tsx (single root call + reportAttributionPageView in [location] effect) and inject visitorId into the LeadFormModal payload before /api/form-leads/progress POST
-- [ ] 05-03-PLAN.md — Wire conversion events: fireConversionEvent('phone_click') on every Navbar tel: link and fireConversionEvent('booking_started') on every setIsFormOpen(true) callsite (StickyBottomBar, Home, ServiceDetails, BlogPost)
+- [x] 05-03-PLAN.md — Wire conversion events: fireConversionEvent('phone_click') on every Navbar tel: link and fireConversionEvent('booking_started') on every setIsFormOpen(true) callsite (StickyBottomBar, Home, ServiceDetails, BlogPost)
 
 ### Phase 6: Marketing Admin Dashboard
 **Goal**: The admin panel has a fully functional "Marketing" section with four data tabs, global filters, business-first language throughout, and useful empty states that coach the user when no data exists
@@ -123,6 +123,6 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete    | 2026-04-25 |
-| 5. Client UTM Capture Hook | v1.2 | 1/3 | In progress | - |
+| 5. Client UTM Capture Hook | v1.2 | 2/3 | In Progress|  |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |

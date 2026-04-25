@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: executing
-last_updated: "2026-04-25T22:30:00.000Z"
-last_activity: 2026-04-25 -- Phase 05 Plan 01 complete (attribution.ts + useAttribution hook)
+last_updated: "2026-04-25T22:29:55.236Z"
+last_activity: 2026-04-25
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 85
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 05 (client-utm-capture-hook) — EXECUTING
-Plan: 2 of 3 (plan 01 complete)
-Status: Executing Phase 05
-Last activity: 2026-04-25 -- Phase 05 Plan 01 complete (attribution.ts + useAttribution hook)
+Plan: 3 of 3 (plan 03 complete)
+Status: Phase 05 complete
+Last activity: 2026-04-25 -- Phase 05 Plan 03 complete (phone_click + booking_started conversion events wired)
 
 Progress: [█████████░] 85% (6/8 plans complete)
 
@@ -50,8 +50,16 @@ Progress: [█████████░] 85% (6/8 plans complete)
 *Updated after each plan completion*
 | Phase 03 P02 | 5 | 2 tasks | 2 files |
 | Phase 04 P01 | 15 | 2 tasks | 2 files |
+| Phase 05 P03 | 10 | 2 tasks | 5 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 05 Plan 03)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| Inline arrow body expansion chosen over extracting a helper | 05-03 | Plan specified surgical 5-line edits; no refactor, no new abstractions |
+| fireConversionEvent called before setIsFormOpen(true) in all callsites | 05-03 | Conversion recorded even if a future bug prevents the modal from opening |
 
 ### Decisions (Phase 05 Plan 01)
 
