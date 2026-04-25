@@ -94,9 +94,6 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SESSION-01 | Phase 3 | Pending |
-| SESSION-02 | Phase 3 | Pending |
-| SESSION-03 | Phase 3 | Pending |
 | SESSION-04 | Phase 3 | Pending |
 | SESSION-05 | Phase 3 | Pending |
 | ATTR-01 | Phase 3 | Pending |
@@ -108,18 +105,21 @@
 | CONV-03 | Phase 4 | Pending |
 | CONV-04 | Phase 4 | Pending |
 | CONV-05 | Phase 4 | Pending |
-| DASH-01 | Phase 5 | Pending |
-| DASH-02 | Phase 5 | Pending |
-| DASH-03 | Phase 5 | Pending |
-| DASH-04 | Phase 5 | Pending |
-| DASH-05 | Phase 5 | Pending |
-| DASH-06 | Phase 6 | Pending |
-| DASH-07 | Phase 5 | Pending |
-| DASH-08 | Phase 5 | Pending |
-| FILTER-01 | Phase 5 | Pending |
-| FILTER-02 | Phase 5 | Pending |
-| FILTER-03 | Phase 5 | Pending |
-| FILTER-04 | Phase 5 | Pending |
+| SESSION-01 | Phase 5 | Pending |
+| SESSION-02 | Phase 5 | Pending |
+| SESSION-03 | Phase 5 | Pending |
+| DASH-01 | Phase 6 | Pending |
+| DASH-02 | Phase 6 | Pending |
+| DASH-03 | Phase 6 | Pending |
+| DASH-04 | Phase 6 | Pending |
+| DASH-05 | Phase 6 | Pending |
+| DASH-07 | Phase 6 | Pending |
+| DASH-08 | Phase 6 | Pending |
+| FILTER-01 | Phase 6 | Pending |
+| FILTER-02 | Phase 6 | Pending |
+| FILTER-03 | Phase 6 | Pending |
+| FILTER-04 | Phase 6 | Pending |
+| DASH-06 | Phase 7 | Pending |
 | LEADATTR-01 | Phase 7 | Pending |
 | LEADATTR-02 | Phase 7 | Pending |
 
@@ -130,4 +130,4 @@
 
 ---
 *Requirements defined: 2026-04-25*
-*Last updated: 2026-04-25 after initial definition*
+*Last updated: 2026-04-25 after roadmap creation (phases 3-7 assigned)*

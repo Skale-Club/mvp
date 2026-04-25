@@ -5,14 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Production service-business site for MVP + forkable base template for other clients.
-**Current focus:** v1.2 — Marketing Attribution
+**Current focus:** v1.2 Marketing Attribution — Phase 3 (Attribution Schema + Storage)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-25 — Milestone v1.2 started
+Phase: 3 of 7 (Attribution Schema + Storage)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-04-25 — v1.2 roadmap created (Phases 3-7 defined)
+
+Progress: [░░░░░░░░░░] 0% (v1.2)
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed (v1.2): 0
+- Average duration: —
+- Total execution time: —
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| — | — | — | — |
+
+**Recent Trend:** No data yet.
+
+*Updated after each plan completion*
 
 ## Accumulated Context
 
@@ -27,15 +46,26 @@ Last activity: 2026-04-25 — Milestone v1.2 started
 | Read-only notification API in v1.1 | v1.1 01-03 | No POST/PATCH/DELETE for logs — resend/delete deferred |
 | Single global fetch (limit 500) + client-side reduce for per-lead icons | v1.1 01-04 | 1 request vs N+1; revisit when logs exceed ~500/day |
 
+### Key Architectural Constraints (v1.2)
+
+- `visitor_sessions.visitor_id` must be UNIQUE (not just indexed) — ON CONFLICT upsert requires it
+- First-touch columns written once on insert; Drizzle updates must name lt_* columns explicitly, never spread full UTM object
+- UTM capture in App root useEffect with `[]` — never in route components (Wouter destroys URL params on navigation)
+- `mvp_vid` (localStorage) is the visitor identity key — separate from existing `formLeads.sessionId`
+- Attribution writes in the lead flow are fire-and-forget — wrapped in try/catch, never await in critical path
+- RLS policies must be applied manually after each `db:push` (not automated by Drizzle)
+- Dashboard aggregate queries use `attribution_conversions` (denormalized); reserve `visitor_sessions` joins for journey view only
+- Server enforces default date range (30 days) on all marketing queries to prevent unbounded table scans
+
 ### Deferred Issues (Carried from v1.1)
 
 | Issue | Origin | Effort | Revisit |
 |-------|--------|--------|---------|
-| Refactor of monolithic Admin.tsx | docs/ADMIN_REFACTOR_PLAN.md | L | Consider for v1.3+ |
-| Resend failed notifications via UI | v1.1 Phase 1 | M | v1.3 if recurring failures appear |
-| Retention/TTL for notification logs | v1.1 Phase 1 | S | When table grows |
-| Drizzle journal / standard migration workflow | v1.1 01-01 | M | Dedicated phase before frequent schema changes |
-| Server-side aggregation for per-lead last-by-channel | v1.1 01-04 | M | When log volume exceeds ~500/day |
+| Refactor of monolithic Admin.tsx | v1.1 | L | v1.3+ |
+| Resend failed notifications via UI | v1.1 | M | v1.3 if recurring failures |
+| Retention/TTL for notification logs | v1.1 | S | When table grows |
+| Drizzle journal / standard migration workflow | v1.1 | M | Before frequent schema changes |
+| Server-side aggregation for per-lead last-by-channel | v1.1 | M | When log volume > ~500/day |
 
 ### Blockers/Concerns
 
