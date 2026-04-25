@@ -50,6 +50,7 @@ export const analyticsEventHits = pgTable("analytics_event_hits", {
   channels: jsonb("channels").$type<Partial<Record<AnalyticsChannel, boolean>>>().default({}),
   pagePath: text("page_path"),
   sessionId: text("session_id"),
+  visitorId: text("visitor_id"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   eventNameIdx: index("analytics_event_hits_event_name_idx").on(table.eventName),
@@ -419,6 +420,7 @@ export const formLeadProgressSchema = z.object({
   utmCampaign: z.string().max(200).optional(),
   startedAt: z.string().optional(),
   customAnswers: z.record(z.string()).optional(),
+  visitorId: z.string().uuid().optional(),
 });
 
 // === TYPES ===
