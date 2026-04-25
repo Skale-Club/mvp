@@ -1,5 +1,6 @@
 import { useEffect, useState, RefObject } from "react";
 import { LeadFormModal } from "@/components/LeadFormModal";
+import { fireConversionEvent } from "@/lib/attribution";
 
 export function StickyBottomBar({ footerRef }: { footerRef: RefObject<HTMLElement> }) {
   const [visible, setVisible] = useState(false);
@@ -64,7 +65,10 @@ export function StickyBottomBar({ footerRef }: { footerRef: RefObject<HTMLElemen
         <div className="backdrop-blur-md border-t border-white/10 py-3 px-4" style={{ backgroundColor: "var(--website-nav-bg)" }}>
           <div className="flex justify-center">
             <button
-              onClick={() => setIsFormOpen(true)}
+              onClick={() => {
+                fireConversionEvent("booking_started");
+                setIsFormOpen(true);
+              }}
               className="w-full md:w-[40%] bg-[var(--website-cta-bg)] text-white hover:bg-[var(--website-cta-hover)] font-bold py-3 rounded-full text-sm md:text-base transition-colors"
             >
               Get a Free Quote

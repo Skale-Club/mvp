@@ -5,6 +5,7 @@ import { AboutSection } from "@/components/AboutSection";
 import { AreasServedMap } from "@/components/AreasServedMap";
 import { LeadFormModal } from "@/components/LeadFormModal";
 import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/homepageDefaults";
+import { fireConversionEvent } from "@/lib/attribution";
 import { ErrorState } from "@/components/ui/error-state";
 import { FaqSection } from "@/components/FaqSection";
 import { HeroSection } from "@/components/sections/HeroSection";
@@ -82,6 +83,7 @@ export default function Home() {
       if (!trigger) return;
       if (trigger.dataset.formTrigger === 'lead-form') {
         event.preventDefault();
+        fireConversionEvent("booking_started");
         setIsFormOpen(true);
       }
     };
@@ -113,7 +115,10 @@ export default function Home() {
         heroBadgeImageUrl={homepageContent.heroBadgeImageUrl}
         heroBadgeAlt={homepageContent.heroBadgeAlt}
         hasTrustBadges={trustBadges.length > 0}
-        onCtaClick={() => setIsFormOpen(true)}
+        onCtaClick={() => {
+          fireConversionEvent("booking_started");
+          setIsFormOpen(true);
+        }}
       />
       <TrustBadgesSection trustBadges={trustBadges} />
       <div className="h-0 bg-website-footer"></div>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { LeadFormModal } from '@/components/LeadFormModal';
+import { fireConversionEvent } from '@/lib/attribution';
 import { 
   Calendar, 
   User, 
@@ -271,7 +272,10 @@ export default function BlogPostPage() {
                     </p>
                     <Button
                       className="w-full"
-                      onClick={() => setIsFormOpen(true)}
+                      onClick={() => {
+                        fireConversionEvent("booking_started");
+                        setIsFormOpen(true);
+                      }}
                       data-testid="button-get-quote"
                     >
                       Get a Free Quote

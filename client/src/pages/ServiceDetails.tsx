@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ImageIcon } from "lucide-react";
 import { getServicePostPath } from "@/lib/service-path";
 import { LeadFormModal } from "@/components/LeadFormModal";
+import { fireConversionEvent } from "@/lib/attribution";
 
 function setMetaTag(name: string, content: string, isProperty = false) {
   const selector = isProperty ? `meta[property="${name}"]` : `meta[name="${name}"]`;
@@ -268,7 +269,10 @@ export default function ServiceDetails() {
                 {post.title}
               </h1>
               <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                <Button size="lg" className="h-10 min-w-[180px] border-0 text-base" onClick={() => setIsFormOpen(true)}>
+                <Button size="lg" className="h-10 min-w-[180px] border-0 text-base" onClick={() => {
+                  fireConversionEvent("booking_started");
+                  setIsFormOpen(true);
+                }}>
                   Get a Free Quote
                 </Button>
                 <Link href="/services">
@@ -335,7 +339,10 @@ export default function ServiceDetails() {
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
             Contact us today to discuss your {post.title.toLowerCase()} needs and get a personalized quote.
           </p>
-          <Button size="lg" className="h-12 min-w-[200px] text-lg" onClick={() => setIsFormOpen(true)}>
+          <Button size="lg" className="h-12 min-w-[200px] text-lg" onClick={() => {
+            fireConversionEvent("booking_started");
+            setIsFormOpen(true);
+          }}>
             Contact Us Now
           </Button>
         </div>
