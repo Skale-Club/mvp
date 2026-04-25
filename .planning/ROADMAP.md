@@ -35,7 +35,7 @@
 
 Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 
-- [ ] **Phase 3: Attribution Schema + Storage** - New DB tables, IStorage methods, and RLS policies that form the attribution foundation
+- [x] **Phase 3: Attribution Schema + Storage** - New DB tables, IStorage methods, and RLS policies that form the attribution foundation (completed 2026-04-25)
 - [ ] **Phase 4: Server Routes + Lead Flow Integration** - Attribution API endpoints and non-blocking injection into the existing lead submit path
 - [ ] **Phase 5: Client UTM Capture Hook** - useAttribution hook at App root, visitorId persistence, page view events, and form payload enrichment
 - [ ] **Phase 6: Marketing Admin Dashboard** - MarketingSection.tsx with Overview, Sources, Campaigns, and Conversions tabs plus global filters
@@ -55,7 +55,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   5. IStorage attribution methods are defined and implemented: `upsertVisitorSession`, `createAttributionConversion`, `linkLeadToVisitor`, and the five marketing query methods
 **Plans**: 2 plans
 - [x] 03-01-PLAN.md — Schema additions: visitor_sessions table, attribution_conversions table, form_leads attribution columns, db:push, manual RLS
-- [ ] 03-02-PLAN.md — IStorage interface methods + DatabaseStorage implementations (upsertVisitorSession with first-touch preservation, createAttributionConversion, linkLeadToVisitor, 5 marketing query stubs) + shared/marketing-types.ts
+- [x] 03-02-PLAN.md — IStorage interface methods + DatabaseStorage implementations (upsertVisitorSession with first-touch preservation, createAttributionConversion, linkLeadToVisitor, 5 marketing query stubs) + shared/marketing-types.ts
 
 ### Phase 4: Server Routes + Lead Flow Integration
 **Goal**: Attribution data begins accumulating in the database — session upserts, conversion records, and lead-visitor linking work end-to-end via API, with zero risk to the existing lead submit path
@@ -115,7 +115,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 |-------|-----------|----------------|--------|-----------|
 | 1. Notification Infrastructure | v1.1 | — | Complete | 2026-04-16 |
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
-| 3. Attribution Schema + Storage | v1.2 | 1/2 | In Progress|  |
+| 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete   | 2026-04-25 |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 0/? | Not started | - |
 | 5. Client UTM Capture Hook | v1.2 | 0/? | Not started | - |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |

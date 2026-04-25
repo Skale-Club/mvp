@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
-status: executing
-last_updated: "2026-04-25T16:30:00Z"
-last_activity: 2026-04-25 -- 03-01 COMPLETE (all 4 tasks done, RLS applied, DDL in Postgres); ready for 03-02
+status: verifying
+last_updated: "2026-04-25T15:33:44.456Z"
+last_activity: 2026-04-25
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 10
 ---
 
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 03 (attribution-schema-storage) — EXECUTING
-Plan: 2 of 2 (ready to start)
-Status: 03-01 COMPLETE — DDL applied via Supabase CLI, RLS policies live, all 4 tasks done
-Last activity: 2026-04-25 -- 03-01 COMPLETE (all 4 tasks done, RLS applied, DDL in Postgres); ready for 03-02
+Phase: 03 (attribution-schema-storage) — COMPLETE
+Plan: 2 of 2 (done)
+Status: 03-02 COMPLETE — IStorage + DatabaseStorage attribution methods, shared/marketing-types.ts created, build passing
+Last activity: 2026-04-25 -- 03-02 COMPLETE (2 tasks done, TypeScript + build clean, first-touch invariant verified)
 
-Progress: [█░░░░░░░░░] 10% (v1.2)
+Progress: [██████████] 100% (phase 03)
 
 ## Performance Metrics
 
@@ -48,8 +48,16 @@ Progress: [█░░░░░░░░░] 10% (v1.2)
 **Recent Trend:** 1 plan completed (03-01 schema + DDL + RLS).
 
 *Updated after each plan completion*
+| Phase 03 P02 | 5 | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 03 Plan 02)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| linkLeadToVisitor does UUID lookup then integer FK update | 03-02 | formLeads.visitorId is integer FK to visitorSessions.id; plan example assumed text UUID but schema uses integer |
+| createAttributionConversion uses explicit conversionType cast | 03-02 | drizzle-zod cannot infer $type<> union; cast is TypeScript-only, runtime value is always correct |
 
 ### Decisions (Phase 03 Plan 01)
 
