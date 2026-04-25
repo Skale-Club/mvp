@@ -67,7 +67,10 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   3. When a lead is created via the existing `POST /api/form-leads/progress` endpoint, the lead's `visitor_id` is stamped and an attribution conversion row is written — and a failure in this attribution block never causes the lead submit to return an error
   4. All five admin marketing query endpoints exist and return structured data (verifiable with curl or Postman against a running dev server)
   5. `shared/routes.ts` and `shared/schema.ts` define the new attribution types consumed by both server and client with no TypeScript errors (`npm run check` passes)
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 04-01-PLAN.md — Schema prep: visitorId on formLeadProgressSchema + analytics_event_hits.visitor_id column + linkLeadToVisitor returns Promise<number | null> + db:push
+- [ ] 04-02-PLAN.md — New POST /api/attribution/session and /api/attribution/conversion (public, in server/routes/attribution.ts) and extend /api/analytics/hit to persist visitorId
+- [ ] 04-03-PLAN.md — Lead-flow attribution IIFE (ATTR-03/ATTR-04/CONV-01) + replace 5 marketing query stubs with real SQL + new admin /api/admin/marketing/* endpoints
 **UI hint**: no
 
 ### Phase 5: Client UTM Capture Hook
