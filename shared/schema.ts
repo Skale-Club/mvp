@@ -204,6 +204,16 @@ export const formLeads = pgTable("form_leads", {
   ghlSyncStatus: text("ghl_sync_status").default("pending"),
   source: text("source").default("form"),
   conversationId: uuid("conversation_id").references(() => conversations.id),
+  visitorId: integer("visitor_id").references(() => visitorSessions.id, { onDelete: "set null" }),
+  utmContent: text("utm_content"),
+  utmTerm: text("utm_term"),
+  sourceChannel: text("source_channel"),
+  firstTouchSource: text("first_touch_source"),
+  firstTouchMedium: text("first_touch_medium"),
+  firstTouchCampaign: text("first_touch_campaign"),
+  lastTouchSource: text("last_touch_source"),
+  lastTouchMedium: text("last_touch_medium"),
+  lastTouchCampaign: text("last_touch_campaign"),
 }, (table) => ({
   emailIdx: index("form_leads_email_idx").on(table.email),
   classificacaoIdx: index("form_leads_classificacao_idx").on(table.classificacao),
@@ -212,6 +222,7 @@ export const formLeads = pgTable("form_leads", {
   sessionIdx: uniqueIndex("form_leads_session_idx").on(table.sessionId),
   sourceIdx: index("form_leads_source_idx").on(table.source),
   conversationIdx: index("form_leads_conversation_idx").on(table.conversationId),
+  visitorIdIdx: index("form_leads_visitor_id_idx").on(table.visitorId),
 }));
 
 export const notificationLogs = pgTable("notification_logs", {
