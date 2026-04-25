@@ -204,6 +204,16 @@ export const formLeads = pgTable("form_leads", {
   ghlSyncStatus: text("ghl_sync_status").default("pending"),
   source: text("source").default("form"),
   conversationId: uuid("conversation_id").references(() => conversations.id),
+  visitorId: integer("visitor_id").references(() => visitorSessions.id, { onDelete: "set null" }),
+  utmContent: text("utm_content"),
+  utmTerm: text("utm_term"),
+  sourceChannel: text("source_channel"),
+  firstTouchSource: text("first_touch_source"),
+  firstTouchMedium: text("first_touch_medium"),
+  firstTouchCampaign: text("first_touch_campaign"),
+  lastTouchSource: text("last_touch_source"),
+  lastTouchMedium: text("last_touch_medium"),
+  lastTouchCampaign: text("last_touch_campaign"),
 }, (table) => ({
   emailIdx: index("form_leads_email_idx").on(table.email),
   classificacaoIdx: index("form_leads_classificacao_idx").on(table.classificacao),
@@ -212,6 +222,7 @@ export const formLeads = pgTable("form_leads", {
   sessionIdx: uniqueIndex("form_leads_session_idx").on(table.sessionId),
   sourceIdx: index("form_leads_source_idx").on(table.source),
   conversationIdx: index("form_leads_conversation_idx").on(table.conversationId),
+  visitorIdIdx: index("form_leads_visitor_id_idx").on(table.visitorId),
 }));
 
 export const notificationLogs = pgTable("notification_logs", {
@@ -233,6 +244,70 @@ export const notificationLogs = pgTable("notification_logs", {
   sentAtIdx: index("notification_logs_sent_at_idx").on(table.sentAt),
   channelIdx: index("notification_logs_channel_idx").on(table.channel),
   statusIdx: index("notification_logs_status_idx").on(table.status),
+}));
+
+// === VISITOR SESSIONS (v1.2 Marketing Attribution) ===
+// First-touch columns are written once on INSERT and NEVER updated by upsert.
+// Last-touch columns are updated on every subsequent visit. Critical invariant: D-13.
+export const visitorSessions = pgTable("visitor_sessions", {
+  id: serial("id").primaryKey(),
+  visitorId: uuid("visitor_id").notNull(),
+  // First-touch (immutable after first insert)
+  ftSource: text("ft_source"),
+  ftMedium: text("ft_medium"),
+  ftCampaign: text("ft_campaign"),
+  ftTerm: text("ft_term"),
+  ftContent: text("ft_content"),
+  ftId: text("ft_id"),
+  ftLandingPage: text("ft_landing_page"),
+  ftReferrer: text("ft_referrer"),
+  ftSourceChannel: text("ft_source_channel"),
+  // Last-touch (updated on every upsert)
+  ltSource: text("lt_source"),
+  ltMedium: text("lt_medium"),
+  ltCampaign: text("lt_campaign"),
+  ltTerm: text("lt_term"),
+  ltContent: text("lt_content"),
+  ltId: text("lt_id"),
+  ltLandingPage: text("lt_landing_page"),
+  ltReferrer: text("lt_referrer"),
+  ltSourceChannel: text("lt_source_channel"),
+  // Metadata
+  deviceType: text("device_type"),
+  converted: boolean("converted").default(false),
+  firstSeenAt: timestamp("first_seen_at").defaultNow(),
+  lastSeenAt: timestamp("last_seen_at").defaultNow(),
+}, (table) => ({
+  visitorIdIdx: uniqueIndex("visitor_sessions_visitor_id_unique").on(table.visitorId),
+  ftSourceChannelIdx: index("visitor_sessions_ft_source_channel_idx").on(table.ftSourceChannel),
+  convertedIdx: index("visitor_sessions_converted_idx").on(table.converted),
+  firstSeenAtIdx: index("visitor_sessions_first_seen_at_idx").on(table.firstSeenAt),
+  lastSeenAtIdx: index("visitor_sessions_last_seen_at_idx").on(table.lastSeenAt),
+}));
+
+// === ATTRIBUTION CONVERSIONS (v1.2 Marketing Attribution) ===
+// Denormalized: stores ft_*/lt_* attribution at the moment of conversion.
+// Optimized for GROUP BY source/campaign aggregation without joins (D-06).
+export const attributionConversions = pgTable("attribution_conversions", {
+  id: serial("id").primaryKey(),
+  visitorId: integer("visitor_id").references(() => visitorSessions.id, { onDelete: "set null" }),
+  leadId: integer("lead_id").references(() => formLeads.id, { onDelete: "set null" }),
+  conversionType: text("conversion_type").$type<'lead_created' | 'phone_click' | 'form_submitted' | 'booking_started'>().notNull(),
+  ftSource: text("ft_source"),
+  ftMedium: text("ft_medium"),
+  ftCampaign: text("ft_campaign"),
+  ftLandingPage: text("ft_landing_page"),
+  ltSource: text("lt_source"),
+  ltMedium: text("lt_medium"),
+  ltCampaign: text("lt_campaign"),
+  ltLandingPage: text("lt_landing_page"),
+  pagePath: text("page_path"),
+  convertedAt: timestamp("converted_at").defaultNow().notNull(),
+}, (table) => ({
+  visitorIdIdx: index("attribution_conversions_visitor_id_idx").on(table.visitorId),
+  leadIdIdx: index("attribution_conversions_lead_id_idx").on(table.leadId),
+  conversionTypeIdx: index("attribution_conversions_conversion_type_idx").on(table.conversionType),
+  convertedAtIdx: index("attribution_conversions_converted_at_idx").on(table.convertedAt),
 }));
 
 // === SCHEMAS ===
@@ -290,6 +365,21 @@ export const insertNotificationLogSchema = createInsertSchema(notificationLogs).
   id: true,
   sentAt: true,
 });
+
+export const insertVisitorSessionSchema = createInsertSchema(visitorSessions).omit({
+  id: true,
+  firstSeenAt: true,
+  lastSeenAt: true,
+});
+export type VisitorSession = typeof visitorSessions.$inferSelect;
+export type InsertVisitorSession = typeof insertVisitorSessionSchema._input;
+
+export const insertAttributionConversionSchema = createInsertSchema(attributionConversions).omit({
+  id: true,
+  convertedAt: true,
+});
+export type AttributionConversion = typeof attributionConversions.$inferSelect;
+export type InsertAttributionConversion = typeof insertAttributionConversionSchema._input;
 
 const leadClassificationValues = leadClassificationEnum.enumValues as [string, ...string[]];
 const leadStatusValues = leadStatusEnum.enumValues as [string, ...string[]];

@@ -1,29 +1,19 @@
 import { useEffect, useState } from "react";
-
-import { Link } from "wouter";
-import { ArrowRight, ChevronLeft, ChevronRight, Star, Shield, Clock, Sparkles, Heart, BadgeCheck, ThumbsUp, Trophy, Calendar, FileText, ImageIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { CompanySettings, HomepageContent, ServicePost, GalleryImage } from "@shared/schema";
 import { AboutSection } from "@/components/AboutSection";
 import { AreasServedMap } from "@/components/AreasServedMap";
-import { useQuery } from "@tanstack/react-query";
-import type { CompanySettings, BlogPost, HomepageContent, ServicePost, GalleryImage } from "@shared/schema";
-import { format } from "date-fns";
-import { trackCTAClick } from "@/lib/analytics";
 import { LeadFormModal } from "@/components/LeadFormModal";
 import { DEFAULT_HOMEPAGE_CONTENT } from "@/lib/homepageDefaults";
 import { ErrorState } from "@/components/ui/error-state";
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
-import { getServicePostPath } from "@/lib/service-path";
 import { FaqSection } from "@/components/FaqSection";
-
-type FallbackReview = {
-  id: number;
-  authorName: string;
-  authorMeta: string;
-  content: string;
-  rating: number;
-  sourceLabel: string;
-  isActive: boolean;
-};
+import { HeroSection } from "@/components/sections/HeroSection";
+import { TrustBadgesSection } from "@/components/sections/TrustBadgesSection";
+import { ServicesCarouselSection } from "@/components/sections/ServicesCarouselSection";
+import { GalleryShowcaseSection } from "@/components/sections/GalleryShowcaseSection";
+import { BlogSection } from "@/components/sections/BlogSection";
+import { ReviewsSection } from "@/components/sections/ReviewsSection";
+import type { FallbackReview } from "@/components/sections/FallbackReviewCard";
 
 type PublicReviewsPayload = {
   settings: {
@@ -38,205 +28,6 @@ type PublicReviewsPayload = {
   };
   fallbackReviews: FallbackReview[];
 };
-
-function BlogSection({ content }: { content: HomepageContent['blogSection'] }) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const sectionContent = {
-    ...(content || {}),
-  };
-
-  const { data: posts, isLoading } = useQuery<BlogPost[]>({
-    queryKey: ['/api/blog', 'published', 3, 0],
-    queryFn: () => fetch('/api/blog?status=published&limit=3&offset=0').then(r => r.json()),
-  });
-
-  const getExcerpt = (post: BlogPost) => {
-    if (post.excerpt) return post.excerpt;
-    const text = post.content.replace(/<[^>]*>/g, '');
-    return text.length > 120 ? text.slice(0, 120) + '...' : text;
-  };
-
-  useEffect(() => {
-    if (!api) return;
-
-    const updateSelection = () => {
-      setSelectedIndex(api.selectedScrollSnap());
-    };
-
-    updateSelection();
-    api.on("select", updateSelection);
-    api.on("reInit", updateSelection);
-
-    return () => {
-      api.off("select", updateSelection);
-      api.off("reInit", updateSelection);
-    };
-  }, [api]);
-
-  if (isLoading || !Array.isArray(posts) || posts.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className="py-20 bg-white">
-      <div className="container-custom mx-auto">
-        <div className="flex items-center justify-between mb-12">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2" data-testid="text-blog-section-title">
-              {sectionContent.title}
-            </h2>
-            <p className="text-slate-600 text-lg">{sectionContent.subtitle}</p>
-          </div>
-          <Link href="/blog" className="hidden md:flex items-center gap-2 text-primary font-semibold hover:underline" data-testid="link-view-all-blog">
-            {sectionContent.viewAllText}
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="md:hidden">
-          <Carousel
-            setApi={setApi}
-            opts={{
-              align: "start",
-              loop: posts.length > 1,
-            }}
-            className="w-full"
-          >
-            <CarouselContent>
-              {posts.map(post => (
-                <CarouselItem key={post.id} className="basis-full">
-                  <Link href={`/blog/${post.slug}`} className="group block" data-testid={`link-blog-card-${post.id}`}>
-                    <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                      {post.featureImageUrl ? (
-                        <div className="aspect-video overflow-hidden">
-                          <img
-                            src={post.featureImageUrl}
-                            alt={post.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            data-testid={`img-blog-home-${post.id}`}
-                            loading="lazy"
-                          />
-                        </div>
-                      ) : (
-                        <div className="aspect-video bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-                          <FileText className="w-12 h-12 text-primary/40" />
-                        </div>
-                      )}
-                      <div className="p-6 flex flex-col flex-1">
-                        <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
-                          <Calendar className="w-4 h-4" />
-                          <span data-testid={`text-blog-home-date-${post.id}`}>
-                            {post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : ''}
-                          </span>
-                        </div>
-                        <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
-                          {post.title}
-                        </h3>
-                        <p className="text-slate-600 text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
-                          {getExcerpt(post)}
-                        </p>
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                          <span className="text-primary font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                            {sectionContent.readMoreText}
-                            <ArrowRight className="w-4 h-4" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
-
-          {posts.length > 1 ? (
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <button
-                type="button"
-                aria-label="Previous article"
-                onClick={() => api?.scrollPrev()}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <div className="flex items-center gap-2">
-                {posts.map((post, index) => (
-                  <button
-                    key={post.id}
-                    type="button"
-                    aria-label={`Go to article ${index + 1}`}
-                    onClick={() => api?.scrollTo(index)}
-                    className={`h-2.5 rounded-full transition-all ${selectedIndex === index ? 'w-7 bg-primary' : 'w-2.5 bg-slate-300'}`}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                aria-label="Next article"
-                onClick={() => api?.scrollNext()}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map(post => (
-            <Link key={post.id} href={`/blog/${post.slug}`} className="group" data-testid={`link-blog-card-${post.id}`}>
-              <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                {post.featureImageUrl ? (
-                  <div className="aspect-video overflow-hidden">
-                    <img
-                      src={post.featureImageUrl}
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      data-testid={`img-blog-home-${post.id}`}
-                      loading="lazy"
-                    />
-                  </div>
-                ) : (
-                  <div className="aspect-video bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-                    <FileText className="w-12 h-12 text-primary/40" />
-                  </div>
-                )}
-                <div className="p-6 flex flex-col flex-1">
-                  <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
-                    <Calendar className="w-4 h-4" />
-                    <span data-testid={`text-blog-home-date-${post.id}`}>
-                      {post.publishedAt ? format(new Date(post.publishedAt), 'MMMM d, yyyy') : ''}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-blog-home-title-${post.id}`}>
-                    {post.title}
-                  </h3>
-                  <p className="text-slate-600 text-sm line-clamp-3 flex-1" data-testid={`text-blog-home-excerpt-${post.id}`}>
-                    {getExcerpt(post)}
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <span className="text-primary font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                      {sectionContent.readMoreText}
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <div className="mt-10 text-center md:hidden">
-          <Link href="/blog" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-full hover:bg-primary/90 transition-colors" data-testid="link-view-all-blog-mobile">
-            {sectionContent.viewAllText}
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export default function Home() {
   const { data: companySettings, isError: isSettingsError, refetch: refetchSettings } = useQuery<CompanySettings>({
@@ -253,8 +44,8 @@ export default function Home() {
   const { data: reviewsPayload } = useQuery<PublicReviewsPayload>({
     queryKey: ['/api/reviews'],
   });
-  const servicePostsList = Array.isArray(servicePosts) ? servicePosts : [];
 
+  const servicePostsList = Array.isArray(servicePosts) ? servicePosts : [];
   const homepageContent: Partial<HomepageContent> = companySettings?.homepageContent || {};
   const areasServedSection: HomepageContent["areasServedSection"] = {
     ...DEFAULT_HOMEPAGE_CONTENT.areasServedSection,
@@ -267,35 +58,18 @@ export default function Home() {
   const reviewsEmbedUrl = (reviewsPayload?.settings?.widgetEmbedUrl || '').trim();
   const reviewsUseWidget = !!reviewsPayload?.settings?.useWidget;
   const reviewsUseFallback = !!reviewsPayload?.settings?.useFallback;
-  const fallbackReviews = Array.isArray(reviewsPayload?.fallbackReviews)
-    ? reviewsPayload.fallbackReviews
-    : [];
-  const badgeIconMap: Record<string, React.ComponentType<any>> = {
-    star: Star,
-    shield: Shield,
-    clock: Clock,
-    sparkles: Sparkles,
-    heart: Heart,
-    badgeCheck: BadgeCheck,
-    thumbsUp: ThumbsUp,
-    trophy: Trophy,
-  };
+  const fallbackReviews = Array.isArray(reviewsPayload?.fallbackReviews) ? reviewsPayload.fallbackReviews : [];
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const heroImageUrl = (companySettings?.heroImageUrl || '').trim();
-  const hasHeroImage = heroImageUrl.length > 0;
   const heroBackgroundImageUrl = (companySettings?.heroBackgroundImageUrl || '').trim();
 
-  // Handle hash navigation on mount (e.g., /#about)
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
     if (hash) {
-      // Small delay to ensure DOM is ready
       setTimeout(() => {
         const element = document.getElementById(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (element) element.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     }
   }, []);
@@ -329,398 +103,49 @@ export default function Home() {
 
   return (
     <div className="pb-0">
-      {/* Hero Section */}
-      <section className="relative flex items-center justify-center overflow-hidden bg-primary min-h-[65vh] sm:min-h-[50vh] lg:min-h-[500px] xl:min-h-[550px] py-16 sm:py-20">
-        <div className={`container-custom mx-auto relative z-10 w-full py-8 ${trustBadges.length > 0 ? 'translate-y-4 sm:translate-y-2 lg:translate-y-0' : 'translate-y-8'}`}>
-          <div className={hasHeroImage ? "grid grid-cols-1 lg:grid-cols-2 gap-1 sm:gap-6 lg:gap-8 items-center lg:items-center" : "grid grid-cols-1 place-items-center"}>
-            <div className={hasHeroImage ? "order-1 lg:order-2 text-white relative z-20" : "order-1 text-white relative z-20 w-full max-w-4xl text-center"}>
-              {homepageContent.heroBadgeImageUrl ? (
-                <div className={hasHeroImage ? "mt-4 sm:mt-0 mb-3 lg:mb-6" : "mt-4 sm:mt-0 mb-3 lg:mb-6 flex justify-center"}>
-                  <img
-                    src={homepageContent.heroBadgeImageUrl}
-                    alt={homepageContent.heroBadgeAlt || ''}
-                    className="h-5 sm:h-6 w-auto object-contain"
-                  />
-                </div>
-              ) : null}
-              <h1 className="text-5xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 lg:mb-6 font-display leading-[0.95] sm:leading-[1.0] lg:leading-[1.05]">
-                {companySettings?.heroTitle ? (
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">{companySettings.heroTitle}</span>
-                ) : null}
-              </h1>
-              <p className={hasHeroImage ? "text-base sm:text-xl text-primary-foreground/80 mb-4 lg:mb-8 leading-relaxed max-w-xl" : "text-base sm:text-xl text-primary-foreground/80 mb-4 lg:mb-8 leading-relaxed max-w-xl mx-auto"}>
-                {companySettings?.heroSubtitle || ""}
-              </p>
-              <div className={hasHeroImage ? "flex flex-col sm:flex-row gap-3 lg:gap-5 flex-wrap" : "flex flex-col sm:flex-row gap-3 lg:gap-5 flex-wrap justify-center"}>
-                {companySettings?.ctaText ? (
-                  <button
-                    data-form-trigger="lead-form"
-                    className="w-full sm:w-auto shrink-0 px-6 sm:px-8 py-3 sm:py-4 bg-cta hover:bg-cta-hover hover:scale-105 text-white font-bold rounded-full transition-all flex items-center justify-center gap-2 text-base sm:text-lg whitespace-nowrap"
-                    onClick={() => {
-                      setIsFormOpen(true);
-                      trackCTAClick('hero', companySettings?.ctaText || '');
-                    }}
-                    data-testid="button-hero-form"
-                  >
-                    {companySettings?.ctaText}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-            {hasHeroImage ? (
-              <div className="order-2 lg:order-1 relative flex h-full items-end justify-center lg:justify-end self-end w-full lg:min-h-[400px] z-10 lg:ml-[-3%] mt-0 sm:mt-0 lg:-mt-10">
-                <img
-                  src={heroImageUrl}
-                  alt={companySettings?.companyName || ""}
-                  className="w-[92vw] sm:w-[98%] lg:w-full max-w-[380px] sm:max-w-[360px] md:max-w-[430px] lg:max-w-[500px] xl:max-w-[560px] object-contain drop-shadow-2xl -translate-y-[2%] sm:-translate-y-[1%] lg:translate-y-[0%] scale-100 sm:scale-100 lg:scale-98 origin-bottom"
-                />
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Hero Background Gradient */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: heroBackgroundImageUrl
-              ? `linear-gradient(to right bottom, rgba(0, 0, 0, 0.6), rgba(20, 20, 30, 0.7)), url(${heroBackgroundImageUrl}) center/cover no-repeat`
-              : `linear-gradient(to right bottom, var(--website-nav-bg), var(--website-footer-bg))`
-          }}
-        ></div>
-      </section>
-      {/* Trust Badges */}
-      {trustBadges.length > 0 && (
-      <section className="relative z-20 -mt-8 sm:-mt-12 lg:-mt-16 bg-transparent">
-        <div className="container-custom mx-auto relative">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100 overflow-hidden relative z-30">
-            {trustBadges.map((feature, i) => {
-              const iconKey = (feature.icon || '').toLowerCase();
-              const Icon = badgeIconMap[iconKey] || badgeIconMap.star || Star;
-              return (
-                <div key={i} className="p-8 flex items-center gap-6 hover:bg-gray-50 transition-colors">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-foreground">{feature.title}</h3>
-                    <p className="text-sm text-slate-500">{feature.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-      )}
+      <HeroSection
+        heroTitle={companySettings?.heroTitle}
+        heroSubtitle={companySettings?.heroSubtitle}
+        ctaText={companySettings?.ctaText}
+        companyName={companySettings?.companyName}
+        heroImageUrl={heroImageUrl}
+        heroBackgroundImageUrl={heroBackgroundImageUrl}
+        heroBadgeImageUrl={homepageContent.heroBadgeImageUrl}
+        heroBadgeAlt={homepageContent.heroBadgeAlt}
+        hasTrustBadges={trustBadges.length > 0}
+        onCtaClick={() => setIsFormOpen(true)}
+      />
+      <TrustBadgesSection trustBadges={trustBadges} />
       <div className="h-0 bg-website-footer"></div>
       <ServicesCarouselSection posts={servicePostsList} />
       <GalleryShowcaseSection images={galleryPreview || []} />
       <BlogSection content={homepageContent.blogSection} />
       {(companySettings?.aboutImageUrl || homepageContent.aboutSection?.description || (homepageContent.aboutSection?.highlights && homepageContent.aboutSection.highlights.length > 0)) && (
-      <section id="about" className="bg-muted/40 py-20">
-        <AboutSection
-          aboutImageUrl={companySettings?.aboutImageUrl}
-          content={homepageContent.aboutSection}
-        />
-      </section>
+        <section id="about" className="bg-muted/40 py-20">
+          <AboutSection
+            aboutImageUrl={companySettings?.aboutImageUrl}
+            content={homepageContent.aboutSection}
+          />
+        </section>
       )}
-      {/* Reviews Section */}
-      {(reviewsUseWidget || (reviewsUseFallback && fallbackReviews.length > 0) || reviewsTitle || reviewsSubtitle) && (
-      <section className="pt-6 sm:pt-10 lg:pt-12 pb-0 bg-white mb-0 text-slate-800">
-        <div className="w-full">
-          {(reviewsTitle || reviewsSubtitle) ? (
-            <div className="container-custom mx-auto mb-16 text-center">
-              {reviewsTitle ? (
-                <h2 className="text-3xl md:text-5xl font-bold mb-4 text-slate-800">
-                  {reviewsTitle}
-                </h2>
-              ) : null}
-              {reviewsSubtitle ? (
-                <p className="text-slate-600 max-w-2xl mx-auto text-lg">
-                  {reviewsSubtitle}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-          {reviewsUseWidget && reviewsEmbedUrl ? (
-            <div className="w-full px-0">
-                <div className="pb-0 bg-muted/40 -mt-6 sm:-mt-8 lg:-mt-10">
-                <iframe 
-                  className="lc_reviews_widget rounded-none" 
-                  src={reviewsEmbedUrl}
-                  frameBorder='0' 
-                  scrolling='no' 
-                   style={{ minWidth: '100%', width: '100%', height: '488px', border: 'none', display: 'block', borderRadius: '0', background: 'transparent' }}
-                  onLoad={() => {
-                    const script = document.createElement('script');
-                    script.type = 'text/javascript';
-                    script.src = 'https://reputationhub.site/reputation/assets/review-widget.js';
-                    document.body.appendChild(script);
-                  }}
-                ></iframe>
-              </div>
-            </div>
-          ) : null}
-          {!reviewsUseWidget && reviewsUseFallback && fallbackReviews.length > 0 ? (
-            <ReviewsCarouselSection reviews={fallbackReviews} />
-          ) : null}
-        </div>
-      </section>
-      )}
+      <ReviewsSection
+        useWidget={reviewsUseWidget}
+        useFallback={reviewsUseFallback}
+        title={reviewsTitle}
+        subtitle={reviewsSubtitle}
+        embedUrl={reviewsEmbedUrl}
+        fallbackReviews={fallbackReviews}
+      />
       <FaqSection maxItems={8} />
       {(companySettings?.mapEmbedUrl || homepageContent.areasServedSection?.heading || homepageContent.areasServedSection?.description) && (
-      <section id="areas-served" className="bg-white py-20">
-        <AreasServedMap
-          mapEmbedUrl={companySettings?.mapEmbedUrl}
-          content={areasServedSection}
-        />
-      </section>
+        <section id="areas-served" className="bg-white py-20">
+          <AreasServedMap
+            mapEmbedUrl={companySettings?.mapEmbedUrl}
+            content={areasServedSection}
+          />
+        </section>
       )}
       <LeadFormModal open={isFormOpen} onClose={() => setIsFormOpen(false)} />
     </div>
-  );
-}
-
-function ServiceCard({ post }: { post: ServicePost }) {
-  return (
-    <Link
-      href={getServicePostPath(post.id, post.slug)}
-      className="group block h-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
-      data-testid={`link-home-service-post-${post.id}`}
-    >
-      {post.featureImageUrl ? (
-        <img src={post.featureImageUrl} alt={post.title} className="aspect-[4/3] w-full object-cover" loading="lazy" />
-      ) : (
-        <div className="flex aspect-[4/3] items-center justify-center bg-slate-100">
-          <ImageIcon className="h-10 w-10 text-slate-400" />
-        </div>
-      )}
-      <div className="space-y-3 p-5">
-        <h3 className="text-xl font-bold text-slate-900 group-hover:text-primary transition-colors">
-          {post.title}
-        </h3>
-        <p className="line-clamp-2 text-sm text-slate-600">
-          {post.excerpt || "Professional service tailored to your needs."}
-        </p>
-        <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-          View service page
-          <ArrowRight className="h-4 w-4" />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
-function ServicesCarouselSection({ posts }: { posts: ServicePost[] }) {
-  const [api, setApi] = useState<CarouselApi>();
-  const safePosts = Array.isArray(posts) ? posts : [];
-  const featuredPosts = safePosts
-    .filter((post) => post.status === "published")
-    .slice(0, 12);
-
-  const enableCarousel = featuredPosts.length > 3;
-
-  useEffect(() => {
-    if (!api || !enableCarousel) return;
-    const interval = setInterval(() => {
-      if (api.canScrollNext()) {
-        api.scrollNext();
-      } else {
-        api.scrollTo(0);
-      }
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [api, enableCarousel]);
-
-  if (featuredPosts.length === 0) return null;
-
-  return (
-    <section className="bg-white py-20">
-      <div className="container-custom mx-auto">
-        <div className="mb-10 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">Featured Services</h2>
-            <p className="mt-2 text-lg text-slate-600">Explore our most requested services and open each page for details.</p>
-          </div>
-          <Link href="/services" className="hidden md:inline-flex items-center gap-2 text-primary font-semibold hover:underline">
-            View all services
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {enableCarousel ? (
-          <Carousel
-            setApi={setApi}
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent>
-              {featuredPosts.map((post) => (
-                <CarouselItem key={post.id} className="basis-full sm:basis-1/2 lg:basis-1/3">
-                  <ServiceCard post={post} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
-        ) : (
-          <div className="flex flex-wrap justify-center gap-6">
-            {featuredPosts.map((post) => (
-              <div key={post.id} className="w-full max-w-md sm:w-[calc(50%-12px)] lg:w-[calc(33.33%-16px)]">
-                <ServiceCard post={post} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-8 text-center md:hidden">
-          <Link href="/services" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-white hover:bg-primary/90">
-            View all services
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FallbackReviewCard({ review }: { review: FallbackReview }) {
-  return (
-    <article
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm h-full"
-      data-testid={`card-fallback-review-${review.id}`}
-    >
-      <div className="flex items-center gap-1 mb-3">
-        {Array.from({ length: Math.max(1, Math.min(5, review.rating || 5)) }).map((_, index) => (
-          <Star key={`${review.id}-star-${index}`} className="h-4 w-4 text-amber-500 fill-amber-500" />
-        ))}
-      </div>
-      <p className="text-slate-700 leading-relaxed mb-4">"{review.content}"</p>
-      <p className="font-semibold text-slate-900">{review.authorName}</p>
-      {review.authorMeta ? (
-        <p className="text-sm text-slate-500">{review.authorMeta}</p>
-      ) : null}
-      {review.sourceLabel ? (
-        <span className="inline-flex mt-3 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-          {review.sourceLabel}
-        </span>
-      ) : null}
-    </article>
-  );
-}
-
-function ReviewsCarouselSection({ reviews }: { reviews: FallbackReview[] }) {
-  const [api, setApi] = useState<CarouselApi>();
-  const safeReviews = Array.isArray(reviews) ? reviews : [];
-  const enableCarousel = safeReviews.length > 1;
-
-  useEffect(() => {
-    if (!api || !enableCarousel) return;
-    const interval = setInterval(() => {
-      if (api.canScrollNext()) {
-        api.scrollNext();
-      } else {
-        api.scrollTo(0);
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [api, enableCarousel]);
-
-  if (safeReviews.length === 0) return null;
-
-  if (!enableCarousel) {
-    return (
-      <div className="w-full px-4 sm:px-6 lg:px-8 pb-16">
-        <FallbackReviewCard review={safeReviews[0]} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full pb-16">
-      <div className="relative">
-        <Carousel
-          setApi={setApi}
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full px-4 sm:px-6 lg:px-8"
-        >
-          <CarouselContent>
-            {safeReviews.map((review) => (
-              <CarouselItem key={review.id} className="pl-0 px-2 sm:px-3 lg:px-4 basis-full sm:basis-1/2 lg:basis-1/3">
-                <FallbackReviewCard review={review} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
-        <button
-          type="button"
-          aria-label="Previous review"
-          onClick={() => api?.scrollPrev()}
-          className="inline-flex absolute left-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-slate-700 hover:text-slate-900"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button
-          type="button"
-          aria-label="Next review"
-          onClick={() => api?.scrollNext()}
-          className="inline-flex absolute right-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center text-slate-700 hover:text-slate-900"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function GalleryShowcaseSection({ images }: { images: GalleryImage[] }) {
-  if (!images.length) return null;
-
-  return (
-    <section className="bg-muted/40 py-20">
-      <div className="container-custom mx-auto">
-        <div className="mb-10 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">Gallery Showcase</h2>
-            <p className="mt-2 text-lg text-slate-600">A quick preview of our latest project photos.</p>
-          </div>
-          <Link href="/gallery" className="hidden md:inline-flex items-center gap-2 text-primary font-semibold hover:underline">
-            View all photos
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {images.slice(0, 8).map((image) => (
-            <Link
-              key={image.id}
-              href="/gallery"
-              className="group overflow-hidden rounded-xl border border-white/60 bg-white shadow-sm"
-              data-testid={`link-home-gallery-${image.id}`}
-            >
-              <img
-                src={image.imageUrl}
-                alt={image.altText || image.title || "Gallery image"}
-                className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                loading="lazy"
-              />
-            </Link>
-          ))}
-        </div>
-
-        <div className="mt-8 text-center md:hidden">
-          <Link href="/gallery" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-bold text-white hover:bg-primary/90">
-            View all photos
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    </section>
   );
 }
