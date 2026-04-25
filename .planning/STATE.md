@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 04 (server-routes-lead-flow-integration) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
-Last activity: 2026-04-25 -- Phase 04-02 attribution routes + analytics/hit visitorId extension complete
+Phase: 04 (server-routes-lead-flow-integration) — COMPLETE
+Plan: 3 of 3 (all plans done)
+Status: Phase complete — ready for Phase 05
+Last activity: 2026-04-25 -- Phase 04-03 lead flow attribution IIFE + marketing endpoints complete
 
 Progress: [████████░░] 80% (4/5 plans complete)
 
@@ -52,6 +52,14 @@ Progress: [████████░░] 80% (4/5 plans complete)
 | Phase 04 P01 | 15 | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 04 Plan 03)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| English enum HOT/WARM/COLD used for classificacao — plan research said Portuguese but Phase 3 schema used English | 04-03 | getMarketingBySource FILTER clauses use 'HOT'/'WARM'/'COLD' matching the actual pgEnum values |
+| updateFormLead Pick type extended to include attribution fields (firstTouchSource etc.) | 04-03 | IIFE can stamp ft/lt columns on form_leads via existing storage method |
+| VisitorJourney returns { session, conversions } matching actual shared/marketing-types.ts interface | 04-03 | getVisitorJourney returns VisitorSession + AttributionConversion[] array (not pagesVisited/closingConversion) |
 
 ### Decisions (Phase 04 Plan 02)
 
