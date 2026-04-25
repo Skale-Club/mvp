@@ -37,7 +37,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 
 - [x] **Phase 3: Attribution Schema + Storage** - New DB tables, IStorage methods, and RLS policies that form the attribution foundation (completed 2026-04-25)
 - [x] **Phase 4: Server Routes + Lead Flow Integration** - Attribution API endpoints and non-blocking injection into the existing lead submit path (completed 2026-04-25)
-- [ ] **Phase 5: Client UTM Capture Hook** - useAttribution hook at App root, visitorId persistence, page view events, and form payload enrichment
+- [x] **Phase 5: Client UTM Capture Hook** - useAttribution hook at App root, visitorId persistence, page view events, and form payload enrichment (completed 2026-04-25)
 - [ ] **Phase 6: Marketing Admin Dashboard** - MarketingSection.tsx with Overview, Sources, Campaigns, and Conversions tabs plus global filters
 - [ ] **Phase 7: Visitor Journey + Lead Attribution Panel** - Journey tab for per-visitor page sequences and attribution panel in the existing Lead detail drawer
 
@@ -84,7 +84,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   4. Submitting the lead form passes `visitorId` in the payload so the server can link the lead record to the visitor session (verifiable by checking `form_leads.visitor_id` is populated after a test submission)
 **Plans**: 3 plans
 - [x] 05-01-PLAN.md — Foundation: client/src/lib/attribution.ts utility module + client/src/hooks/use-attribution.ts hook (mvp_vid persistence, UTM capture, referrer classification, sendBeacon helpers)
-- [ ] 05-02-PLAN.md — Wire useAttribution into App.tsx (single root call + reportAttributionPageView in [location] effect) and inject visitorId into the LeadFormModal payload before /api/form-leads/progress POST
+- [x] 05-02-PLAN.md — Wire useAttribution into App.tsx (single root call + reportAttributionPageView in [location] effect) and inject visitorId into the LeadFormModal payload before /api/form-leads/progress POST
 - [x] 05-03-PLAN.md — Wire conversion events: fireConversionEvent('phone_click') on every Navbar tel: link and fireConversionEvent('booking_started') on every setIsFormOpen(true) callsite (StickyBottomBar, Home, ServiceDetails, BlogPost)
 
 ### Phase 6: Marketing Admin Dashboard
@@ -123,6 +123,6 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete    | 2026-04-25 |
-| 5. Client UTM Capture Hook | v1.2 | 2/3 | In Progress|  |
+| 5. Client UTM Capture Hook | v1.2 | 3/3 | Complete   | 2026-04-25 |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |

@@ -10,7 +10,7 @@
 
 ### Session (Visitor Session Capture)
 
-- [ ] **SESSION-01**: System captures UTM parameters (source, medium, campaign, term, content, id) on every page load, normalizes them (lowercase + trim), and stores them server-side per visitor session
+- [x] **SESSION-01**: System captures UTM parameters (source, medium, campaign, term, content, id) on every page load, normalizes them (lowercase + trim), and stores them server-side per visitor session
 - [ ] **SESSION-02**: System auto-classifies non-UTM traffic from `document.referrer` into: Organic Search (Google, Bing, Yahoo, DuckDuckGo), Social (Facebook, Instagram, YouTube, TikTok, LinkedIn, X/Twitter), Referral (any other external domain), Direct (no referrer), or Unknown
 - [x] **SESSION-03**: Anonymous visitor ID (`mvp_vid`) persists in localStorage across page navigations and browser restarts — distinct from the existing per-form `sessionId`
 - [x] **SESSION-04**: Visitor session records: landing page pathname, device type (mobile/tablet/desktop), and first/last seen timestamps
@@ -105,7 +105,7 @@
 | CONV-03 | Phase 4 | Pending |
 | CONV-04 | Phase 4 | Pending |
 | CONV-05 | Phase 4 | Complete |
-| SESSION-01 | Phase 5 | Pending |
+| SESSION-01 | Phase 5 | Complete |
 | SESSION-02 | Phase 5 | Pending |
 | SESSION-03 | Phase 5 | Complete |
 | DASH-01 | Phase 6 | Pending |

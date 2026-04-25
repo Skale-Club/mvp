@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
-status: executing
-last_updated: "2026-04-25T22:29:55.236Z"
+status: verifying
+last_updated: "2026-04-25T22:31:37.736Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
-  percent: 85
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 05 (client-utm-capture-hook) — EXECUTING
-Plan: 3 of 3 (plan 03 complete)
-Status: Phase 05 complete
-Last activity: 2026-04-25 -- Phase 05 Plan 03 complete (phone_click + booking_started conversion events wired)
+Phase: 05 (client-utm-capture-hook) — COMPLETE
+Plan: 2 of 3 (plan 02 complete; plan 03 attribution CTAs also complete)
+Status: All plans complete — ready for verification
+Last activity: 2026-04-25 -- Phase 05 Plan 02 complete (App.tsx + LeadFormModal attribution wiring)
 
-Progress: [█████████░] 85% (6/8 plans complete)
+Progress: [██████████] 100% (8/8 plans complete)
 
 ## Performance Metrics
 
@@ -51,8 +51,16 @@ Progress: [█████████░] 85% (6/8 plans complete)
 | Phase 03 P02 | 5 | 2 tasks | 2 files |
 | Phase 04 P01 | 15 | 2 tasks | 2 files |
 | Phase 05 P03 | 10 | 2 tasks | 5 files |
+| Phase 05 P02 | 20 min | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 05 Plan 02)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| reportAttributionPageView added to [location, visitorId] effect (not a new effect) | 05-02 | Keeps hook count minimal; visitorId dep keeps react-hooks/exhaustive-deps clean |
+| getStoredVisitorId used in LeadFormModal instead of useAttribution hook | 05-02 | Per D-13/D-18: avoids re-mounting hook in nested form component; mvp_vid is written synchronously before form opens |
 
 ### Decisions (Phase 05 Plan 03)
 
