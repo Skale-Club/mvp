@@ -54,11 +54,13 @@ Exceptions:
 
 Source: `client/src/index.css` CSS variables + observed admin component conventions.
 
+Exactly 2 font weights are used across this phase: 400 (normal) and 700 (bold).
+
 | Role | Size | Weight | Line Height | Font | Usage |
 |------|------|--------|-------------|------|-------|
 | Body | 14px (`text-sm`) | 400 (normal) | 1.5 | Inter | Table cell text, filter labels, card body text |
-| Label / Caption | 12px (`text-xs`) | 500 (medium) | 1.4 | Inter | KPI card label (uppercase + tracking-wide), table column headers, badge text |
-| Heading (card) | 16px (`text-base`) | 600 (semibold) | 1.3 | Inter | Card section headings (`text-base font-semibold`) |
+| Label / Caption | 12px (`text-xs`) | 400 (normal) | 1.4 | Inter | KPI card label (uppercase + tracking-wide), table column headers, badge text |
+| Heading (card) | 16px (`text-base`) | 700 (bold) | 1.3 | Inter | Card section headings (`text-base font-bold`) |
 | Heading (page) | 24px (`text-2xl`) | 700 (bold) | 1.2 | Outfit | `AdminPageHeader` title (`text-2xl font-bold`) |
 | Display / KPI value | 24px (`text-2xl`) | 700 (bold) | 1.1 | Inter | KPI metric numbers |
 
@@ -167,6 +169,8 @@ Source: D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-11, D-12.
 
 ### Overview Tab Layout (DASH-02, D-14, D-15)
 
+Primary focal point: KPI metric row 1 — the three count cards at the top of the Overview tab (Total Visits / Leads Generated / Conversion Rate). These are the first element the eye lands on and must be visually dominant relative to the descriptor row and chart below.
+
 ```
 <div class="space-y-6 pt-4">
   <!-- Row 1: Metric KPI cards -->
@@ -230,7 +234,7 @@ KPI card structure (matches DashboardSection.tsx pattern):
 </Card>
 ```
 
-Table header: `text-xs font-medium uppercase tracking-wide text-muted-foreground px-4 py-3 text-left`.
+Table header: `text-xs font-bold uppercase tracking-wide text-muted-foreground px-4 py-3 text-left`.
 Table cell: `px-4 py-3 text-sm`.
 Table row hover: `hover:bg-muted/40 transition-colors`.
 
@@ -275,7 +279,7 @@ Empty state renders when API returns zero rows for the current filter selection.
       <div class="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
         <TrendingUp class="h-6 w-6 text-muted-foreground" />
       </div>
-      <h3 class="text-base font-semibold mb-2">{heading}</h3>
+      <h3 class="text-base font-bold mb-2">{heading}</h3>
       <p class="text-sm text-muted-foreground">{body}</p>
     </CardContent>
   </Card>
