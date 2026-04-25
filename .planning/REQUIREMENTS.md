@@ -99,7 +99,7 @@
 | ATTR-01 | Phase 3 | Pending |
 | ATTR-02 | Phase 3 | Pending |
 | ATTR-03 | Phase 4 | Pending |
-| ATTR-04 | Phase 4 | Pending |
+| ATTR-04 | Phase 3 | Pending |
 | CONV-01 | Phase 4 | Pending |
 | CONV-02 | Phase 4 | Pending |
 | CONV-03 | Phase 4 | Pending |

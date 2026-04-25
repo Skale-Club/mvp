@@ -18,7 +18,7 @@ This phase is purely schema + storage — no API endpoints, no client code, no U
 ### form_leads Extension
 
 - **D-01:** Add attribution columns to `form_leads` inline as nullable columns via `db:push`. Do NOT create a separate lookup table. Follows the existing pattern (the `ghlContactId`/`ghlSyncStatus` columns were added the same way).
-- **D-02:** New columns to add: `visitorId` (uuid, nullable, FK to visitor_sessions), `utmContent` (text, nullable), `utmTerm` (text, nullable), `sourceChannel` (text, nullable), `firstTouchSource` (text, nullable), `firstTouchMedium` (text, nullable), `firstTouchCampaign` (text, nullable), `lastTouchSource` (text, nullable), `lastTouchMedium` (text, nullable), `lastTouchCampaign` (text, nullable).
+- **D-02:** New columns to add: `visitorId` (integer, nullable, FK to visitor_sessions.id serial PK), `utmContent` (text, nullable), `utmTerm` (text, nullable), `sourceChannel` (text, nullable), `firstTouchSource` (text, nullable), `firstTouchMedium` (text, nullable), `firstTouchCampaign` (text, nullable), `lastTouchSource` (text, nullable), `lastTouchMedium` (text, nullable), `lastTouchCampaign` (text, nullable).
 - **D-03:** Add `visitorId` index on `form_leads` (non-unique, a visitor can have at most one lead but the column is nullable so UNIQUE is wrong).
 
 ### Existing UTM Fields on form_leads
@@ -29,7 +29,7 @@ This phase is purely schema + storage — no API endpoints, no client code, no U
 ### Conversion Events Table
 
 - **D-06:** Create a new `attribution_conversions` table — do NOT extend `analytics_event_hits`. Reason: `attribution_conversions` stores denormalized first-touch and last-touch attribution at the moment of conversion, optimized for `GROUP BY source/campaign` aggregation queries without joins. `analytics_event_hits` continues to receive all client-side events (including non-conversion ones) unchanged.
-- **D-07:** `attribution_conversions` columns: `id` (serial PK), `visitorId` (uuid, FK to visitor_sessions ON DELETE SET NULL), `leadId` (integer, FK to form_leads ON DELETE SET NULL, nullable), `conversionType` (text — 'lead_created' | 'phone_click' | 'form_submitted' | 'booking_started'), `ftSource` (text), `ftMedium` (text), `ftCampaign` (text), `ftLandingPage` (text), `ltSource` (text), `ltMedium` (text), `ltCampaign` (text), `ltLandingPage` (text), `pagePath` (text, nullable — page where conversion happened), `convertedAt` (timestamp, defaultNow, not null).
+- **D-07:** `attribution_conversions` columns: `id` (serial PK), `visitorId` (integer, FK to visitor_sessions.id, ON DELETE SET NULL), `leadId` (integer, FK to form_leads ON DELETE SET NULL, nullable), `conversionType` (text — 'lead_created' | 'phone_click' | 'form_submitted' | 'booking_started'), `ftSource` (text), `ftMedium` (text), `ftCampaign` (text), `ftLandingPage` (text), `ltSource` (text), `ltMedium` (text), `ltCampaign` (text), `ltLandingPage` (text), `pagePath` (text, nullable — page where conversion happened), `convertedAt` (timestamp, defaultNow, not null).
 - **D-08:** FK pattern follows `notification_logs.leadId` — `ON DELETE SET NULL` so conversion records survive lead deletion.
 
 ### visitor_sessions Table
@@ -62,6 +62,7 @@ This phase is purely schema + storage — no API endpoints, no client code, no U
 - Column varchar lengths vs text: Claude can use `text` for all UTM/source fields (consistent with existing schema)
 - Drizzle `$type<>()` annotations for typed columns: Claude's discretion whether to use TypeScript union types for `conversionType` and `sourceChannel`
 - Whether to create Zod insert schemas for new tables via `createInsertSchema`: Follow existing pattern (yes, create them)
+- **FK column type for visitor_sessions references:** Both FK columns referencing visitor_sessions (in form_leads and attribution_conversions) use integer type targeting the serial PK visitorSessions.id — matching the notificationLogs.leadId convention. CONTEXT.md originally specified uuid for these columns, which would cause a PostgreSQL type mismatch. D-02 and D-07 above have been updated to reflect the correct integer type. The natural-key `visitor_sessions.visitor_id` (uuid) remains the upsert conflict target, but FKs from other tables reference the serial `id` PK, not the uuid natural key.
 
 </decisions>
 
