@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: verifying
-last_updated: "2026-04-25T22:31:37.736Z"
+last_updated: "2026-04-25T22:37:25.728Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 05 (client-utm-capture-hook) — COMPLETE
-Plan: 2 of 3 (plan 02 complete; plan 03 attribution CTAs also complete)
+Phase: 6
+Plan: Not started
 Status: All plans complete — ready for verification
-Last activity: 2026-04-25 -- Phase 05 Plan 02 complete (App.tsx + LeadFormModal attribution wiring)
+Last activity: 2026-04-25
 
 Progress: [██████████] 100% (8/8 plans complete)
 

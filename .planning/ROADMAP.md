@@ -123,6 +123,6 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete    | 2026-04-25 |
-| 5. Client UTM Capture Hook | v1.2 | 3/3 | Complete   | 2026-04-25 |
+| 5. Client UTM Capture Hook | v1.2 | 3/3 | Complete    | 2026-04-25 |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |
