@@ -9,6 +9,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useSEO } from "@/hooks/use-seo";
 import { initAnalytics, trackPageView } from "@/lib/analytics";
+import { useAttribution } from "@/hooks/use-attribution";
+import { reportAttributionPageView } from "@/lib/attribution";
 import { PageLoader } from "@/components/ui/spinner";
 import { useEffect, Suspense, lazy, useRef, useState, createContext, useContext } from "react";
 import type { CompanySettings } from "@shared/schema";
@@ -131,6 +133,7 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['/api/company-settings'],
   });
   const [location] = useLocation();
+  const { visitorId } = useAttribution();
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
@@ -148,7 +151,8 @@ function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     trackPageView(location);
-  }, [location]);
+    reportAttributionPageView(location, visitorId);
+  }, [location, visitorId]);
 
   useEffect(() => {
     const root = document.documentElement;
