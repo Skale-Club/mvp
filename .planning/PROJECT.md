@@ -40,8 +40,7 @@ Delivers a complete service-business website (service catalog, booking, leads, a
 
 - ✓ Attribution data model in DB — `visitor_sessions` + `attribution_conversions` tables, 10 new columns on `form_leads`, RLS applied, IStorage methods implemented — Phase 3
 - ✓ Attribution API endpoints live — `POST /api/attribution/session`, `POST /api/attribution/conversion`, lead-flow IIFE (ATTR-03/CONV-01), 5 admin marketing query endpoints — Phase 4
-- [ ] UTM parameter capture on page load and stored server-side per session (client hook)
-- [ ] Automatic traffic source classification without UTM (client hook)
+- ✓ Client attribution pipeline live — `use-attribution` hook (two-useEffect, mvp_vid, UTM capture, referrer classifier), form visitorId injection, phone_click + booking_started conversion events — Phase 5
 - [ ] Admin Marketing section with overview, campaign, source, conversions, and journey views
 - [ ] Filters by date, source, medium, campaign, landing page, conversion type, device
 
@@ -101,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-25 after Phase 4 complete (server routes + lead flow integration)*
+*Last updated: 2026-04-25 after Phase 5 complete (client UTM capture hook)*
