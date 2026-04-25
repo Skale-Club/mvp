@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
-status: completed
-last_updated: "2026-04-25T15:39:42.775Z"
+status: executing
+last_updated: "2026-04-25T20:55:38.202Z"
 last_activity: 2026-04-25
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 5
+  completed_plans: 3
   percent: 100
 ---
 
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Production service-business site for MVP + forkable base template for other clients.
-**Current focus:** Phase 03 — attribution-schema-storage
+**Current focus:** Phase 04 — server-routes-lead-flow-integration
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: 03-02 COMPLETE — IStorage + DatabaseStorage attribution methods, shared/marketing-types.ts created, build passing
-Last activity: 2026-04-25
+Phase: 04 (server-routes-lead-flow-integration) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-25 -- Phase 04-01 schema + storage signature prerequisites complete
 
-Progress: [██████████] 100% (phase 03)
+Progress: [██████░░░░] 60% (3/5 plans complete)
 
 ## Performance Metrics
 
@@ -49,8 +49,17 @@ Progress: [██████████] 100% (phase 03)
 
 *Updated after each plan completion*
 | Phase 03 P02 | 5 | 2 tasks | 2 files |
+| Phase 04 P01 | 15 | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 04 Plan 01)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| visitorId on analyticsEventHits is nullable text column (not a join) | 04-01 | analytics_event_hits.session_id is form UUID, not mvp_vid — cannot join; column needed |
+| linkLeadToVisitor returns number|null (not void) | 04-01 | Lead-flow IIFE passes resolved integer directly to createAttributionConversion — no second DB query |
+| db:push requires manual run (DATABASE_URL not in agent shell) | 04-01 | User must run npm run db:push before analytics_event_hits.visitor_id column exists in Postgres |
 
 ### Decisions (Phase 03 Plan 02)
 

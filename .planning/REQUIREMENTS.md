@@ -21,7 +21,7 @@
 - [x] **ATTR-01**: First-touch attribution (source, medium, campaign, landing page) is captured on the visitor's very first page load and preserved immutably
 - [x] **ATTR-02**: Last-touch attribution (source, medium, campaign, landing page) is updated on every subsequent visit so the most recent meaningful source is always current
 - [ ] **ATTR-03**: When a lead is created, the system links the visitor session to the `form_leads` record via `sessionId` and stamps first-touch and last-touch fields on the lead
-- [ ] **ATTR-04**: `form_leads` is extended with: `utmContent`, `utmTerm`, `sourceChannel`, `firstTouchSource`, `firstTouchMedium`, `firstTouchCampaign`, `lastTouchSource`, `lastTouchMedium`, `lastTouchCampaign`
+- [x] **ATTR-04**: `form_leads` is extended with: `utmContent`, `utmTerm`, `sourceChannel`, `firstTouchSource`, `firstTouchMedium`, `firstTouchCampaign`, `lastTouchSource`, `lastTouchMedium`, `lastTouchCampaign`
 
 ### Conversion Events
 
@@ -29,7 +29,7 @@
 - [ ] **CONV-02**: "Phone number clicked" is recorded as a conversion event with attribution snapshot
 - [ ] **CONV-03**: "Form submitted" is recorded as a conversion event with attribution snapshot
 - [ ] **CONV-04**: "Booking started" is recorded as a conversion event with attribution snapshot
-- [ ] **CONV-05**: Page view events are emitted on every client-side Wouter navigation and stored in `analytics_event_hits` with session_id and page_path (required for visitor journey view)
+- [x] **CONV-05**: Page view events are emitted on every client-side Wouter navigation and stored in `analytics_event_hits` with session_id and page_path (required for visitor journey view)
 
 ### Marketing Dashboard
 
@@ -99,12 +99,12 @@
 | ATTR-01 | Phase 3 | Complete (03-01) |
 | ATTR-02 | Phase 3 | Complete (03-01) |
 | ATTR-03 | Phase 4 | Pending |
-| ATTR-04 | Phase 3 | Pending |
+| ATTR-04 | Phase 3 | Complete |
 | CONV-01 | Phase 4 | Pending |
 | CONV-02 | Phase 4 | Pending |
 | CONV-03 | Phase 4 | Pending |
 | CONV-04 | Phase 4 | Pending |
-| CONV-05 | Phase 4 | Pending |
+| CONV-05 | Phase 4 | Complete |
 | SESSION-01 | Phase 5 | Pending |
 | SESSION-02 | Phase 5 | Pending |
 | SESSION-03 | Phase 5 | Pending |

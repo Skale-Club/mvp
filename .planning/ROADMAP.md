@@ -68,7 +68,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   4. All five admin marketing query endpoints exist and return structured data (verifiable with curl or Postman against a running dev server)
   5. `shared/routes.ts` and `shared/schema.ts` define the new attribution types consumed by both server and client with no TypeScript errors (`npm run check` passes)
 **Plans**: 3 plans
-- [ ] 04-01-PLAN.md — Schema prep: visitorId on formLeadProgressSchema + analytics_event_hits.visitor_id column + linkLeadToVisitor returns Promise<number | null> + db:push
+- [x] 04-01-PLAN.md — Schema prep: visitorId on formLeadProgressSchema + analytics_event_hits.visitor_id column + linkLeadToVisitor returns Promise<number | null> + db:push
 - [ ] 04-02-PLAN.md — New POST /api/attribution/session and /api/attribution/conversion (public, in server/routes/attribution.ts) and extend /api/analytics/hit to persist visitorId
 - [ ] 04-03-PLAN.md — Lead-flow attribution IIFE (ATTR-03/ATTR-04/CONV-01) + replace 5 marketing query stubs with real SQL + new admin /api/admin/marketing/* endpoints
 **UI hint**: no
@@ -119,7 +119,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 1. Notification Infrastructure | v1.1 | — | Complete | 2026-04-16 |
 | 2. Notification Admin UI + Docs | v1.1 | — | Complete | 2026-04-16 |
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
-| 4. Server Routes + Lead Flow Integration | v1.2 | 0/? | Not started | - |
+| 4. Server Routes + Lead Flow Integration | v1.2 | 1/3 | In Progress|  |
 | 5. Client UTM Capture Hook | v1.2 | 0/? | Not started | - |
 | 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |
