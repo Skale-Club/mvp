@@ -14,6 +14,7 @@ import { WebsiteSection } from '@/components/admin/WebsiteSection';
 import { CompanySettingsSection } from '@/components/admin/CompanySettingsSection';
 import { SEOSection } from '@/components/admin/SEOSection';
 import { LeadsSection } from '@/components/admin/LeadsSection';
+import { MarketingSection } from '@/components/admin/MarketingSection';
 import { FaqsSection } from '@/components/admin/FaqsSection';
 import { ChatSection } from '@/components/admin/ChatSection';
 import { IntegrationsSection } from '@/components/admin/IntegrationsSection';
@@ -147,6 +148,7 @@ function AdminContent() {
             />
           )}
           {activeSection === 'leads' && <LeadsSection />}
+          {activeSection === 'marketing' && <MarketingSection />}
           {activeSection === 'hero' && (
             <WebsiteSection
               activeTab={(routeState.tab?.id as WebsiteAdminTab | undefined) ?? 'hero'}

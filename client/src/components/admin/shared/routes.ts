@@ -8,8 +8,9 @@ import {
   MessageSquare,
   Puzzle,
   Search,
-  Star,
   Sparkles,
+  Star,
+  TrendingUp,
   Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -64,6 +65,7 @@ export const ADMIN_ROUTES: readonly AdminRouteDefinition[] = [
   { id: 'gallery', slug: 'gallery', title: 'Gallery', icon: Images },
   { id: 'servicePosts', slug: 'services', title: 'Services', icon: FileText },
   { id: 'leads', slug: 'leads', title: 'Leads', icon: Sparkles },
+  { id: 'marketing', slug: 'marketing', title: 'Marketing', icon: TrendingUp },
   { id: 'faqs', slug: 'faqs', title: 'FAQs', icon: HelpCircle },
   { id: 'users', slug: 'users', title: 'Users', icon: Users },
   { id: 'blog', slug: 'blog', title: 'Blog', icon: FileText },

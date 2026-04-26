@@ -3,6 +3,7 @@ import type { HomepageContent } from '@shared/schema';
 export type AdminSection =
   | 'dashboard'
   | 'leads'
+  | 'marketing'    // NEW — added per D-01
   | 'hero'
   | 'reviews'
   | 'company'
