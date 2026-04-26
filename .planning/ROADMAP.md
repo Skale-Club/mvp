@@ -36,8 +36,10 @@
 Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 
 - [x] **Phase 3: Attribution Schema + Storage** - New DB tables, IStorage methods, and RLS policies that form the attribution foundation (completed 2026-04-25)
-- [x] **Phase 4: Server Routes + Lead Flow Integration** - Attribution API endpoints and non-blocking injection into the existing lead submit path (completed 2026-04-25)
-- [x] **Phase 5: Client UTM Capture Hook** - useAttribution hook at App root, visitorId persistence, page view events, and form payload enrichment (completed 2026-04-25)
+- [x] **Phase 4: Server Routes + Lead Flow Integration** - Attribution API endpoints and non-blocking injection into the existing lead submit path
+ (completed 2026-04-25)
+- [x] **Phase 5: Client UTM Capture Hook** - useAttribution hook at App root, visitorId persistence, page view events, and form payload enrichment
+ (completed 2026-04-25)
 - [ ] **Phase 6: Marketing Admin Dashboard** - MarketingSection.tsx with Overview, Sources, Campaigns, and Conversions tabs plus global filters
 - [ ] **Phase 7: Visitor Journey + Lead Attribution Panel** - Journey tab for per-visitor page sequences and attribution panel in the existing Lead detail drawer
 
@@ -99,7 +101,11 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   5. The Conversions tab lists recent conversion events with business-language labels ("Lead Created", "Phone Call", "Form Submitted", "Booking Started") — no developer jargon anywhere in the section
   6. Date range filter (Today / Last 7 days / Last 30 days / This month / Custom picker) and source/campaign/conversion-type filters all update all visible tab data without a page reload
   7. Every tab shows a coach-mark empty state with a clear explanation when no data matches the current filters
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 06-01-PLAN.md — Foundation: register marketing in AdminSection/ADMIN_ROUTES/Admin.tsx + create MarketingSection shell + shared marketing/utils.ts (Wave 1)
+- [ ] 06-02-PLAN.md — Overview tab: KPI cards + Recharts AreaChart consuming /api/admin/marketing/overview (Wave 2)
+- [ ] 06-03-PLAN.md — Sources + Campaigns tabs: channel table with HOT/WARM/COLD badges + campaign table with Direct/Untagged rendering (Wave 2)
+- [ ] 06-04-PLAN.md — Conversions tab: business-label pills + relative time + client-side conversionType filter (FILTER-04) (Wave 2)
 **UI hint**: yes
 
 ### Phase 7: Visitor Journey + Lead Attribution Panel
@@ -124,5 +130,5 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete    | 2026-04-25 |
 | 5. Client UTM Capture Hook | v1.2 | 3/3 | Complete    | 2026-04-25 |
-| 6. Marketing Admin Dashboard | v1.2 | 0/? | Not started | - |
+| 6. Marketing Admin Dashboard | v1.2 | 0/4 | Not started | - |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |
