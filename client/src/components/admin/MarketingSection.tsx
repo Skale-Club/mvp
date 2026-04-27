@@ -24,9 +24,11 @@ import { MarketingOverviewTab } from '@/components/admin/marketing/MarketingOver
 
 const DATE_PRESETS: ReadonlyArray<{ id: DatePreset; label: string }> = [
   { id: 'today', label: 'Today' },
+  { id: 'yesterday', label: 'Yesterday' },
   { id: '7d', label: 'Last 7 days' },
   { id: '30d', label: 'Last 30 days' },
   { id: 'month', label: 'This month' },
+  { id: 'last_month', label: 'Last month' },
 ];
 
 const CONVERSION_TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [

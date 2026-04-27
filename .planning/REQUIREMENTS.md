@@ -35,9 +35,9 @@
 
 - [x] **DASH-01**: Admin panel has a "Marketing" section in the existing admin navigation, built as a per-section component following the `NotificationsSection`/`LeadsSection` pattern
 - [x] **DASH-02**: Overview tab shows: total visits, leads generated, overall conversion rate, top traffic source, top campaign, top landing page, and a time-series chart (visits + conversions over the selected date range)
-- [ ] **DASH-03**: Sources tab groups traffic by channel (Organic Search, Paid Ads, Social Media, Referral, Direct, Unknown) with: visits, leads, HOT/WARM/COLD lead quality breakdown, and conversion rate per channel
-- [ ] **DASH-04**: Campaigns tab shows each unique campaign with: source, channel, visits, leads, conversion rate, and the top landing pages used by that campaign
-- [ ] **DASH-05**: Conversions tab shows recent conversion events with: event type (in business language), timestamp, first source, last source, campaign, landing page — date-filterable
+- [x] **DASH-03**: Sources tab groups traffic by channel (Organic Search, Paid Ads, Social Media, Referral, Direct, Unknown) with: visits, leads, HOT/WARM/COLD lead quality breakdown, and conversion rate per channel
+- [x] **DASH-04**: Campaigns tab shows each unique campaign with: source, channel, visits, leads, conversion rate, and the top landing pages used by that campaign
+- [x] **DASH-05**: Conversions tab shows recent conversion events with: event type (in business language), timestamp, first source, last source, campaign, landing page — date-filterable
 - [ ] **DASH-06**: Journey tab shows the page-by-page visit sequence for a selected visitor session: first source, pages visited in order, and conversion event that closed the journey
 - [x] **DASH-07**: All labels throughout the Marketing section use business-first language — "Traffic Source" not "utm_source", "Campaign Name" not "utm_campaign", "How they found you" not "first-touch"
 - [x] **DASH-08**: Every tab with no data shows a coach-mark empty state explaining how to generate data (e.g., "Add UTM parameters to your ad links to see campaign data here")
@@ -110,9 +110,9 @@
 | SESSION-03 | Phase 5 | Complete |
 | DASH-01 | Phase 6 | Complete |
 | DASH-02 | Phase 6 | Complete |
-| DASH-03 | Phase 6 | Pending |
-| DASH-04 | Phase 6 | Pending |
-| DASH-05 | Phase 6 | Pending |
+| DASH-03 | Phase 6 | Complete |
+| DASH-04 | Phase 6 | Complete |
+| DASH-05 | Phase 6 | Complete |
 | DASH-07 | Phase 6 | Complete |
 | DASH-08 | Phase 6 | Complete |
 | FILTER-01 | Phase 6 | Complete |

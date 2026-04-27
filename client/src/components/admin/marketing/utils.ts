@@ -2,7 +2,7 @@
 // Shared helpers for the Marketing admin section (Phase 6).
 // Consumed by MarketingSection.tsx and all four tab components.
 
-export type DatePreset = 'today' | '7d' | '30d' | 'month' | 'custom';
+export type DatePreset = 'today' | 'yesterday' | '7d' | '30d' | 'month' | 'last_month' | 'custom';
 
 export interface MarketingFilters {
   datePreset: DatePreset;
@@ -15,11 +15,13 @@ export interface MarketingFilters {
 
 /**
  * Resolves a DatePreset (and optional custom dates) into concrete from/to Date objects.
- * - today  -> midnight today through now
- * - 7d     -> 7 days ago through now
- * - 30d    -> 30 days ago through now (default; matches server-side default)
- * - month  -> first of this month through now
- * - custom -> uses customFrom / customTo (falls back to last 30 days if either is missing)
+ * - today      -> midnight today through now
+ * - yesterday  -> midnight yesterday through end of yesterday
+ * - 7d         -> 7 days ago through now
+ * - 30d        -> 30 days ago through now (default; matches server-side default)
+ * - month      -> first of this month through now
+ * - last_month -> first through last day of previous month
+ * - custom     -> uses customFrom / customTo (falls back to last 30 days if either is missing)
  */
 export function resolveDateRange(
   preset: DatePreset,
@@ -33,6 +35,14 @@ export function resolveDateRange(
       start.setHours(0, 0, 0, 0);
       return { from: start, to: now };
     }
+    case 'yesterday': {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 1);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+      return { from: start, to: end };
+    }
     case '7d':
       return { from: new Date(now.getTime() - 7 * 86_400_000), to: now };
     case '30d':
@@ -41,6 +51,13 @@ export function resolveDateRange(
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
       start.setHours(0, 0, 0, 0);
       return { from: start, to: now };
+    }
+    case 'last_month': {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      end.setHours(23, 59, 59, 999);
+      return { from: start, to: end };
     }
     case 'custom':
       return {
