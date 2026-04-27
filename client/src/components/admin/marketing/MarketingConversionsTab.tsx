@@ -33,13 +33,14 @@ const CONVERSION_PILL_CLASS: Record<string, string> = {
 
 export interface MarketingConversionsTabProps {
   filters: MarketingFilters;
+  onSelectVisitor?: (visitorUuid: string) => void;
 }
 
-export function MarketingConversionsTab({ filters }: MarketingConversionsTabProps) {
+export function MarketingConversionsTab({ filters, onSelectVisitor }: MarketingConversionsTabProps) {
   // Fetch all conversions — server returns up to 500 rows ordered by convertedAt desc.
   // Note: server ignores conversionType filter (Critical Finding: FILTER-04 storage gap).
   // Client-side filtering applied via useMemo below.
-  const { data: allConversions = [], isLoading, isError, refetch } = useQuery<AttributionConversion[]>({
+  const { data: allConversions = [], isLoading, isError, refetch } = useQuery<Array<AttributionConversion & { visitorUuid: string | null }>>({
     queryKey: ['/api/admin/marketing/conversions', filters],
     queryFn: async () => {
       const params = buildMarketingQueryParams(filters);
@@ -53,7 +54,7 @@ export function MarketingConversionsTab({ filters }: MarketingConversionsTabProp
   // D-29: cap at 25 most recent (server already orders by convertedAt desc).
   // Note: the schema type union omits 'page_view' (column is plain text so values CAN appear).
   // We widen to string[] before filtering so TypeScript accepts the comparison.
-  const allConversionsWidened = allConversions as Array<Omit<AttributionConversion, 'conversionType'> & { conversionType: string }>;
+  const allConversionsWidened = allConversions as Array<Omit<AttributionConversion, 'conversionType'> & { conversionType: string; visitorUuid: string | null }>;
   const visibleConversions = useMemo(() => {
     return allConversionsWidened
       .filter((c) => c.conversionType !== 'page_view') // never show page_view
@@ -135,8 +136,30 @@ export function MarketingConversionsTab({ filters }: MarketingConversionsTabProp
                 const convertedAtStr = typeof row.convertedAt === 'string'
                   ? row.convertedAt
                   : (row.convertedAt as Date).toISOString();
+                const clickable = !!onSelectVisitor && row.visitorUuid != null;
                 return (
-                  <tr key={row.id} className="border-b border-border hover:bg-muted/40 transition-colors">
+                  <tr
+                    key={row.id}
+                    className={
+                      clickable
+                        ? 'border-b border-border hover:bg-muted/40 transition-colors cursor-pointer'
+                        : 'border-b border-border hover:bg-muted/40 transition-colors'
+                    }
+                    role={clickable ? 'button' : undefined}
+                    tabIndex={clickable ? 0 : undefined}
+                    onClick={clickable ? () => onSelectVisitor!(row.visitorUuid!) : undefined}
+                    onKeyDown={
+                      clickable
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onSelectVisitor!(row.visitorUuid!);
+                            }
+                          }
+                        : undefined
+                    }
+                    data-testid={clickable ? `conversions-row-clickable-${row.id}` : `conversions-row-${row.id}`}
+                  >
                     <td
                       className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap"
                       title={convertedAtStr}
