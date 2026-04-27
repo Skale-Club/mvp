@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: executing
-last_updated: "2026-04-27T19:15:00.000Z"
-last_activity: 2026-04-27 -- Phase 06 Plan 02 completed (MarketingOverviewTab)
+last_updated: "2026-04-27T18:51:26.405Z"
+last_activity: 2026-04-27
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 12
-  completed_plans: 10
-  percent: 83
+  completed_plans: 12
+  percent: 92
 ---
 
 # Project State
@@ -24,12 +24,12 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 
 ## Current Position
 
-Phase: 06 (marketing-admin-dashboard) — EXECUTING
-Plan: 2 of 4 (completed)
-Status: Executing Phase 06 (06-02 done; 06-03 and 06-04 pending)
-Last activity: 2026-04-27 -- Phase 06 Plan 02 completed (MarketingOverviewTab)
+Phase: 7
+Plan: Not started
+Status: Executing Phase 06 (06-02 + 06-04 done; 06-03 pending)
+Last activity: 2026-04-27
 
-Progress: [████████░░] 83% (10/12 plans complete)
+Progress: [█████████░] 92% (11/12 plans complete)
 
 ## Performance Metrics
 
@@ -53,8 +53,16 @@ Progress: [████████░░] 83% (10/12 plans complete)
 | Phase 05 P03 | 10 | 2 tasks | 5 files |
 | Phase 05 P02 | 20 min | 2 tasks | 2 files |
 | Phase 06 P02 | 15 | 2 tasks | 2 files |
+| Phase 06 P04 | 15 min | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 06 Plan 04)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| Widen allConversions conversionType to string via Omit+intersection cast | 06-04 | schema union omits 'page_view' but DB column is plain text; cast preserves literal filter syntax for acceptance criteria while TypeScript stays happy |
+| Replace 3 remaining MarketingTabPlaceholder calls with inline divs in parallel worktree | 06-04 | Plans 02/03 replace Overview/Sources/Campaigns in their worktrees; removing the helper requires eliminating all callers in this worktree |
 
 ### Decisions (Phase 06 Plan 02)
 
@@ -152,6 +160,7 @@ Progress: [████████░░] 83% (10/12 plans complete)
 | Issue | Origin | Effort | Revisit |
 |-------|--------|--------|---------|
 | Refactor of monolithic Admin.tsx | v1.1 | L | v1.3+ |
+| Server-side conversionType filter in getMarketingConversions (storage.ts ignores param) | 06-04 FILTER-04 | S | v1.3 — client-side workaround sufficient for 25-row cap |
 | Resend failed notifications via UI | v1.1 | M | v1.3 if recurring failures |
 | Retention/TTL for notification logs | v1.1 | S | When table grows |
 | Drizzle journal / standard migration workflow | v1.1 | M | Before frequent schema changes |
