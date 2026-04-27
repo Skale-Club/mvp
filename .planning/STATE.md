@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: executing
-last_updated: "2026-04-27T18:25:13.131Z"
-last_activity: 2026-04-27 -- Phase 06 execution started
+last_updated: "2026-04-27T19:15:00.000Z"
+last_activity: 2026-04-27 -- Phase 06 Plan 02 completed (MarketingOverviewTab)
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 12
-  completed_plans: 8
-  percent: 100
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 06 (marketing-admin-dashboard) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 06
-Last activity: 2026-04-27 -- Phase 06 execution started
+Plan: 2 of 4 (completed)
+Status: Executing Phase 06 (06-02 done; 06-03 and 06-04 pending)
+Last activity: 2026-04-27 -- Phase 06 Plan 02 completed (MarketingOverviewTab)
 
-Progress: [██████████] 100% (8/8 plans complete)
+Progress: [████████░░] 83% (10/12 plans complete)
 
 ## Performance Metrics
 
@@ -52,8 +52,17 @@ Progress: [██████████] 100% (8/8 plans complete)
 | Phase 04 P01 | 15 | 2 tasks | 2 files |
 | Phase 05 P03 | 10 | 2 tasks | 5 files |
 | Phase 05 P02 | 20 min | 2 tasks | 2 files |
+| Phase 06 P02 | 15 | 2 tasks | 2 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 06 Plan 02)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| Inline KpiCard co-located in MarketingOverviewTab.tsx | 06-02 | 10-line presentational component doesn't justify separate file; Plans 03-04 use different layouts |
+| Conversions chart series uses #FFD700 (gold) not #FFFF01 | 06-02 | Brand yellow #FFFF01 is invisible on white backgrounds; gold is specified in 06-UI-SPEC Color section |
+| staleTime: 30_000 set per-query (overrides global Infinity) | 06-02 | Global default Infinity prevents filter-change refetch; 30 s per-query allows responsive filter UX |
 
 ### Decisions (Phase 05 Plan 02)
 
