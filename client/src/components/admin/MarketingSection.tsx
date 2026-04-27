@@ -21,6 +21,7 @@ import {
 } from '@/components/admin/marketing/utils';
 import { MarketingConversionsTab } from '@/components/admin/marketing/MarketingConversionsTab';
 import { MarketingOverviewTab } from '@/components/admin/marketing/MarketingOverviewTab';
+import { MarketingJourneyTab } from '@/components/admin/marketing/MarketingJourneyTab';
 
 const DATE_PRESETS: ReadonlyArray<{ id: DatePreset; label: string }> = [
   { id: 'today', label: 'Today' },
@@ -42,6 +43,8 @@ const ALL_VALUE = '__all__'; // sentinel — Select cannot use empty-string valu
 
 export function MarketingSection() {
   const [filters, setFilters] = useState<MarketingFilters>({ datePreset: '30d' });
+  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [selectedVisitorUuid, setSelectedVisitorUuid] = useState<string | null>(null);
 
   // Source / Campaign options will be populated by tabs once data loads (Plan 02+).
   // For now we render a single "All" option so the Selects are functional.
@@ -189,7 +192,7 @@ export function MarketingSection() {
       </div>
 
       {/* Tabs (D-11) */}
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="overview" data-testid="marketing-tab-overview">
             Overview
@@ -203,6 +206,9 @@ export function MarketingSection() {
           <TabsTrigger value="conversions" data-testid="marketing-tab-conversions">
             Conversions
           </TabsTrigger>
+          <TabsTrigger value="journey" data-testid="marketing-tab-journey">
+            Journey
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="pt-4">
@@ -215,7 +221,16 @@ export function MarketingSection() {
           <MarketingCampaignsTab filters={filters} />
         </TabsContent>
         <TabsContent value="conversions" className="pt-4">
-          <MarketingConversionsTab filters={filters} />
+          <MarketingConversionsTab
+            filters={filters}
+            onSelectVisitor={(uuid) => {
+              setSelectedVisitorUuid(uuid);
+              setActiveTab('journey');
+            }}
+          />
+        </TabsContent>
+        <TabsContent value="journey" className="pt-4">
+          <MarketingJourneyTab selectedVisitorUuid={selectedVisitorUuid} />
         </TabsContent>
       </Tabs>
     </div>
