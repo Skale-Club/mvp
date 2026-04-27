@@ -42,7 +42,7 @@ Delivers a complete service-business website (service catalog, booking, leads, a
 - ✓ Attribution API endpoints live — `POST /api/attribution/session`, `POST /api/attribution/conversion`, lead-flow IIFE (ATTR-03/CONV-01), 5 admin marketing query endpoints — Phase 4
 - ✓ Client attribution pipeline live — `use-attribution` hook (two-useEffect, mvp_vid, UTM capture, referrer classifier), form visitorId injection, phone_click + booking_started conversion events — Phase 5
 - ✓ Admin Marketing section with overview, sources, campaigns, and conversions tabs; global date/source/campaign/conversion-type filters; business-first labels throughout — Phase 6
-- [ ] Visitor Journey tab (per-visitor page sequence) + Lead attribution panel in existing Lead detail drawer
+- ✓ Visitor Journey tab (5th Marketing tab, Conversions→Journey navigation, vertical event timeline) + Lead Marketing Attribution panel in Lead detail Dialog — Phase 7
 - [ ] Source/Campaign filter Select options populated dynamically from live data (deferred from Phase 6)
 
 ### Out of Scope
