@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: executing
-last_updated: "2026-04-27T20:16:57.962Z"
+last_updated: "2026-04-27T20:30:00Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 15
-  completed_plans: 12
-  percent: 92
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 07 (visitor-journey-lead-attribution-panel) — EXECUTING
-Plan: 2 of 3
-Status: Ready to execute
-Last activity: 2026-04-27 -- Completed 07-01-PLAN.md (data foundation: visitorUuid, ftLandingPage, visitCount, channelLabel)
+Plan: 3 of 3
+Status: Plan 03 complete; phase 07 complete pending 07-02 merge
+Last activity: 2026-04-27 -- Completed 07-03-PLAN.md (Lead Dialog Attribution Panel: LEADATTR-01 + LEADATTR-02)
 
-Progress: [████████░░] 80% (12/15 plans complete)
+Progress: [████████░░] 93% (13/15 plans complete)
 
 ## Performance Metrics
 
@@ -55,8 +55,18 @@ Progress: [████████░░] 80% (12/15 plans complete)
 | Phase 06 P02 | 15 | 2 tasks | 2 files |
 | Phase 06 P04 | 15 min | 2 tasks | 2 files |
 | Phase 07 P01 | 10 min | 3 tasks | 3 files |
+| Phase 07 P03 | 3 min | 2 tasks | 1 file |
 
 ## Accumulated Context
+
+### Decisions (Phase 07 Plan 03)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| Collapsible defaultOpen (open by default) for attribution panel | 07-03 | Attribution immediately visible on dialog open — no extra click required |
+| FormLeadWithAttribution declared at module level (not inside component) | 07-03 | Cleaner module-level type alias; explicit about scope |
+| openLeadDialog param widened from FormLead to FormLeadWithAttribution | 07-03 | Avoids structural mismatch TypeScript error at the call site in the leads table |
+| Comment text uses "Attribution Panel" not "Marketing Attribution Panel" | 07-03 | Keeps acceptance criterion grep exact-1-match for "Marketing Attribution" |
 
 ### Decisions (Phase 07 Plan 01)
 
