@@ -38,6 +38,7 @@ import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { channelLabel } from '@/components/admin/marketing/utils';
 import {
   Loader2,
   Plus,
@@ -179,10 +180,17 @@ function formatFieldLabel(fieldId: string): string {
   return withSpaces.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// Phase 7 LEADATTR-01: server enriches each /api/form-leads row with ftLandingPage + visitCount.
+// The shared FormLead type does not include these fields; this local extension keeps the change scoped.
+type FormLeadWithAttribution = FormLead & {
+  ftLandingPage?: string | null;
+  visitCount?: number;
+};
+
 export function LeadsSection() {
   const { toast } = useToast();
   const [isFormEditorOpen, setIsFormEditorOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<FormLead | null>(null);
+  const [selectedLead, setSelectedLead] = useState<FormLeadWithAttribution | null>(null);
   const [isLeadDialogOpen, setIsLeadDialogOpen] = useState(false);
   const [filters, setFilters] = useState<{
     search: string;
@@ -204,7 +212,7 @@ export function LeadsSection() {
     }
   });
 
-  const { data: leads, isLoading, isFetching } = useQuery<FormLead[]>({
+  const { data: leads, isLoading, isFetching } = useQuery<FormLeadWithAttribution[]>({
     queryKey: ['/api/form-leads', filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -285,7 +293,7 @@ export function LeadsSection() {
     }
   });
 
-  const openLeadDialog = (lead: FormLead) => {
+  const openLeadDialog = (lead: FormLeadWithAttribution) => {
     setSelectedLead(lead);
     setIsLeadDialogOpen(true);
   };
