@@ -104,7 +104,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 **Plans**: 4 plans
 - [x] 06-01-PLAN.md — Foundation: register marketing in AdminSection/ADMIN_ROUTES/Admin.tsx + create MarketingSection shell + shared marketing/utils.ts (Wave 1)
 - [ ] 06-02-PLAN.md — Overview tab: KPI cards + Recharts AreaChart consuming /api/admin/marketing/overview (Wave 2)
-- [ ] 06-03-PLAN.md — Sources + Campaigns tabs: channel table with HOT/WARM/COLD badges + campaign table with Direct/Untagged rendering (Wave 2)
+- [x] 06-03-PLAN.md — Sources + Campaigns tabs: channel table with HOT/WARM/COLD badges + campaign table with Direct/Untagged rendering (Wave 2)
 - [ ] 06-04-PLAN.md — Conversions tab: business-label pills + relative time + client-side conversionType filter (FILTER-04) (Wave 2)
 **UI hint**: yes
 
@@ -130,5 +130,5 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 3. Attribution Schema + Storage | v1.2 | 2/2 | Complete    | 2026-04-25 |
 | 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete    | 2026-04-25 |
 | 5. Client UTM Capture Hook | v1.2 | 3/3 | Complete    | 2026-04-25 |
-| 6. Marketing Admin Dashboard | v1.2 | 1/4 | In Progress|  |
+| 6. Marketing Admin Dashboard | v1.2 | 2/4 | In Progress|  |
 | 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/? | Not started | - |
