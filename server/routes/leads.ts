@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { storage } from "../storage.js";
 import { db } from "../db.js";
 import { z } from "zod";
-import { formLeadProgressSchema, type LeadStatus, type LeadClassification, visitorSessions } from "#shared/schema.js";
-import { eq } from "drizzle-orm";
+import { formLeadProgressSchema, type LeadStatus, type LeadClassification, visitorSessions, attributionConversions } from "#shared/schema.js";
+import { eq, inArray, sql, and } from "drizzle-orm";
 import { safeErrorMessage } from "./errorUtils.js";
 import { DEFAULT_FORM_CONFIG, calculateMaxScore, getSortedQuestions } from "#shared/form.js";
 import type { FormConfig } from "#shared/schema.js";
@@ -359,7 +359,50 @@ export function registerLeadRoutes(app: Express, requireAdmin: any) {
         search?: string
       };
       const leads = await storage.listFormLeads(filters);
-      res.json(leads);
+
+      // Phase 7 D-13 enrichment: ftLandingPage (from visitor_sessions) + visitCount (page_view rows in attribution_conversions).
+      // Done in route layer (not storage) per Pitfall 5 — keeps IStorage.listFormLeads return type narrow.
+      const visitorIds = Array.from(new Set(
+        leads.map((l) => l.visitorId).filter((v): v is number => typeof v === 'number'),
+      ));
+
+      const ftLandingByVid = new Map<number, string | null>();
+      const visitCountByVid = new Map<number, number>();
+
+      if (visitorIds.length > 0) {
+        // Single query: ftLandingPage per visitor session
+        const sessionRows = await db
+          .select({ id: visitorSessions.id, ftLandingPage: visitorSessions.ftLandingPage })
+          .from(visitorSessions)
+          .where(inArray(visitorSessions.id, visitorIds));
+        for (const row of sessionRows) {
+          ftLandingByVid.set(row.id, row.ftLandingPage ?? null);
+        }
+
+        // Single query: count page_view rows per visitor
+        const countRows = await db
+          .select({
+            visitorId: attributionConversions.visitorId,
+            cnt: sql<number>`count(*)::int`,
+          })
+          .from(attributionConversions)
+          .where(and(
+            inArray(attributionConversions.visitorId, visitorIds),
+            eq(attributionConversions.conversionType, 'page_view' as any),
+          ))
+          .groupBy(attributionConversions.visitorId);
+        for (const row of countRows) {
+          if (row.visitorId != null) visitCountByVid.set(row.visitorId, row.cnt);
+        }
+      }
+
+      const enriched = leads.map((lead) => ({
+        ...lead,
+        ftLandingPage: lead.visitorId != null ? (ftLandingByVid.get(lead.visitorId) ?? null) : null,
+        visitCount: lead.visitorId != null ? (visitCountByVid.get(lead.visitorId) ?? 0) : 0,
+      }));
+
+      res.json(enriched);
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: 'Invalid filters', errors: err.errors });
