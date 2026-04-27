@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { MarketingCampaignsTab } from '@/components/admin/marketing/MarketingCampaignsTab';
+import { MarketingSourcesTab } from '@/components/admin/marketing/MarketingSourcesTab';
 import {
   type DatePreset,
   type MarketingFilters,
@@ -205,10 +207,10 @@ export function MarketingSection() {
           <MarketingTabPlaceholder name="Overview" />
         </TabsContent>
         <TabsContent value="sources" className="pt-4">
-          <MarketingTabPlaceholder name="Sources" />
+          <MarketingSourcesTab filters={filters} />
         </TabsContent>
         <TabsContent value="campaigns" className="pt-4">
-          <MarketingTabPlaceholder name="Campaigns" />
+          <MarketingCampaignsTab filters={filters} />
         </TabsContent>
         <TabsContent value="conversions" className="pt-4">
           <MarketingTabPlaceholder name="Conversions" />
