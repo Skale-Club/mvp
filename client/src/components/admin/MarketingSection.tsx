@@ -17,6 +17,7 @@ import {
   type DatePreset,
   type MarketingFilters,
 } from '@/components/admin/marketing/utils';
+import { MarketingOverviewTab } from '@/components/admin/marketing/MarketingOverviewTab';
 
 const DATE_PRESETS: ReadonlyArray<{ id: DatePreset; label: string }> = [
   { id: 'today', label: 'Today' },
@@ -202,7 +203,7 @@ export function MarketingSection() {
         {/* Tab content placeholders — Plans 02-04 replace each with the real tab component.
             Each placeholder is intentionally minimal so this plan ships a navigable shell. */}
         <TabsContent value="overview" className="pt-4">
-          <MarketingTabPlaceholder name="Overview" />
+          <MarketingOverviewTab filters={filters} />
         </TabsContent>
         <TabsContent value="sources" className="pt-4">
           <MarketingTabPlaceholder name="Sources" />
