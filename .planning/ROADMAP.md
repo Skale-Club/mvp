@@ -118,7 +118,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
   3. The attribution panel on a lead uses business-language channel labels ("Paid Ads", "Organic Search", "Social Media", "Direct") — no utm_ field names visible
 **Plans**: 3 plans
 - [x] 07-01-PLAN.md — Server enrichment + channelLabel utility (Wave 1): visitorUuid LEFT JOIN on getMarketingConversions + ftLandingPage/visitCount enrichment in GET /api/form-leads route handler + channelLabel() shared utility in marketing/utils.ts
-- [ ] 07-02-PLAN.md — Journey tab (Wave 2): MarketingJourneyTab.tsx with empty state + session card + vertical timeline + MarketingSection controlled tabs migration + onSelectVisitor click handler in MarketingConversionsTab
+- [x] 07-02-PLAN.md — Journey tab (Wave 2): MarketingJourneyTab.tsx with empty state + session card + vertical timeline + MarketingSection controlled tabs migration + onSelectVisitor click handler in MarketingConversionsTab
 - [ ] 07-03-PLAN.md — Lead Attribution Panel (Wave 2): Marketing Attribution Collapsible panel inserted in Lead detail Dialog after Form Answers, gated by firstTouchSource, six DetailItems with channelLabel applied to source values
 **UI hint**: yes
 
@@ -134,4 +134,4 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 | 4. Server Routes + Lead Flow Integration | v1.2 | 3/3 | Complete    | 2026-04-25 |
 | 5. Client UTM Capture Hook | v1.2 | 3/3 | Complete    | 2026-04-25 |
 | 6. Marketing Admin Dashboard | v1.2 | 3/4 | In Progress|  |
-| 7. Visitor Journey + Lead Attribution Panel | v1.2 | 0/3 | Planned    |  |
+| 7. Visitor Journey + Lead Attribution Panel | v1.2 | 2/3 | In Progress|  |

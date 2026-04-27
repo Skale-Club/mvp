@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: executing
-last_updated: "2026-04-27T20:16:57.962Z"
+last_updated: "2026-04-27T20:30:48.681Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 15
-  completed_plans: 12
-  percent: 92
+  completed_plans: 14
+  percent: 80
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-04-25)
 ## Current Position
 
 Phase: 07 (visitor-journey-lead-attribution-panel) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-04-27 -- Completed 07-01-PLAN.md (data foundation: visitorUuid, ftLandingPage, visitCount, channelLabel)
+Last activity: 2026-04-27 -- Completed 07-02-PLAN.md (Journey tab: MarketingJourneyTab + controlled tabs + clickable Conversions rows)
 
-Progress: [████████░░] 80% (12/15 plans complete)
+Progress: [█████████░] 93% (14/15 plans complete)
 
 ## Performance Metrics
 
@@ -55,8 +55,17 @@ Progress: [████████░░] 80% (12/15 plans complete)
 | Phase 06 P02 | 15 | 2 tasks | 2 files |
 | Phase 06 P04 | 15 min | 2 tasks | 2 files |
 | Phase 07 P01 | 10 min | 3 tasks | 3 files |
+| Phase 07 P02 | 4.5 min | 3 tasks | 3 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 07 Plan 02)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| Globe icon for page_view timeline rows (muted), Zap for real conversions (accent) — visual distinction without UTM vocabulary | 07-02 | D-06 fulfilled: two visually distinct event types in timeline |
+| Controlled Tabs migration removes defaultValue entirely — value+onValueChange enables programmatic tab switching from Conversions row click | 07-02 | Pitfall 2 avoided; no React controlled/uncontrolled warning |
+| Keyboard support (Enter/Space) added to clickable Conversions rows beyond plan spec | 07-02 | Accessibility requirement for role=button elements; zero additional complexity |
 
 ### Decisions (Phase 07 Plan 01)
 
