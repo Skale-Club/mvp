@@ -750,6 +750,58 @@ export function LeadsSection() {
                   </div>
                 )}
               </div>
+
+              {/* Phase 7 LEADATTR-01 / LEADATTR-02 — Attribution Panel.
+                  D-14: only render when firstTouchSource is non-null (skip pre-v1.2 leads). */}
+              {selectedLead.firstTouchSource && (
+                <Collapsible defaultOpen className="space-y-2">
+                  <CollapsibleTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 p-3 text-sm font-semibold hover:bg-muted/60 transition-colors"
+                      data-testid="lead-attribution-trigger"
+                    >
+                      Marketing Attribution
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=closed]_&]:-rotate-90" />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div
+                      className="grid grid-cols-1 md:grid-cols-3 gap-3"
+                      data-testid="lead-attribution-panel"
+                    >
+                      <DetailItem
+                        label="First Source"
+                        value={channelLabel(selectedLead.firstTouchSource)}
+                      />
+                      <DetailItem
+                        label="First Campaign"
+                        value={selectedLead.firstTouchCampaign || '—'}
+                      />
+                      <DetailItem
+                        label="Last Source"
+                        value={channelLabel(selectedLead.lastTouchSource)}
+                      />
+                      <DetailItem
+                        label="Last Campaign"
+                        value={selectedLead.lastTouchCampaign || '—'}
+                      />
+                      <DetailItem
+                        label="Landing Page"
+                        value={selectedLead.ftLandingPage || '—'}
+                      />
+                      <DetailItem
+                        label="Visits Before Conversion"
+                        value={
+                          selectedLead.visitCount != null
+                            ? String(selectedLead.visitCount)
+                            : '—'
+                        }
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Select a lead to view details.</p>
