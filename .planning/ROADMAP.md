@@ -119,7 +119,7 @@ Phases execute in numeric order: 3 → 4 → 5 → 6 → 7
 **Plans**: 3 plans
 - [x] 07-01-PLAN.md — Server enrichment + channelLabel utility (Wave 1): visitorUuid LEFT JOIN on getMarketingConversions + ftLandingPage/visitCount enrichment in GET /api/form-leads route handler + channelLabel() shared utility in marketing/utils.ts
 - [x] 07-02-PLAN.md — Journey tab (Wave 2): MarketingJourneyTab.tsx with empty state + session card + vertical timeline + MarketingSection controlled tabs migration + onSelectVisitor click handler in MarketingConversionsTab
-- [ ] 07-03-PLAN.md — Lead Attribution Panel (Wave 2): Marketing Attribution Collapsible panel inserted in Lead detail Dialog after Form Answers, gated by firstTouchSource, six DetailItems with channelLabel applied to source values
+- [x] 07-03-PLAN.md — Lead Attribution Panel (Wave 2): Marketing Attribution Collapsible panel inserted in Lead detail Dialog after Form Answers, gated by firstTouchSource, six DetailItems with channelLabel applied to source values
 **UI hint**: yes
 
 ## Progress
