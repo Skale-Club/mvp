@@ -61,7 +61,7 @@ import {
   type AttributionConversion,
   type InsertAttributionConversion,
 } from "#shared/schema.js";
-import { eq, and, or, ilike, gte, lte, lt, inArray, desc, asc, sql, ne } from "drizzle-orm";
+import { eq, and, or, ilike, gte, lte, lt, inArray, desc, asc, sql, ne, getTableColumns } from "drizzle-orm";
 import type {
   MarketingFilters,
   MarketingOverview,
@@ -514,7 +514,7 @@ export interface IStorage {
   getMarketingOverview(filters?: MarketingFilters): Promise<MarketingOverview>;
   getMarketingBySource(filters?: MarketingFilters): Promise<MarketingBySource[]>;
   getMarketingByCampaign(filters?: MarketingFilters): Promise<MarketingByCampaign[]>;
-  getMarketingConversions(filters?: MarketingFilters): Promise<AttributionConversion[]>;
+  getMarketingConversions(filters?: MarketingFilters): Promise<Array<AttributionConversion & { visitorUuid: string | null }>>;
   getVisitorJourney(visitorId: string): Promise<VisitorJourney | undefined>;
 
 }
@@ -1861,13 +1861,17 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getMarketingConversions(filters?: MarketingFilters): Promise<AttributionConversion[]> {
+  async getMarketingConversions(filters?: MarketingFilters): Promise<Array<AttributionConversion & { visitorUuid: string | null }>> {
     const from = filters?.from ?? new Date(Date.now() - 30 * 86400_000);
     const to = filters?.to ?? new Date();
 
     const rows = await db
-      .select()
+      .select({
+        ...getTableColumns(attributionConversions),
+        visitorUuid: visitorSessions.visitorId,
+      })
       .from(attributionConversions)
+      .leftJoin(visitorSessions, eq(attributionConversions.visitorId, visitorSessions.id))
       .where(and(
         gte(attributionConversions.convertedAt, from),
         lte(attributionConversions.convertedAt, to),
