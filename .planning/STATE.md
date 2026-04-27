@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Marketing Attribution
 status: executing
-last_updated: "2026-04-27T18:51:26.405Z"
+last_updated: "2026-04-27T20:16:57.962Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 12
+  total_plans: 15
   completed_plans: 12
   percent: 92
 ---
@@ -20,16 +20,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-25)
 
 **Core value:** Production service-business site for MVP + forkable base template for other clients.
-**Current focus:** Phase 06 — marketing-admin-dashboard
+**Current focus:** Phase 07 — visitor-journey-lead-attribution-panel
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
-Status: Executing Phase 06 (06-02 + 06-04 done; 06-03 pending)
-Last activity: 2026-04-27
+Phase: 07 (visitor-journey-lead-attribution-panel) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-27 -- Completed 07-01-PLAN.md (data foundation: visitorUuid, ftLandingPage, visitCount, channelLabel)
 
-Progress: [█████████░] 92% (11/12 plans complete)
+Progress: [████████░░] 80% (12/15 plans complete)
 
 ## Performance Metrics
 
@@ -54,8 +54,18 @@ Progress: [█████████░] 92% (11/12 plans complete)
 | Phase 05 P02 | 20 min | 2 tasks | 2 files |
 | Phase 06 P02 | 15 | 2 tasks | 2 files |
 | Phase 06 P04 | 15 min | 2 tasks | 2 files |
+| Phase 07 P01 | 10 min | 3 tasks | 3 files |
 
 ## Accumulated Context
+
+### Decisions (Phase 07 Plan 01)
+
+| Decision | Phase | Impact |
+|----------|-------|--------|
+| getTableColumns from drizzle-orm 0.39.x works correctly for spreading all attributionConversions columns in LEFT JOIN select | 07-01 | Enables clean column spread without naming every column individually |
+| ftLandingPage + visitCount enrichment kept in route handler (not IStorage.listFormLeads) per Pitfall 5 | 07-01 | Avoids widening listFormLeads return type and forcing every caller to handle the wider type; enrichment isolated to single HTTP handler |
+| 'page_view' as any cast required in leads route | 07-01 | conversionType $type<> union is TS-only; DB stores plain text 'page_view'; same pattern as 06-04 decision |
+| leftJoin used for getMarketingConversions (not inner join) | 07-01 | attributionConversions.visitorId is nullable with onDelete: set null; inner join would silently drop rows whose session was deleted |
 
 ### Decisions (Phase 06 Plan 04)
 

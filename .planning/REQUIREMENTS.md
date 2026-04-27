@@ -38,7 +38,7 @@
 - [x] **DASH-03**: Sources tab groups traffic by channel (Organic Search, Paid Ads, Social Media, Referral, Direct, Unknown) with: visits, leads, HOT/WARM/COLD lead quality breakdown, and conversion rate per channel
 - [x] **DASH-04**: Campaigns tab shows each unique campaign with: source, channel, visits, leads, conversion rate, and the top landing pages used by that campaign
 - [x] **DASH-05**: Conversions tab shows recent conversion events with: event type (in business language), timestamp, first source, last source, campaign, landing page — date-filterable
-- [ ] **DASH-06**: Journey tab shows the page-by-page visit sequence for a selected visitor session: first source, pages visited in order, and conversion event that closed the journey
+- [x] **DASH-06**: Journey tab shows the page-by-page visit sequence for a selected visitor session: first source, pages visited in order, and conversion event that closed the journey
 - [x] **DASH-07**: All labels throughout the Marketing section use business-first language — "Traffic Source" not "utm_source", "Campaign Name" not "utm_campaign", "How they found you" not "first-touch"
 - [x] **DASH-08**: Every tab with no data shows a coach-mark empty state explaining how to generate data (e.g., "Add UTM parameters to your ad links to see campaign data here")
 
@@ -51,8 +51,8 @@
 
 ### Lead-Level Attribution
 
-- [ ] **LEADATTR-01**: Lead detail drawer in the existing Leads section shows an attribution summary panel: first source, last source, campaign name, landing page, and number of visits before conversion
-- [ ] **LEADATTR-02**: Attribution summary panel on the lead detail identifies clearly whether the lead came via paid, organic, social, referral, or direct traffic — in business language
+- [x] **LEADATTR-01**: Lead detail drawer in the existing Leads section shows an attribution summary panel: first source, last source, campaign name, landing page, and number of visits before conversion
+- [x] **LEADATTR-02**: Attribution summary panel on the lead detail identifies clearly whether the lead came via paid, organic, social, referral, or direct traffic — in business language
 
 ---
 
@@ -119,9 +119,9 @@
 | FILTER-02 | Phase 6 | Complete |
 | FILTER-03 | Phase 6 | Complete |
 | FILTER-04 | Phase 6 | Complete |
-| DASH-06 | Phase 7 | Pending |
-| LEADATTR-01 | Phase 7 | Pending |
-| LEADATTR-02 | Phase 7 | Pending |
+| DASH-06 | Phase 7 | Complete |
+| LEADATTR-01 | Phase 7 | Complete |
+| LEADATTR-02 | Phase 7 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 28 total
