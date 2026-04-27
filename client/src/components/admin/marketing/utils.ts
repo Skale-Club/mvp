@@ -83,3 +83,25 @@ export function buildMarketingQueryParams(filters: MarketingFilters): string {
   if (filters.conversionType) params.set('conversionType', filters.conversionType);
   return `?${params.toString()}`;
 }
+
+/**
+ * Maps a raw traffic source string to a business-language channel label (D-15, D-16).
+ * Single source of truth for source → label translation, used by:
+ *   - MarketingJourneyTab session summary card
+ *   - LeadsSection lead attribution panel
+ *
+ * Vocabulary ban (DASH-07): no `utm_*` field names ever surface in the UI.
+ * Treats null/undefined/empty/whitespace and any unrecognized value as "Unknown".
+ * Case-insensitive: "ORGANIC_SEARCH" and "organic_search" both map to "Organic Search".
+ */
+export function channelLabel(source: string | null | undefined): string {
+  if (!source) return 'Unknown';
+  const s = source.toLowerCase().trim();
+  if (!s) return 'Unknown';
+  if (s === 'organic_search') return 'Organic Search';
+  if (s === 'paid_search' || s === 'paid_ads') return 'Paid Ads';
+  if (s === 'social') return 'Social Media';
+  if (s === 'referral') return 'Referral';
+  if (s === 'direct') return 'Direct';
+  return 'Unknown';
+}
