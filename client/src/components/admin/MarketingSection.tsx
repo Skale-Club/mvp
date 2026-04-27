@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarDays, TrendingUp } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -19,6 +19,7 @@ import {
   type DatePreset,
   type MarketingFilters,
 } from '@/components/admin/marketing/utils';
+import { MarketingConversionsTab } from '@/components/admin/marketing/MarketingConversionsTab';
 import { MarketingOverviewTab } from '@/components/admin/marketing/MarketingOverviewTab';
 
 const DATE_PRESETS: ReadonlyArray<{ id: DatePreset; label: string }> = [
@@ -202,8 +203,6 @@ export function MarketingSection() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab content placeholders — Plans 02-04 replace each with the real tab component.
-            Each placeholder is intentionally minimal so this plan ships a navigable shell. */}
         <TabsContent value="overview" className="pt-4">
           <MarketingOverviewTab filters={filters} />
         </TabsContent>
@@ -214,25 +213,9 @@ export function MarketingSection() {
           <MarketingCampaignsTab filters={filters} />
         </TabsContent>
         <TabsContent value="conversions" className="pt-4">
-          <MarketingTabPlaceholder name="Conversions" />
+          <MarketingConversionsTab filters={filters} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-// Temporary placeholder used until Plans 02-04 wire in the real tab components.
-function MarketingTabPlaceholder({ name }: { name: string }) {
-  return (
-    <div className="flex items-center justify-center py-16">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-          <TrendingUp className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {name} tab — coming online in the next plan.
-        </p>
-      </div>
     </div>
   );
 }
