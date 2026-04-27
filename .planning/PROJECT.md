@@ -41,8 +41,9 @@ Delivers a complete service-business website (service catalog, booking, leads, a
 - ✓ Attribution data model in DB — `visitor_sessions` + `attribution_conversions` tables, 10 new columns on `form_leads`, RLS applied, IStorage methods implemented — Phase 3
 - ✓ Attribution API endpoints live — `POST /api/attribution/session`, `POST /api/attribution/conversion`, lead-flow IIFE (ATTR-03/CONV-01), 5 admin marketing query endpoints — Phase 4
 - ✓ Client attribution pipeline live — `use-attribution` hook (two-useEffect, mvp_vid, UTM capture, referrer classifier), form visitorId injection, phone_click + booking_started conversion events — Phase 5
-- [ ] Admin Marketing section with overview, campaign, source, conversions, and journey views
-- [ ] Filters by date, source, medium, campaign, landing page, conversion type, device
+- ✓ Admin Marketing section with overview, sources, campaigns, and conversions tabs; global date/source/campaign/conversion-type filters; business-first labels throughout — Phase 6
+- [ ] Visitor Journey tab (per-visitor page sequence) + Lead attribution panel in existing Lead detail drawer
+- [ ] Source/Campaign filter Select options populated dynamically from live data (deferred from Phase 6)
 
 ### Out of Scope
 
@@ -61,7 +62,7 @@ Real production website for MVP (a service business). Also used as a base templa
 Monorepo with `client/`, `server/`, `shared/` (source of truth for schemas/types via Drizzle + Zod). Deployed on Vercel (Fluid Compute, Node.js). DB hosted on Supabase (Postgres + Auth + Storage + RLS). Integrations are fire-and-forget; notification logging added in v1.1.
 
 **Admin Architecture:**
-Admin.tsx was monolithic in v1.0; partially refactored. Each section (Leads, Notifications, etc.) now lives in `client/src/components/admin/`. Marketing section will follow the same pattern.
+Admin.tsx was monolithic in v1.0; partially refactored. Each section (Leads, Notifications, Marketing, etc.) now lives in `client/src/components/admin/`. Phase 6 added `MarketingSection.tsx` + `admin/marketing/` sub-directory (4 tab components + shared utils). Pattern established for future sections.
 
 ## Constraints
 
